@@ -1,0 +1,212 @@
+<!-- Modern GRN Report Supplier Wise -->
+<div class="grn-report-container">
+  <!-- Header Section -->
+  <div class="report-header">
+    <div class="header-content">
+      <div class="header-left">
+        <h1 class="report-title">
+          <i class="ti ti-file-report me-3"></i>GRN Report - Supplier Wise
+        </h1>
+        <p class="report-subtitle">Generate and analyze GRN reports by supplier</p>
+      </div>
+      <div class="header-right">
+        <div class="date-display">
+          <i class="ti ti-calendar me-2"></i>
+          <span>{{ currentDate | date:'EEEE, MMMM d, y' }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="filters-section">
+    <div class="filters-card modern-card">
+      <div class="filters-header">
+        <h4><i class="ti ti-filter me-2"></i>Report Filters</h4>
+      </div>
+      <div class="filters-body">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <div class="form-group">
+              <label for="supplierDropdown" class="form-label">
+                <i class="ti ti-building me-1"></i>Select Supplier
+              </label>
+              <select id="supplierDropdown" class="form-select modern-select"
+                  [(ngModel)]="selectedsupplier"
+                  (change)="onSupplierChange()">
+                <option value="" disabled>Choose a supplier...</option>
+                <option value="-2">All Suppliers</option>
+                <option *ngFor="let supplier of suppliers" [value]="supplier.supplierID">
+                  {{ supplier.name }}
+                </option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="col-md-4">
+            <div class="form-group">
+              <label for="dateFrom" class="form-label">
+                <i class="ti ti-calendar-event me-1"></i>Date From
+              </label>
+              <input type="date" id="dateFrom" class="form-control modern-input" [(ngModel)]="dateFrom">
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="form-group">
+              <label for="dateTo" class="form-label">
+                <i class="ti ti-calendar-event me-1"></i>Date To
+              </label>
+              <input type="date" id="dateTo" class="form-control modern-input" [(ngModel)]="dateTo">
+            </div>
+          </div>
+        </div>
+
+        <div class="filters-actions">
+          <button class="btn btn-primary generate-btn" (click)="getReport()" [disabled]="!canGenerateReport()">
+            <i class="ti ti-chart-bar me-2"></i>Generate Report
+          </button>
+          
+          <button *ngIf="isReportGenerated" class="btn btn-success print-btn" (click)="getPrint()">
+            <i class="ti ti-printer me-2"></i>Print Report
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Report Results Section -->
+  <div class="results-section" *ngIf="isReportGenerated">
+    <div class="results-header">
+      <div class="results-info">
+        <h4><i class="ti ti-chart-pie me-2"></i>Report Results</h4>
+        <div class="results-summary">
+          <span class="summary-item">
+            <i class="ti ti-building"></i>
+            <strong>{{ groupedGrnList.length }}</strong> Suppliers
+          </span>
+          <span class="summary-item">
+            <i class="ti ti-file-text"></i>
+            <strong>{{ getTotalGrns() }}</strong> GRNs
+          </span>
+          <span class="summary-item">
+            <i class="ti ti-calendar"></i>
+            {{ dateFrom | date:'MMM dd' }} - {{ dateTo | date:'MMM dd, yyyy' }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Suppliers Accordion -->
+    <div class="suppliers-accordion">
+      <div class="supplier-card modern-card" *ngFor="let group of groupedGrnList; let i = index">
+        <div class="supplier-header" (click)="toggleSupplier(i)">
+          <div class="supplier-info">
+            <div class="supplier-icon">
+              <i class="ti ti-building"></i>
+            </div>
+            <div class="supplier-details">
+              <h5 class="supplier-name">{{ group.supplierName }}</h5>
+              <p class="supplier-stats">
+                <span class="stat-item">
+                  <i class="ti ti-file-text"></i>
+                  {{ group.grns.length }} GRNs
+                </span>
+                <span class="stat-item">
+                  <i class="ti ti-calendar"></i>
+                  {{ getSupplierDateRange(group) }}
+                </span>
+              </p>
+            </div>
+          </div>
+          <div class="supplier-actions">
+            <i class="ti ti-chevron-down toggle-icon" [class.rotated]="group.isExpanded"></i>
+          </div>
+        </div>
+
+        <!-- GRN List -->
+        <div class="grn-list" [class.expanded]="group.isExpanded">
+          <div class="grn-item" *ngFor="let grn of group.grns; let j = index">
+            <div class="grn-header" (click)="toggleGrn(i, j)">
+              <div class="grn-info">
+                <div class="grn-number">
+                  <i class="ti ti-hash"></i>
+                  <strong>{{ grn.grnNumber }}</strong>
+                </div>
+                <div class="grn-meta">
+                  <span class="grn-date">
+                    <i class="ti ti-calendar"></i>
+                    {{ grn.createdAt | date:'MMM dd, yyyy HH:mm' }}
+                  </span>
+                  <span class="grn-status" [ngClass]="'status-' + grn.grnStatus.toLowerCase()">
+                    <i class="ti ti-circle"></i>
+                    {{ grn.grnStatus }}
+                  </span>
+                </div>
+              </div>
+              <div class="grn-actions">
+                <i class="ti ti-chevron-down toggle-icon" [class.rotated]="grn.isExpanded"></i>
+              </div>
+            </div>
+
+            <!-- GRN Details Table -->
+            <div class="grn-details" [class.expanded]="grn.isExpanded">
+              <div class="table-container">
+                <table class="modern-table">
+                  <thead>
+                    <tr>
+                      <th rowspan="2" class="product-col">Product</th>
+                      <th colspan="2" class="quantity-col">Quantity (Party)</th>
+                      <th colspan="2" class="quantity-col">Quantity (Received)</th>
+                      <th rowspan="2" class="demand-col">Demanded By Party</th>
+                      <th rowspan="2" class="return-col">Return To Party</th>
+                      <th rowspan="2" class="mrp-col">MRP</th>
+                      <th rowspan="2" class="batch-col">Batch No</th>
+                    </tr>
+                    <tr>
+                      <th>As per Party</th>
+                      <th>Received</th>
+                      <th>Passed</th>
+                      <th>Rejected</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let detail of grn.grndetails">
+                      <td class="product-name">{{ detail.productName }}</td>
+                      <td class="quantity-party">{{ detail.quantityAsPerParty }}</td>
+                      <td class="quantity-received">{{ detail.receivedQuantity }}</td>
+                      <td class="quantity-passed">
+                        {{ detail.passedQuantity }}
+                        <span class="status-indicator passed" *ngIf="detail.passedstatus">✓</span>
+                      </td>
+                      <td class="quantity-rejected">
+                        {{ detail.rejectedQuantity }}
+                        <span class="status-indicator rejected" *ngIf="detail.rejectedstatus">✗</span>
+                      </td>
+                      <td class="demanded-party">{{ detail.demandedbyparty }}</td>
+                      <td class="return-party">{{ detail.returnToParty }}</td>
+                      <td class="mrp">₹{{ detail.mrp }}</td>
+                      <td class="batch-number">{{ detail.batchNumber }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="!isReportGenerated">
+    <div class="empty-content">
+      <div class="empty-icon">
+        <i class="ti ti-file-report"></i>
+      </div>
+      <h3>No Report Generated</h3>
+      <p>Select your filters and generate a report to view GRN data by supplier.</p>
+    </div>
+  </div>
+</div>
+  

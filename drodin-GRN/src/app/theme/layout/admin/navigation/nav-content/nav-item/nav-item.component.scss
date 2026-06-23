@@ -1,0 +1,73 @@
+/* Menu Item Bottom Line Styling */
+.nav-item {
+  position: relative;
+  
+  .nav-link {
+    position: relative;
+    transition: all 0.3s ease;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+      transition: width 0.3s ease;
+      border-radius: 1px;
+    }
+    
+    &:hover::after {
+      width: 100%;
+    }
+    
+    &.active::after {
+      width: 100%;
+      background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+      box-shadow: 0 0 8px rgba(102, 126, 234, 0.4);
+    }
+  }
+}
+
+/* Alternative: Simple bottom border */
+.nav-item {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  
+  &:last-child {
+    border-bottom: none;
+  }
+  
+  .nav-link {
+    padding: 12px 15px;
+    border-bottom: 1px solid transparent;
+    transition: all 0.3s ease;
+    
+    &:hover {
+      border-bottom-color: #667eea;
+      background-color: rgba(102, 126, 234, 0.05);
+    }
+    
+    &.active {
+      border-bottom-color: #667eea;
+      background-color: rgba(102, 126, 234, 0.1);
+      color: #667eea;
+      font-weight: 600;
+    }
+  }
+}
+
+/* Dark theme support */
+[data-theme="dark"] .nav-item {
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+  
+  .nav-link {
+    &:hover {
+      background-color: rgba(102, 126, 234, 0.1);
+    }
+    
+    &.active {
+      background-color: rgba(102, 126, 234, 0.15);
+    }
+  }
+} 

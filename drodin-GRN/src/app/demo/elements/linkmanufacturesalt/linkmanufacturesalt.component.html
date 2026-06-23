@@ -1,0 +1,197 @@
+<div class="row">
+  <div class="col-sm-12">
+    <div class="card">
+      <div class="card-body">
+        <h3>Display Report By ({{ selectedOption }}):</h3>
+        <div class="radio-container boxed-style">
+          <form #form="ngForm">
+            <label>
+              <input type="radio" name="choice" value="Manufacturer" [(ngModel)]="selectedOption" />
+              <span>Manufacturer</span>
+            </label>
+            <label>
+              <input type="radio" name="choice" value="Salt" [(ngModel)]="selectedOption" />
+              <span>API</span>
+            </label>
+            <label>
+              <input type="radio" name="choice" value="location" [(ngModel)]="selectedOption" />
+              <span>Stock Location Wise</span>
+            </label>
+          </form>
+        </div>
+        <div class="row" *ngIf="selectedOption === 'Salt'">
+          <div class="col-md-4 dropdown-container mt-3">
+            <label for="saltDropdown" class="dropdown-label">Select API:</label>
+            <select id="saltDropdown" [(ngModel)]="selectedSalt" (change)="onSaltChange($event)" name="saltDropdown"
+              class="custom-dropdown">
+              <option value="" disabled>Select API</option>
+              <option *ngFor="let salt of saltOptions" [value]="salt.saltId">{{ salt.name }}</option>
+            </select>
+          </div>
+          
+        </div>
+        <div *ngIf="selectedOption === 'Salt' && selectedSalt">
+          <h5>Menufacturer List</h5>
+
+          <div class="table-responsive">
+              <table class="table table-bordered table-hover text-start">
+                <thead class="table-dark">
+                  <tr>
+                    
+                    <th scope="col">
+                      Name
+                      <span class="filter-icon" (click)="toggleFilter('name')">
+                        <i class="bi bi-filter"></i>
+                      </span>
+                      <div *ngIf="activeFilter === 'name'" class="filter-popup">
+                        <input type="text" class="form-control form-control-sm" placeholder="Filter Name"
+                          [(ngModel)]="filters.name" />
+                      </div>
+                    </th>
+                    <th scope="col">
+                      Contact Person Detail
+                      <!-- <span class="filter-icon" (click)="toggleFilter('address')">
+                        <i class="bi bi-filter"></i>
+                      </span>
+                      <div *ngIf="activeFilter === 'address'" class="filter-popup">
+                        <input type="text" class="form-control form-control-sm" placeholder="Filter Address"
+                          [(ngModel)]="filters.address" />
+                      </div> -->
+                    </th>
+                    <th scope="col">
+                      Email
+                      <!-- <span class="filter-icon" (click)="toggleFilter('email')">
+                        <i class="bi bi-filter"></i>
+                      </span>
+                      <div *ngIf="activeFilter === 'email'" class="filter-popup">
+                        <input type="text" class="form-control form-control-sm" placeholder="Filter Email"
+                          [(ngModel)]="filters.email" />
+                      </div> -->
+                    </th>
+                    <th scope="col">
+                      Phone Number
+                      <!-- <span class="filter-icon" (click)="toggleFilter('phoneNumber')">
+                        <i class="bi bi-filter"></i>
+                      </span>
+                      <div *ngIf="activeFilter === 'phoneNumber'" class="filter-popup">
+                        <input type="text" class="form-control form-control-sm" placeholder="Filter Phone"
+                          [(ngModel)]="filters.phoneNumber" />
+                      </div> -->
+                    </th>
+                    <th scope="col">Remarks</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let manufacturer of filteredManufacturersBySaltid(); let i = index">
+                    <td class="text-start">{{ manufacturer.name }}</td>
+                    <td class="text-start">{{ manufacturer.address }}</td>
+                    <td class="text-start">{{ manufacturer.email }}</td>
+                    <td class="text-start">{{ manufacturer.phoneNumber }}</td>
+                    <td class="text-start">{{ manufacturer.otherInformation }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+          
+
+        </div>
+        <div class="row" *ngIf="selectedOption === 'Manufacturer'">
+          <div class="col-md-4 dropdown-container mt-3">
+            <label for="ManufacturerDropdown" class="dropdown-label">Select Manufacturer:</label>
+            <select id="ManufacturerDropdown" (change)="onManufacturerChange($event)" [(ngModel)]="selectedManufacturer"
+              name="ManufacturerDropdown" class="custom-dropdown">
+              <option value="" disabled>Select Manufacturer</option>
+              <option *ngFor="let Manufacturer of manufacturers" [value]="Manufacturer.manufacturerId">{{
+                Manufacturer.name }}</option>
+            </select>
+          </div>
+          <!-- <div class="col-md-4 mt-3">
+          <button type="submit" class="btn btn-primary mt-4">Link Selected Menufacturer with Selected Salt</button>
+        </div> -->
+        </div>
+        <div *ngIf="selectedOption === 'Manufacturer' && selectedManufacturer">
+          <h5 class="mt-2">API List</h5>
+          <div class="table-responsive">
+           
+              <table class="table table-bordered table-hover text-start">
+                <thead class="table-dark">
+                  <tr>
+                    <th scope="col">
+                      Name
+                      <span class="filter-icon" (click)="toggleFilter('name')">
+                        <i class="bi bi-filter"></i>
+                      </span>
+                      <div *ngIf="activeFilter === 'name'" class="filter-popup">
+                        <input type="text" class="form-control form-control-sm" placeholder="Filter Name"
+                          [(ngModel)]="filters.name" />
+                      </div>
+                    </th>
+
+
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let manufacturer of filteredSaltByManufactureId(); let i = index"
+                    >
+                    <td class="text-start">{{ manufacturer.name }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            
+          </div>
+        </div>
+        <div class="row" *ngIf="selectedOption === 'location'">
+          <div class="col-md-4 dropdown-container mt-3">
+            <label for="saltDropdown" class="dropdown-label">Select API:</label>
+
+            <select id="saltDropdown" [(ngModel)]="selectedSalt" (change)="onSaltLocationChange($event)"
+              name="saltDropdown" class="custom-dropdown">
+              <option value="" disabled>Select API</option>
+              <option *ngFor="let salt of saltOptions" [value]="salt.saltId">{{ salt.name }}</option>
+            </select>
+          </div>
+          <div *ngIf="selectedOption === 'location' && selectedSalt">
+            <h5>API List</h5>
+            <div class="table-responsive">
+            
+                <table class="table table-bordered table-hover text-start">
+                  <thead class="table-dark">
+                    <tr>
+                      <th scope="col">
+                        Location
+                        <span class="filter-icon" (click)="toggleFilter('name')">
+                          <i class="bi bi-filter"></i>
+                        </span>
+                        <div *ngIf="activeFilter === 'name'" class="filter-popup">
+                          <input type="text" class="form-control form-control-sm" placeholder="Filter Name"
+                            [(ngModel)]="filters.name" />
+                        </div>
+                      </th>
+                      <th scope="col">
+                        Quantity
+                        <span class="filter-icon" (click)="toggleFilter('name')">
+                          <i class="bi bi-filter"></i>
+                        </span>
+                        <div *ngIf="activeFilter === 'name'" class="filter-popup">
+                          <input type="text" class="form-control form-control-sm" placeholder="Filter Name"
+                            [(ngModel)]="filters.name" />
+                        </div>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let stock of filteredsaltStockLocation(); let i = index">
+                      <td class="text-start">{{ stock.locationName }}</td>
+                      <td class="text-start">{{stock.stockQuantity}}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

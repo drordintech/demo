@@ -1,0 +1,280 @@
+<div class="supplier-container">
+  <!-- Header Section -->
+  <div class="supplier-header">
+    <div class="header-content">
+      <div class="header-left">
+        <h5 class="page-title">
+          <i class="bi bi-building me-2"></i>Supplier Management
+        </h5>
+        <p class="page-subtitle">Manage your supplier information and contacts</p>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-primary add-supplier-btn" (click)="openAddSupplierModal()">
+          <i class="bi bi-plus-circle me-2"></i>Add New Supplier
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-section">
+    <div class="row">
+      <div class="col-md-3">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="bi bi-building"></i>
+          </div>
+                     <div class="stat-content">
+             <h3 class="stat-number">{{ Suppliers.length }}</h3>
+             <p class="stat-label">Total Suppliers</p>
+           </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="bi bi-geo-alt"></i>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-number">{{ getUniqueStates().length }}</h3>
+            <p class="stat-label">States Covered</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="bi bi-envelope"></i>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-number">{{ getSuppliersWithEmail().length }}</h3>
+            <p class="stat-label">With Email</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="bi bi-telephone"></i>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-number">{{ getSuppliersWithPhone().length }}</h3>
+            <p class="stat-label">With Phone</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="content-card">
+      <div class="card-header-section">
+        <div class="header-left">
+          <h4 class="card-title">
+            <i class="bi bi-list-ul me-2"></i>Supplier List
+          </h4>
+          <span class="supplier-count">{{ filteredSuppliers().length }} suppliers found</span>
+        </div>
+        <div class="header-right">
+          <div class="search-box">
+            <i class="bi bi-search search-icon"></i>
+            <input type="text" 
+                   class="form-control search-input" 
+                   placeholder="Search suppliers..." 
+                   [(ngModel)]="filters.name" />
+          </div>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <div class="table-responsive">
+          <table class="table table-hover supplier-table">
+            <thead>
+              <tr>
+                <th class="table-header">
+                  <div class="header-content">
+                    <span>Supplier Name</span>
+                    <i class="bi bi-arrow-down-up sort-icon"></i>
+                  </div>
+                </th>
+                <th class="table-header">
+                  <div class="header-content">
+                    <span>State</span>
+                    <i class="bi bi-arrow-down-up sort-icon"></i>
+                  </div>
+                </th>
+                <th class="table-header">Contact Details</th>
+                <th class="table-header">Email</th>
+                <th class="table-header">Phone</th>
+                <th class="table-header">Remarks</th>
+                <th class="table-header actions-header">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let supplier of filteredSuppliers(); let i = index" class="supplier-row">
+                <td class="supplier-name">
+                  <div class="name-content">
+                    <div class="supplier-avatar">
+                      <i class="bi bi-building"></i>
+                    </div>
+                    <div class="supplier-info">
+                      <span class="name">{{ supplier.name }}</span>
+                    </div>
+                  </div>
+                </td>
+                <td class="supplier-state">
+                  <span class="state-badge">{{ supplier.state }}</span>
+                </td>
+                <td class="supplier-address">
+                  <span class="address-text">{{ supplier.address }}</span>
+                </td>
+                <td class="supplier-email">
+                  <a *ngIf="supplier.email" [href]="'mailto:' + supplier.email" class="email-link">
+                    <i class="bi bi-envelope me-1"></i>{{ supplier.email }}
+                  </a>
+                  <span *ngIf="!supplier.email" class="no-email">No email</span>
+                </td>
+                <td class="supplier-phone">
+                  <a *ngIf="supplier.phoneNumber" [href]="'tel:' + supplier.phoneNumber" class="phone-link">
+                    <i class="bi bi-telephone me-1"></i>{{ supplier.phoneNumber }}
+                  </a>
+                  <span *ngIf="!supplier.phoneNumber" class="no-phone">No phone</span>
+                </td>
+                <td class="supplier-remarks">
+                  <span class="remarks-text">{{ supplier.otherInformation || 'No remarks' }}</span>
+                </td>
+                <td class="supplier-actions">
+                  <div class="action-buttons">
+                    <button class="btn btn-sm btn-outline-primary action-btn" (click)="editSuppliers(supplier)" title="Edit Supplier">
+                      <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger action-btn" (click)="deleteSupplier(supplier.supplierID)" title="Delete Supplier">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add/Edit Supplier Modal -->
+  <div class="modal fade" id="addSupplierModal" tabindex="-1" aria-labelledby="addSupplierModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addSupplierModalLabel">
+            <i class="bi bi-building me-2"></i>
+            {{ editingSupplier ? 'Edit Supplier' : 'Add New Supplier' }}
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form #SupplierForm="ngForm" (submit)="editingSupplier ? updateSupplier() : addSupplier()" class="supplier-form">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="name" class="form-label">
+                    <i class="bi bi-building me-1"></i>Supplier Name <span class="text-danger">*</span>
+                  </label>
+                  <input id="name" 
+                         [(ngModel)]="tempSupplierName" 
+                         name="name"
+                         class="form-control custom-input" 
+                         placeholder="Enter supplier name" 
+                         required 
+                         #name="ngModel" />
+                  <div *ngIf="name.invalid && name.touched" class="error-message">
+                    <i class="bi bi-exclamation-circle me-1"></i>Supplier name is required
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="state" class="form-label">
+                    <i class="bi bi-geo-alt me-1"></i>State
+                  </label>
+                  <select id="state" 
+                          [(ngModel)]="tempSupplierState" 
+                          name="state" 
+                          class="form-select custom-dropdown">
+                    <option value="" disabled>Select State</option>
+                    <option *ngFor="let state of statesList" [value]="state">{{ state }}</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="address" class="form-label">
+                <i class="bi bi-geo-alt me-1"></i>Address
+              </label>
+              <textarea id="address" 
+                        [(ngModel)]="tempSupplierAddress"
+                        name="address" 
+                        class="form-control custom-textarea" 
+                        placeholder="Enter supplier address"
+                        rows="3"></textarea>
+            </div>
+            
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="email" class="form-label">
+                    <i class="bi bi-envelope me-1"></i>Email Address
+                  </label>
+                  <input id="email" 
+                         [(ngModel)]="tempSupplierEmail" 
+                         name="email"
+                         type="email"
+                         class="form-control custom-input" 
+                         placeholder="Enter email address" />
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="phoneNumber" class="form-label">
+                    <i class="bi bi-telephone me-1"></i>Phone Number
+                  </label>
+                  <input id="phoneNumber"
+                         [(ngModel)]="tempSupplierphoneNumber" 
+                         name="phoneNumber"
+                         class="form-control custom-input" 
+                         placeholder="Enter phone number" />
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="otherInfo" class="form-label">
+                <i class="bi bi-chat-text me-1"></i>Remarks
+              </label>
+              <textarea id="otherInfo" 
+                        [(ngModel)]="tempSupplierotherInfo"
+                        name="otherInfo" 
+                        class="form-control custom-textarea" 
+                        placeholder="Enter additional information or remarks"
+                        rows="3"></textarea>
+            </div>
+            
+            <div class="form-actions">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                <i class="bi bi-x-circle me-1"></i>Cancel
+              </button>
+              <button type="submit" 
+                      [disabled]="SupplierForm.invalid" 
+                      class="btn btn-primary submit-btn">
+                <i class="bi bi-check-circle me-1"></i>
+                {{ editingSupplier ? 'Update Supplier' : 'Save Supplier' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,62 @@
+/* Custom Scrollbar Styling for Main Menu */
+ng-scrollbar {
+  display: block;
+  width: 100%;
+}
+
+/* Custom scrollbar styling */
+::ng-deep ng-scrollbar {
+  .ng-scrollbar-view {
+    overflow-x: hidden;
+  }
+  
+  .ng-scrollbar-track {
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    width: 8px;
+  }
+  
+  .ng-scrollbar-thumb {
+    background: linear-gradient(135deg, #2196f3 0%, #3d8bfd 100%);
+    border-radius: 10px;
+    width: 8px;
+    transition: all 0.3s ease;
+  }
+  
+  .ng-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #1c76da 0%, #2d7dd2 100%);
+    width: 10px;
+  }
+  
+  .ng-scrollbar-track:hover {
+    background-color: rgba(0, 0, 0, 0.15);
+  }
+}
+
+/* Ensure proper height and overflow */
+.navbar-content {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Smooth scrolling */
+.navbar-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.navbar-content::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+}
+
+.navbar-content::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #2196f3 0%, #3d8bfd 100%);
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+
+.navbar-content::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #1c76da 0%, #2d7dd2 100%);
+  width: 10px;
+}

@@ -1,0 +1,175 @@
+.chart-income {
+  .active {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    outline: 0px;
+    border: 0px;
+    margin: 0px;
+    cursor: pointer;
+    user-select: none;
+    vertical-align: middle;
+    appearance: none;
+    text-decoration: none;
+    text-transform: capitalize;
+    font-family: Roboto, sans-serif;
+    font-size: 0.8125rem;
+    line-height: 1.75;
+    min-width: 64px;
+    padding: 4px 10px;
+    transition:
+      background-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms,
+      box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms,
+      border-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms,
+      color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
+    background-color: rgb(33, 150, 243);
+    box-shadow: none;
+    font-weight: 500;
+    border-radius: 4px;
+    color: inherit;
+  }
+}
+
+.performance-metrics {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  
+  .metrics-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    
+    .metrics-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      
+      .metrics-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        
+        i {
+          font-size: 1.5rem;
+          color: white;
+        }
+      }
+      
+      .metrics-content {
+        .metrics-value {
+          font-size: 2rem;
+          font-weight: 700;
+          color: #2c3e50;
+          margin: 0;
+          line-height: 1;
+        }
+        
+        .metrics-label {
+          color: #6c757d;
+          font-size: 0.9rem;
+          font-weight: 500;
+          margin: 0.25rem 0 0 0;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+      }
+    }
+    
+    .metrics-controls {
+      .btn-group {
+        .btn {
+          border-radius: 8px;
+          padding: 0.5rem 1rem;
+          font-size: 0.85rem;
+          font-weight: 500;
+          transition: all 0.3s ease;
+          
+          &:hover {
+            transform: translateY(-2px);
+          }
+          
+          &.btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #667eea;
+          }
+          
+          &.btn-outline-primary {
+            border-color: #667eea;
+            color: #667eea;
+            
+            &:hover {
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              border-color: #667eea;
+              color: white;
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  .chart-wrapper {
+    flex: 1;
+    min-height: 200px;
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .performance-metrics {
+    .metrics-header {
+      flex-direction: column;
+      gap: 1rem;
+      align-items: flex-start;
+      
+      .metrics-controls {
+        width: 100%;
+        
+        .btn-group {
+          width: 100%;
+          display: flex;
+          
+          .btn {
+            flex: 1;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Animation for metrics value changes
+.metrics-value {
+  transition: all 0.3s ease;
+}
+
+// Custom scrollbar for chart
+.chart-wrapper {
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 2px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 2px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+  }
+}

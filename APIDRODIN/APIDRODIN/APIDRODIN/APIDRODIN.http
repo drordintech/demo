@@ -1,0 +1,6 @@
+@APIDRODIN_HostAddress = http://localhost:5296
+
+GET {{APIDRODIN_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

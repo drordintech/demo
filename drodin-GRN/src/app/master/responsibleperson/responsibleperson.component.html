@@ -1,0 +1,176 @@
+<div class="responsibleperson-container">
+  <!-- Header Section -->
+  <div class="responsibleperson-header">
+    <div class="header-content">
+      <div class="header-left">
+        <h2 class="page-title">
+          <i class="bi bi-person-badge me-2"></i>Responsible Person Management
+        </h2>
+        <p class="page-subtitle">Manage your responsible persons and their information</p>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-primary add-responsibleperson-btn" (click)="openAddresponsiblepersonModal()">
+          <i class="bi bi-plus-circle me-2"></i>Add New Person
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-section">
+    <div class="row">
+      <div class="col-md-4">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="bi bi-person-badge"></i>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-number">{{ responsiblepersons.length }}</h3>
+            <p class="stat-label">Total Persons</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="bi bi-check-circle"></i>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-number">{{ getActivePersons().length }}</h3>
+            <p class="stat-label">Active Persons</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="bi bi-people"></i>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-number">{{ getUniqueNames().length }}</h3>
+            <p class="stat-label">Unique Names</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="content-card">
+      <div class="card-header-section">
+        <div class="header-left">
+          <h4 class="card-title">
+            <i class="bi bi-list-ul me-2"></i>Responsible Person List
+          </h4>
+          <span class="responsibleperson-count">{{ filteredresponsibleperson().length }} persons found</span>
+        </div>
+        <div class="header-right">
+          <div class="search-box">
+            <i class="bi bi-search search-icon"></i>
+            <input type="text" 
+                   class="form-control search-input" 
+                   placeholder="Search persons..." 
+                   [(ngModel)]="filters.name" />
+          </div>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <div class="table-responsive">
+          <table class="table table-hover responsibleperson-table">
+            <thead>
+              <tr>
+                <th class="table-header">
+                  <div class="header-content">
+                    <span>Person Name</span>
+                    <i class="bi bi-arrow-down-up sort-icon"></i>
+                  </div>
+                </th>
+                <th class="table-header">Status</th>
+                <th class="table-header">Created Date</th>
+                <th class="table-header actions-header">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let responsibleperson of filteredresponsibleperson(); let i = index" class="responsibleperson-row">
+                <td class="responsibleperson-name">
+                  <div class="name-content">
+                    <div class="responsibleperson-avatar">
+                      <i class="bi bi-person-badge"></i>
+                    </div>
+                    <div class="responsibleperson-info">
+                      <span class="name">{{ responsibleperson.name }}</span>
+                    </div>
+                  </div>
+                </td>
+                <td class="responsibleperson-status">
+                  <span class="status-badge active">Active</span>
+                </td>
+                <td class="responsibleperson-date">
+                  <span class="date-text">{{ getCurrentDate() }}</span>
+                </td>
+                <td class="responsibleperson-actions">
+                  <div class="action-buttons">
+                    <button class="btn btn-sm btn-outline-primary action-btn" (click)="editresponsibleperson(responsibleperson)" title="Edit Person">
+                      <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger action-btn" (click)="deleteresponsibleperson(responsibleperson.id)" title="Delete Person">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add/Edit Responsible Person Modal -->
+  <div class="modal fade" id="addresponsiblepersonModal" tabindex="-1" aria-labelledby="addresponsiblepersonModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addresponsiblepersonModalLabel">
+            <i class="bi bi-person-badge me-2"></i>
+            {{ editingresponsibleperson ? 'Edit Responsible Person' : 'Add New Responsible Person' }}
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form #responsiblepersonForm="ngForm" (submit)="editingresponsibleperson ? updateresponsibleperson() : addresponsibleperson()" class="responsibleperson-form">
+            <div class="form-group">
+              <label for="name" class="form-label">
+                <i class="bi bi-person me-1"></i>Person Name <span class="text-danger">*</span>
+              </label>
+              <input id="name" 
+                     [(ngModel)]="tempresponsiblepersonName" 
+                     name="name"
+                     class="form-control custom-input" 
+                     placeholder="Enter person name" 
+                     required 
+                     #name="ngModel" />
+              <div *ngIf="name.invalid && name.touched" class="error-message">
+                <i class="bi bi-exclamation-circle me-1"></i>Person name is required
+              </div>
+            </div>
+            
+            <div class="form-actions">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                <i class="bi bi-x-circle me-1"></i>Cancel
+              </button>
+              <button type="submit" 
+                      [disabled]="responsiblepersonForm.invalid" 
+                      class="btn btn-primary submit-btn">
+                <i class="bi bi-check-circle me-1"></i>
+                {{ editingresponsibleperson ? 'Update Person' : 'Save Person' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

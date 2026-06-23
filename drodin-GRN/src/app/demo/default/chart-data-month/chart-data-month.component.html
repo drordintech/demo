@@ -1,0 +1,38 @@
+<div class="performance-metrics">
+  <div class="metrics-header">
+    <div class="metrics-info">
+      <div class="metrics-icon">
+        <i class="ti ti-gauge"></i>
+      </div>
+      <div class="metrics-content">
+        <h3 class="metrics-value">{{ amount }}%</h3>
+        <p class="metrics-label">Performance Score</p>
+      </div>
+    </div>
+    <div class="metrics-controls">
+      <div class="btn-group btn-group-sm">
+        <button class="btn" [ngClass]="btnActive === 'month' ? 'btn-primary' : 'btn-outline-primary'" (click)="toggleActive('month')">
+          Month
+        </button>
+        <button class="btn" [ngClass]="btnActive === 'year' ? 'btn-primary' : 'btn-outline-primary'" (click)="toggleActive('year')">
+          Year
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <div class="chart-wrapper">
+    <apx-chart
+      [series]="chartOptions.series"
+      [chart]="chartOptions.chart"
+      [dataLabels]="chartOptions.dataLabels"
+      [xaxis]="chartOptions.xaxis"
+      [yaxis]="chartOptions.yaxis"
+      [colors]="chartOptions.colors"
+      [stroke]="chartOptions.stroke"
+      [fill]="chartOptions.fill"
+      [grid]="chartOptions.grid"
+      [tooltip]="chartOptions.tooltip"
+    ></apx-chart>
+  </div>
+</div>

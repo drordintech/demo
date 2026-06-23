@@ -1,0 +1,29 @@
+.custom-switch {
+    width: 50px;
+    height: 25px;
+    background: #ccc;
+    border-radius: 25px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+  
+  .custom-switch.active {
+    background: #4caf50;
+  }
+  
+  .switch-handle {
+    width: 23px;
+    height: 23px;
+    background: white;
+    border-radius: 50%;
+    position: absolute;
+    top: 1px;
+    left: 1px;
+    transition: left 0.3s ease;
+  }
+  
+  .custom-switch.active .switch-handle {
+    left: 26px;
+  }
+  

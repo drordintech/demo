@@ -1,0 +1,286 @@
+
+.bg-purple-400 {
+  background: #3d8bfd;
+  color: white;}
+
+  .bg-blue-400 {  background: #3d8bfd;
+      color: white;}
+      
+      
+      .boxed-style label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #2196f3;
+  border-radius: 5px;
+  padding: 8px 12px;
+  margin-right: 10px;
+  font-size: 14px;
+  color: #2196f3;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.boxed-style label input[type="radio"] {
+  display: none; /* Hide the default radio button */
+}
+
+.boxed-style label span {
+  padding-left: 8px;
+}
+
+.boxed-style label:hover {
+  background-color: #f0f8ff;
+}
+
+.boxed-style label input[type="radio"]:checked + span {
+  font-weight: bold;
+  color: white;
+  background-color: #2196f3;
+  padding: 4px 8px;
+  border-radius: 3px;
+}
+
+/* Container for the dropdown */
+.dropdown-container {
+  display: flex;
+  flex-direction: column;
+  margin-top: 10px;
+}
+
+/* Label styling */
+.dropdown-label {
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: #333;
+}
+
+/* Custom dropdown styling */
+.custom-dropdown {
+  padding: 8px 12px;
+  border: 2px solid #2196f3;
+  border-radius: 5px;
+  font-size: 14px;
+  color: #333;
+  background-color: #fff;
+  outline: none;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+}
+
+/* Hover effect */
+.custom-dropdown:hover {
+  border-color: #2196f3;
+}
+
+/* Focus effect */
+.custom-dropdown:focus {
+  border-color: #2196f3;
+  // box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+/* Option styling */
+.custom-dropdown option {
+  padding: 5px;
+  font-size: 14px;
+}
+
+/* Table Container */
+.table {
+  margin-top: 20px;
+  border-collapse: collapse;
+  font-size: 16px;
+}
+
+/* Table Header Styling */
+// .table thead th {
+//   background-color: #673ab7; /* Dark header */
+//   color: white;
+//   font-weight: bold;
+//   text-transform: uppercase;
+//   padding: 10px;
+//   text-align: center;
+// }
+
+/* Table Cell Styling */
+.table tbody td {
+  padding: 10px;
+  vertical-align: middle;
+  border: 1px solid #ddd; /* Light border for table */
+  text-align: center;
+}
+
+/* Hover Effect on Rows */
+.table tbody tr:hover {
+  background-color: #f1f1f1; /* Light gray hover background */
+  transition: background-color 0.3s ease;
+}
+
+/* Alternate Row Colors */
+.bg-light {
+  background-color: #f9f9f9 !important; /* Light gray */
+}
+
+.bg-white {
+  background-color: #ffffff !important; /* White */
+}
+
+/* Responsive Table */
+@media (max-width: 768px) {
+  .table {
+    font-size: 14px;
+  }
+  .table thead th, .table tbody td {
+    padding: 8px;
+  }
+}
+/* Style for the filter icon */
+.filter-icon {
+  cursor: pointer;
+  margin-left: 5px;
+  color: #fff;
+}
+
+.filter-icon i {
+  font-size: 16px;
+}
+
+/* Popup container for filters */
+.filter-popup {
+  position: absolute;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.2);
+  padding: 5px;
+  z-index: 10;
+  margin-top: 5px;
+  width: 150px;
+}
+
+/* Input styling in popup */
+.filter-popup input {
+  width: 100%;
+  font-size: 14px;
+  padding: 4px;
+}
+
+.mt-4 {
+  margin-top: 1.8rem !important;
+}
+
+.bi::before, [class^="bi-"]::before, [class*=" bi-"]::before {
+  color: #2196f3;
+}
+
+
+
+.table-dark {
+  --bs-table-color: #2196f3;
+  --bs-table-bg: #e3f2fd;
+  --bs-table-border-color: #e3f2fd;
+  --bs-table-striped-bg: #2c3034;
+  --bs-table-striped-color: #fff;
+  --bs-table-active-bg: #373b3e;
+  --bs-table-active-color: #2196f3;
+  --bs-table-hover-bg: #323539;
+  --bs-table-hover-color: #fff;
+  color: var(--bs-table-color);
+  border-color: var(--bs-table-border-color);
+}
+
+.custom-striped tbody tr:nth-child(even) {
+  background-color: #362a2a;
+  /* Light gray for even rows */
+}
+
+.custom-striped tbody tr:nth-child(odd) {
+  background-color: #ffffff;
+  /* White for odd rows */
+}
+
+.bg-purple-400 {
+  background: #3d8bfd;
+  color: white;
+}
+
+.bg-blue-400 {
+  background: #3d8bfd;
+  color: white;
+}
+
+.card-body {
+  padding: 10px;
+}
+
+/* Style for the filter icon */
+.filter-icon {
+  cursor: pointer;
+  margin-left: 5px;
+  color: #000;
+}
+
+.filter-icon i {
+  font-size: 16px;
+}
+
+/* Popup container for filters */
+.filter-popup {
+  position: absolute;
+  background-color: #fdfdfd;
+  border: 1px solid #fefdfd;
+  box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.2);
+  padding: 5px;
+  z-index: 10;
+  margin-top: 5px;
+  width: 150px;
+}
+
+/* Input styling in popup */
+.filter-popup input {
+  width: 100%;
+  font-size: 14px;
+  padding: 4px;
+}
+
+.table {
+  --bs-table-border-color:#ffffff;
+  --bs-table-bg: #ffffff;}
+
+
+  // .actions-column {
+  //   min-width: 300px; /* Minimum width for desktop */
+  //   max-width: 350px; /* Prevent column from expanding too much */
+  //   width: 300px; /* Default width */
+  //   word-wrap: break-word; /* Prevent overflow of text */
+  // }
+  
+
+  .text-danger{
+    color: red;
+  }
+
+  /* Container for button and tooltip */
+.hover-text {
+  position: relative; /* To position the tooltip relative to the button */
+}
+
+/* Initially hide the tooltip */
+.tooltip-text {
+  display: none;
+  position: absolute; /* Position the tooltip absolutely inside the button */
+  background-color: rgba(0, 0, 255, 0.7); /* Blue background with some transparency */
+  color: white; /* White text */
+  padding: 5px;
+  border-radius: 5px;
+  top: -50%; /* Position the tooltip below the button */
+  left: 50%; /* Center the tooltip */
+  transform: translateX(-50%); /* Adjust to center it */
+  white-space: nowrap; /* Prevent the text from wrapping */
+  z-index: 10; /* Ensure the tooltip appears on top of other elements */
+}
+
+/* Show the tooltip when hovering over the button */
+.hover-text:hover .tooltip-text {
+  display: block;
+}

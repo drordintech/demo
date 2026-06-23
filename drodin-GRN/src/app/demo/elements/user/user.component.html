@@ -1,0 +1,218 @@
+<div class="user-container">
+  <!-- Header Section -->
+  <div class="user-header">
+    <div class="header-content">
+      <div class="header-left">
+        <h2 class="page-title">
+          <i class="bi bi-people me-2"></i>User Management
+        </h2>
+        <p class="page-subtitle">Manage your system users and their access</p>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-primary add-user-btn" (click)="openAdduserModal()">
+          <i class="bi bi-plus-circle me-2"></i>Add New User
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-section">
+    <div class="row">
+      <div class="col-md-3">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="bi bi-people"></i>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-number">{{ users.length }}</h3>
+            <p class="stat-label">Total Users</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="bi bi-check-circle"></i>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-number">{{ getActiveUsers().length }}</h3>
+            <p class="stat-label">Active Users</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="bi bi-x-circle"></i>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-number">{{ getInactiveUsers().length }}</h3>
+            <p class="stat-label">Inactive Users</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="bi bi-envelope"></i>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-number">{{ getUniqueEmails().length }}</h3>
+            <p class="stat-label">Unique Emails</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="content-card">
+      <div class="card-header-section">
+        <div class="header-left">
+          <h4 class="card-title">
+            <i class="bi bi-list-ul me-2"></i>User List
+          </h4>
+          <span class="user-count">{{ filtereduser().length }} users found</span>
+        </div>
+        <div class="header-right">
+          <div class="search-box">
+            <i class="bi bi-search search-icon"></i>
+            <input type="text" 
+                   class="form-control search-input" 
+                   placeholder="Search users..." 
+                   [(ngModel)]="filters.name" />
+          </div>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <div class="table-responsive">
+          <table class="table table-hover user-table">
+            <thead>
+              <tr>
+                <th class="table-header">
+                  <div class="header-content">
+                    <span>User Email</span>
+                    <i class="bi bi-arrow-down-up sort-icon"></i>
+                  </div>
+                </th>
+                <th class="table-header">Status</th>
+                <th class="table-header">Last Login</th>
+                <th class="table-header actions-header">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let user of filtereduser(); let i = index" class="user-row">
+                <td class="user-email">
+                  <div class="email-content">
+                    <div class="user-avatar">
+                      <i class="bi bi-person"></i>
+                    </div>
+                    <div class="user-info">
+                      <span class="email">{{ user.emailAddress }}</span>
+                    </div>
+                  </div>
+                </td>
+                <td class="user-status">
+                  <div class="status-toggle">
+                    <label class="switch">
+                      <input type="checkbox" 
+                             [checked]="user.isActive" 
+                             (change)="toggleUserActive(user)"
+                             class="status-checkbox" />
+                      <span class="slider round"></span>
+                    </label>
+                    <span class="status-text" [class]="user.isActive ? 'active' : 'inactive'">
+                      {{ user.isActive ? 'Active' : 'Inactive' }}
+                    </span>
+                  </div>
+                </td>
+                <td class="user-lastlogin">
+                  <span class="lastlogin-text">{{ getLastLoginDate() }}</span>
+                </td>
+                <td class="user-actions">
+                  <div class="action-buttons">
+                    <button class="btn btn-sm btn-outline-primary action-btn" (click)="edituser(user)" title="Edit User">
+                      <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger action-btn" (click)="deleteuser(user.userId)" title="Delete User">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-info action-btn" (click)="linkMenufacturer(user.userId)" title="Link Manufacturer">
+                      <i class="bi bi-link"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add/Edit User Modal -->
+  <div class="modal fade" id="adduserModal" tabindex="-1" aria-labelledby="adduserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="adduserModalLabel">
+            <i class="bi bi-person-plus me-2"></i>
+            {{ editinguser ? 'Edit User' : 'Add New User' }}
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form #userForm="ngForm" (submit)="editinguser ? updateuser() : adduser()" class="user-form">
+            <div class="form-group">
+              <label for="email" class="form-label">
+                <i class="bi bi-envelope me-1"></i>Email Address <span class="text-danger">*</span>
+              </label>
+              <input id="email" 
+                     [(ngModel)]="tempuserName" 
+                     name="email"
+                     type="email"
+                     class="form-control custom-input" 
+                     placeholder="Enter email address" 
+                     required 
+                     #email="ngModel" />
+              <div *ngIf="email.invalid && email.touched" class="error-message">
+                <i class="bi bi-exclamation-circle me-1"></i>Valid email address is required
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">
+                <i class="bi bi-toggle-on me-1"></i>User Status
+              </label>
+              <div class="status-option">
+                <label class="switch">
+                  <input type="checkbox" 
+                         [(ngModel)]="newuser.isActive" 
+                         name="isActive"
+                         class="status-checkbox" />
+                  <span class="slider round"></span>
+                </label>
+                <span class="status-label">{{ newuser.isActive ? 'Active' : 'Inactive' }}</span>
+              </div>
+            </div>
+            
+            <div class="form-actions">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                <i class="bi bi-x-circle me-1"></i>Cancel
+              </button>
+              <button type="submit" 
+                      [disabled]="userForm.invalid" 
+                      class="btn btn-primary submit-btn">
+                <i class="bi bi-check-circle me-1"></i>
+                {{ editinguser ? 'Update User' : 'Save User' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

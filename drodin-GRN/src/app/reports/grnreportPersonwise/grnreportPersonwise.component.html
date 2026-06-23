@@ -1,0 +1,241 @@
+<div class="grn-report-container">
+  <!-- Report Header -->
+  <div class="report-header">
+    <div class="header-content">
+      <div class="header-left">
+        <h1 class="report-title">
+          <i class="bi bi-person-badge-fill"></i>
+          GRN Report Person Wise
+        </h1>
+        <p class="report-subtitle">Generate comprehensive GRN reports filtered by responsible person</p>
+      </div>
+      <div class="header-right">
+        <div class="date-display">
+          <i class="bi bi-calendar3"></i>
+          {{ dateFrom && dateTo ? (dateFrom + ' to ' + dateTo) : 'Select Date Range' }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="filters-section">
+    <div class="filters-card">
+      <div class="filters-header">
+        <h4><i class="bi bi-funnel-fill"></i> Report Filters</h4>
+      </div>
+      <div class="filters-body">
+        <div class="row">
+          <div class="col-md-4">
+            <div class="form-group">
+              <label class="form-label">
+                <i class="bi bi-person-badge"></i> Select Responsible Person
+              </label>
+              <select 
+                class="modern-select form-select" 
+                [(ngModel)]="selectedResponsiblePerson"
+                [class.is-invalid]="showPersonError">
+                <option value="" disabled>Select a Responsible Person</option>
+                <option value="-2">All Responsible Person</option>
+                <option *ngFor="let rp of ResponsiblePersons" [value]="rp.id">
+                  {{ rp.name }}
+                </option>
+              </select>
+              <div *ngIf="showPersonError" class="invalid-feedback">
+                Please select a responsible person
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="form-group">
+              <label class="form-label">
+                <i class="bi bi-calendar-date"></i> Date From
+              </label>
+              <input 
+                type="date" 
+                class="modern-input form-control" 
+                [(ngModel)]="dateFrom"
+                [class.is-invalid]="showDateFromError">
+              <div *ngIf="showDateFromError" class="invalid-feedback">
+                Please select start date
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="form-group">
+              <label class="form-label">
+                <i class="bi bi-calendar-date"></i> Date To
+              </label>
+              <input 
+                type="date" 
+                class="modern-input form-control" 
+                [(ngModel)]="dateTo"
+                [class.is-invalid]="showDateToError">
+              <div *ngIf="showDateToError" class="invalid-feedback">
+                Please select end date
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="filters-actions">
+          <button 
+            class="generate-btn btn" 
+            (click)="getReport()"
+            [disabled]="isLoading">
+            <i class="bi bi-bar-chart-line"></i> 
+            {{ isLoading ? 'Generating...' : 'Generate Report' }}
+          </button>
+          <button 
+            *ngIf="isReportGenerated" 
+            class="print-btn btn" 
+            (click)="getPrint()">
+            <i class="bi bi-printer"></i> Print Report
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results Section -->
+  <div class="results-section" *ngIf="isReportGenerated">
+    <div class="results-header">
+      <div class="results-info">
+        <h4><i class="bi bi-list-ul"></i> Report Results</h4>
+        <div class="results-summary">
+          <div class="summary-item">
+            <i class="bi bi-building"></i>
+            <span><strong>{{ groupedGrnList.length }}</strong> Suppliers</span>
+          </div>
+          <div class="summary-item">
+            <i class="bi bi-file-text"></i>
+            <span><strong>{{ getTotalGrns() }}</strong> GRNs</span>
+          </div>
+          <div class="summary-item">
+            <i class="bi bi-calendar-range"></i>
+            <span>Period: <strong>{{ dateFrom | date:'MMM dd' }} - {{ dateTo | date:'MMM dd, yyyy' }}</strong></span>
+          </div>
+          <div class="summary-item">
+            <i class="bi bi-person-badge"></i>
+            <span>Person: <strong>{{ getSelectedPersonName() }}</strong></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="suppliers-accordion" *ngIf="groupedGrnList.length > 0">
+      <div class="supplier-card" *ngFor="let group of groupedGrnList; let i = index">
+        <div class="supplier-header" (click)="toggleSupplierExpansion(i)">
+          <div class="supplier-info">
+            <div class="supplier-icon">
+              <i class="bi bi-building"></i>
+            </div>
+            <div class="supplier-details">
+              <h5 class="supplier-name">{{ group.supplierName }}</h5>
+              <div class="supplier-stats">
+                <div class="stat-item">
+                  <i class="bi bi-file-text"></i>
+                  <span>{{ group.grns.length }} GRNs</span>
+                </div>
+                <div class="stat-item">
+                  <i class="bi bi-calendar3"></i>
+                  <span>{{ getSupplierDateRange(group) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="supplier-actions">
+            <i class="bi bi-chevron-down toggle-icon" 
+               [class.rotated]="expandedSuppliers.has(i)"></i>
+          </div>
+        </div>
+
+        <div class="grn-list" [class.expanded]="expandedSuppliers.has(i)">
+          <div class="grn-item" *ngFor="let grn of group.grns; let j = index">
+            <div class="grn-header" (click)="toggleGrnExpansion(i, j)">
+              <div class="grn-info">
+                <div class="grn-number">
+                  <i class="bi bi-file-earmark-text"></i>
+                  {{ grn.grnNumber }}
+                </div>
+                <div class="grn-meta">
+                  <div class="grn-date">
+                    <i class="bi bi-calendar"></i>
+                    {{ grn.createdAt | date:'MMM dd, yyyy' }}
+                  </div>
+                  <div class="grn-status" [class]="'status-' + grn.grnStatus.toLowerCase()">
+                    <i class="bi bi-circle-fill"></i>
+                    {{ grn.grnStatus }}
+                  </div>
+                </div>
+              </div>
+              <div class="grn-actions">
+                <i class="bi bi-chevron-down toggle-icon" 
+                   [class.rotated]="expandedGrns.has(i + '-' + j)"></i>
+              </div>
+            </div>
+
+            <div class="grn-details" [class.expanded]="expandedGrns.has(i + '-' + j)">
+              <div class="table-container">
+                <table class="modern-table table">
+                  <thead>
+                    <tr>
+                      <th class="product-col">Product</th>
+                      <th colspan="2">Quantity (Party)</th>
+                      <th colspan="2">Quantity (Received)</th>
+                      <th>Demanded By Party</th>
+                      <th>Return To Party</th>
+                      <th>MRP</th>
+                      <th>Batch No</th>
+                    </tr>
+                    <tr>
+                      <th></th>
+                      <th>As per Party</th>
+                      <th>Received</th>
+                      <th>Passed</th>
+                      <th>Rejected</th>
+                      <th></th>
+                      <th></th>
+                      <th></th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let detail of grn.grndetails">
+                      <td class="product-name">{{ detail.productName }}</td>
+                      <td>{{ detail.quantityAsPerParty }}</td>
+                      <td>{{ detail.receivedQuantity }}</td>
+                      <td>
+                        {{ detail.passedQuantity }}
+                        <span class="status-indicator passed" *ngIf="detail.passedstatus">✓</span>
+                      </td>
+                      <td>
+                        {{ detail.rejectedQuantity }}
+                        <span class="status-indicator rejected" *ngIf="detail.rejectedstatus">✗</span>
+                      </td>
+                      <td>{{ detail.demandedbyparty }}</td>
+                      <td>{{ detail.returnToParty }}</td>
+                      <td>₹{{ detail.mrp }}</td>
+                      <td>{{ detail.batchNumber }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="isReportGenerated && groupedGrnList.length === 0">
+    <div class="empty-content">
+      <div class="empty-icon">
+        <i class="bi bi-inbox"></i>
+      </div>
+      <h3>No Data Found</h3>
+      <p>No GRN records found for the selected criteria. Try adjusting your filters.</p>
+    </div>
+  </div>
+</div>
+  

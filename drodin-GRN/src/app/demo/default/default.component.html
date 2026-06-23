@@ -1,0 +1,288 @@
+<!-- Modern Dashboard Layout -->
+<div class="modern-dashboard">
+  <!-- Header Section -->
+  <div class="dashboard-header">
+    <div class="header-content">
+      <div class="header-left">
+        <h1 class="dashboard-title">
+          <i class="ti ti-dashboard me-3"></i>Analytics Dashboard
+        </h1>
+        <p class="dashboard-subtitle">Real-time insights and performance metrics</p>
+        <div class="filter-summary" *ngIf="selectedSupplier || selectedDateFrom || selectedDateTo">
+          <i class="ti ti-filter me-1"></i>
+          <span>{{ getFilterSummary() }}</span>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="date-display">
+          <i class="ti ti-calendar me-2"></i>
+          <span>{{ currentDate | date:'EEEE, MMMM d, y' }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter Section -->
+  <div class="filter-section">
+    <div class="filter-card modern-card">
+      <div class="filter-header">
+        <h5><i class="ti ti-filter me-2"></i>Dashboard Filters</h5>
+        <p class="filter-subtitle">Filter analytics data by supplier and date range</p>
+      </div>
+      <div class="filter-body">
+        <form [formGroup]="filterForm" (ngSubmit)="onFilterChange()">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label for="supplier" class="form-label">
+                <i class="ti ti-building me-1"></i>Supplier
+              </label>
+              <select 
+                id="supplier" 
+                class="form-select" 
+                formControlName="supplier"
+                [disabled]="isLoadingSuppliers">
+                <option value="">
+                  {{ isLoadingSuppliers ? 'Loading suppliers...' : 'All Suppliers' }}
+                </option>
+                <option 
+                  *ngFor="let supplier of suppliers" 
+                  [value]="supplier.supplierID">
+                  {{ supplier.name }}
+                </option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label for="dateFrom" class="form-label">
+                <i class="ti ti-calendar me-1"></i>From Date
+              </label>
+              <input 
+                type="date" 
+                id="dateFrom" 
+                class="form-control" 
+                formControlName="dateFrom">
+            </div>
+            <div class="col-md-3">
+              <label for="dateTo" class="form-label">
+                <i class="ti ti-calendar me-1"></i>To Date
+              </label>
+              <input 
+                type="date" 
+                id="dateTo" 
+                class="form-control" 
+                formControlName="dateTo">
+            </div>
+            <div class="col-md-2">
+              <label class="form-label">&nbsp;</label>
+              <div class="d-grid">
+                <button 
+                  type="submit" 
+                  class="btn btn-primary btn-sm"
+                  (click)="getReport()">
+                  <i class="ti ti-search me-1"></i>Search
+                </button>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Report Results Section -->
+  <div class="report-section" *ngIf="isReportGenerated">
+    <div class="report-card modern-card">
+      <div class="report-header">
+        <h5><i class="ti ti-file-report me-2"></i>GRN Report Results</h5>
+        <div class="report-summary">
+          <span class="badge bg-primary">{{ groupedGrnList.length }} Suppliers</span>
+          <span class="badge bg-secondary">{{ grnList.length }} Total GRNs</span>
+          <span class="badge bg-warning">{{ getTotalPendingCount() }} Pending</span>
+          <span class="badge bg-success">{{ getTotalCompletedCount() }} Completed</span>
+          <span class="badge bg-info">{{ selectedDateFrom | date:'MMM dd' }} - {{ selectedDateTo | date:'MMM dd, yyyy' }}</span>
+        </div>
+      </div>
+      <div class="report-body">
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>Supplier Name</th>
+                <th>GRN Count</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let group of groupedGrnList">
+                <td>
+                  <strong>{{ group.supplierName }}</strong>
+                </td>
+                <td>
+                  <div class="grn-status-summary">
+                    <span class="badge bg-secondary me-1">{{ group.totalCount }} Total</span>
+                    <span class="badge bg-warning me-1">{{ group.pendingCount }} Pending</span>
+                    <span class="badge bg-success">{{ group.completedCount }} Completed</span>
+                  </div>
+                </td>
+                <td>
+                  <button 
+                    class="btn btn-sm btn-outline-primary"
+                    (click)="group.isExpanded = !group.isExpanded">
+                    <i class="ti" [ngClass]="group.isExpanded ? 'ti-chevron-up' : 'ti-chevron-down'"></i>
+                    {{ group.isExpanded ? 'Hide' : 'Show' }} Details
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- Expanded GRN Details -->
+        <div class="grn-details" *ngFor="let group of groupedGrnList">
+          <div class="grn-detail-section" [class.expanded]="group.isExpanded">
+            <h6 class="detail-header">{{ group.supplierName }} - GRN Details</h6>
+            <div class="table-responsive">
+              <table class="table table-sm table-striped">
+                <thead>
+                  <tr>
+                    <th>GRN Number</th>
+                    <th>Created Date</th>
+                    <th>Status</th>
+                    <th>Total Products</th>
+                    <th>Total Quantity</th>
+                    <th>Rejected Quantity</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let grn of group.grns">
+                    <td>{{ grn.grnNumber }}</td>
+                    <td>{{ grn.createdAt | date:'MMM dd, yyyy' }}</td>
+                    <td>
+                      <span class="badge" [ngClass]="grn.grnStatus?.trim() === 'Complete' ? 'bg-success' : 'bg-warning'">
+                        {{ grn.grnStatus }}
+                      </span>
+                    </td>
+                    <td>{{ grn.grndetails?.length || 0 }}</td>
+                    <td>{{ getTotalQuantity(grn) }}</td>
+                    <td>
+                      <span class="text-danger">{{ getRejectedQuantity(grn) }}</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Row -->
+  <div class="charts-row">
+    <div class="row g-4">
+      <!-- State Wise Rejected Quantity Report - Modernized -->
+      <div class="col-xl-6 col-lg-6">
+        <div class="chart-card modern-card">
+          <div class="chart-header">
+            <div class="chart-title">
+              <i class="ti ti-map-pin me-2"></i>
+              <h4>State-wise Rejection Analysis</h4>
+            </div>
+            <div class="chart-actions">
+              <div class="chart-filters">
+                <select class="form-select form-select-sm">
+                  <option>Last 30 Days</option>
+                  <option>Last 90 Days</option>
+                  <option>Last Year</option>
+                </select>
+              </div>
+              <button class="btn btn-sm btn-outline-primary">
+                <i class="ti ti-download"></i>
+              </button>
+            </div>
+          </div>
+          <div class="chart-body">
+            <div class="chart-container">
+              <google-chart 
+                [type]="type" 
+                [data]="rejectedstate" 
+                [options]="modernOptions" 
+                [width]="width" 
+                [height]="height">
+              </google-chart>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Products Chart - Modernized -->
+      <div class="col-xl-6 col-lg-6">
+        <div class="chart-card modern-card">
+          <div class="chart-header">
+            <div class="chart-title">
+              <i class="ti ti-package me-2"></i>
+              <h4>Top Returned Products</h4>
+            </div>
+            <div class="chart-actions">
+              <button class="btn btn-sm btn-outline-primary">
+                <i class="ti ti-download"></i>
+              </button>
+            </div>
+          </div>
+          <div class="chart-body">
+            <div class="chart-container">
+              <google-chart 
+                [type]="type" 
+                [data]="top10rejectedproducts" 
+                [options]="modernOptionsReturn" 
+                [width]="width" 
+                [height]="height">
+              </google-chart>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions Row -->
+  <div class="actions-row">
+    <div class="row g-4">
+      <div class="col-12">
+        <div class="quick-actions-card modern-card">
+          <div class="card-header">
+            <h5><i class="ti ti-bolt me-2"></i>Quick Actions</h5>
+          </div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-3">
+                <button class="action-btn" (click)="navigateToGrn()">
+                  <i class="ti ti-plus"></i>
+                  <span>Add New GRN</span>
+                </button>
+              </div>
+              <div class="col-md-3">
+                <button class="action-btn" (click)="navigateToSupplierWiseReport()">
+                  <i class="ti ti-file-report"></i>
+                  <span>Generate Report</span>
+                </button>
+              </div>
+              <div class="col-md-3">
+                <button class="action-btn">
+                  <i class="ti ti-settings"></i>
+                  <span>Settings</span>
+                </button>
+              </div>
+              <div class="col-md-3">
+                <button class="action-btn">
+                  <i class="ti ti-help"></i>
+                  <span>Help</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

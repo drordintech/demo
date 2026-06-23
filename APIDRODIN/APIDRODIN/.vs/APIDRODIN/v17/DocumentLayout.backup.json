@@ -1,0 +1,184 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "D:\\DrOdin\\APIDRODIN\\APIDRODIN\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{EC3A4A90-25FB-437D-A8DC-CBECF572DED7}|APIDRODIN\\APIDRODIN.csproj|d:\\drodin\\apidrodin\\apidrodin\\apidrodin\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{EC3A4A90-25FB-437D-A8DC-CBECF572DED7}|APIDRODIN\\APIDRODIN.csproj|solutionrelative:apidrodin\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{EC3A4A90-25FB-437D-A8DC-CBECF572DED7}|APIDRODIN\\APIDRODIN.csproj|d:\\drodin\\apidrodin\\apidrodin\\apidrodin\\controllers\\grncontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{EC3A4A90-25FB-437D-A8DC-CBECF572DED7}|APIDRODIN\\APIDRODIN.csproj|solutionrelative:apidrodin\\controllers\\grncontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{EC3A4A90-25FB-437D-A8DC-CBECF572DED7}|APIDRODIN\\APIDRODIN.csproj|d:\\drodin\\apidrodin\\apidrodin\\apidrodin\\controllers\\productcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{EC3A4A90-25FB-437D-A8DC-CBECF572DED7}|APIDRODIN\\APIDRODIN.csproj|solutionrelative:apidrodin\\controllers\\productcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{EC3A4A90-25FB-437D-A8DC-CBECF572DED7}|APIDRODIN\\APIDRODIN.csproj|d:\\drodin\\apidrodin\\apidrodin\\apidrodin\\controllers\\suppliercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{EC3A4A90-25FB-437D-A8DC-CBECF572DED7}|APIDRODIN\\APIDRODIN.csproj|solutionrelative:apidrodin\\controllers\\suppliercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{EC3A4A90-25FB-437D-A8DC-CBECF572DED7}|APIDRODIN\\APIDRODIN.csproj|d:\\drodin\\apidrodin\\apidrodin\\apidrodin\\controllers\\accountcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{EC3A4A90-25FB-437D-A8DC-CBECF572DED7}|APIDRODIN\\APIDRODIN.csproj|solutionrelative:apidrodin\\controllers\\accountcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{EC3A4A90-25FB-437D-A8DC-CBECF572DED7}|APIDRODIN\\APIDRODIN.csproj|d:\\drodin\\apidrodin\\apidrodin\\apidrodin\\controllers\\responsiblepersoncontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{EC3A4A90-25FB-437D-A8DC-CBECF572DED7}|APIDRODIN\\APIDRODIN.csproj|solutionrelative:apidrodin\\controllers\\responsiblepersoncontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{EC3A4A90-25FB-437D-A8DC-CBECF572DED7}|APIDRODIN\\APIDRODIN.csproj|d:\\drodin\\apidrodin\\apidrodin\\apidrodin\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{EC3A4A90-25FB-437D-A8DC-CBECF572DED7}|APIDRODIN\\APIDRODIN.csproj|solutionrelative:apidrodin\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{EC3A4A90-25FB-437D-A8DC-CBECF572DED7}|APIDRODIN\\APIDRODIN.csproj|d:\\drodin\\apidrodin\\apidrodin\\apidrodin\\controllers\\saltcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{EC3A4A90-25FB-437D-A8DC-CBECF572DED7}|APIDRODIN\\APIDRODIN.csproj|solutionrelative:apidrodin\\controllers\\saltcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 10,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{34e76e81-ee4a-11d0-ae2e-00a0c90fffc3}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:129:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:130:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:134:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:136:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:137:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:140:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:139:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "Program.cs",
+              "DocumentMoniker": "D:\\DrOdin\\APIDRODIN\\APIDRODIN\\APIDRODIN\\Program.cs",
+              "RelativeDocumentMoniker": "APIDRODIN\\Program.cs",
+              "ToolTip": "D:\\DrOdin\\APIDRODIN\\APIDRODIN\\APIDRODIN\\Program.cs",
+              "RelativeToolTip": "APIDRODIN\\Program.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAArAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-06-14T10:56:05.394Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "ResponsiblepersonController.cs",
+              "DocumentMoniker": "D:\\DrOdin\\APIDRODIN\\APIDRODIN\\APIDRODIN\\Controllers\\ResponsiblepersonController.cs",
+              "RelativeDocumentMoniker": "APIDRODIN\\Controllers\\ResponsiblepersonController.cs",
+              "ToolTip": "D:\\DrOdin\\APIDRODIN\\APIDRODIN\\APIDRODIN\\Controllers\\ResponsiblepersonController.cs",
+              "RelativeToolTip": "APIDRODIN\\Controllers\\ResponsiblepersonController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAuwA8AAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-03-22T03:03:01.969Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "appsettings.json",
+              "DocumentMoniker": "D:\\DrOdin\\APIDRODIN\\APIDRODIN\\APIDRODIN\\appsettings.json",
+              "RelativeDocumentMoniker": "APIDRODIN\\appsettings.json",
+              "ToolTip": "D:\\DrOdin\\APIDRODIN\\APIDRODIN\\APIDRODIN\\appsettings.json",
+              "RelativeToolTip": "APIDRODIN\\appsettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAADAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2025-03-05T11:14:23.575Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "GRNController.cs",
+              "DocumentMoniker": "D:\\DrOdin\\APIDRODIN\\APIDRODIN\\APIDRODIN\\Controllers\\GRNController.cs",
+              "RelativeDocumentMoniker": "APIDRODIN\\Controllers\\GRNController.cs",
+              "ToolTip": "D:\\DrOdin\\APIDRODIN\\APIDRODIN\\APIDRODIN\\Controllers\\GRNController.cs",
+              "RelativeToolTip": "APIDRODIN\\Controllers\\GRNController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAIMEAAA4AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-03-04T09:57:26.331Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "ProductController.cs",
+              "DocumentMoniker": "D:\\DrOdin\\APIDRODIN\\APIDRODIN\\APIDRODIN\\Controllers\\ProductController.cs",
+              "RelativeDocumentMoniker": "APIDRODIN\\Controllers\\ProductController.cs",
+              "ToolTip": "D:\\DrOdin\\APIDRODIN\\APIDRODIN\\APIDRODIN\\Controllers\\ProductController.cs",
+              "RelativeToolTip": "APIDRODIN\\Controllers\\ProductController.cs",
+              "ViewState": "AgIAAAcAAAAAAAAAAAAcwFUAAAARAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-03-04T09:57:26.346Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "AccountController.cs",
+              "DocumentMoniker": "D:\\DrOdin\\APIDRODIN\\APIDRODIN\\APIDRODIN\\Controllers\\AccountController.cs",
+              "RelativeDocumentMoniker": "APIDRODIN\\Controllers\\AccountController.cs",
+              "ToolTip": "D:\\DrOdin\\APIDRODIN\\APIDRODIN\\APIDRODIN\\Controllers\\AccountController.cs",
+              "RelativeToolTip": "APIDRODIN\\Controllers\\AccountController.cs",
+              "ViewState": "AgIAAAkAAAAAAAAAAAAMwB8AAAAQAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-02-23T11:13:20.04Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "SupplierController.cs",
+              "DocumentMoniker": "D:\\DrOdin\\APIDRODIN\\APIDRODIN\\APIDRODIN\\Controllers\\SupplierController.cs",
+              "RelativeDocumentMoniker": "APIDRODIN\\Controllers\\SupplierController.cs",
+              "ToolTip": "D:\\DrOdin\\APIDRODIN\\APIDRODIN\\APIDRODIN\\Controllers\\SupplierController.cs",
+              "RelativeToolTip": "APIDRODIN\\Controllers\\SupplierController.cs",
+              "ViewState": "AgIAADsAAAAAAAAAAAAAADsAAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-02-23T11:10:33.703Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "SaltController.cs",
+              "DocumentMoniker": "D:\\DrOdin\\APIDRODIN\\APIDRODIN\\APIDRODIN\\Controllers\\SaltController.cs",
+              "RelativeDocumentMoniker": "APIDRODIN\\Controllers\\SaltController.cs",
+              "ToolTip": "D:\\DrOdin\\APIDRODIN\\APIDRODIN\\APIDRODIN\\Controllers\\SaltController.cs",
+              "RelativeToolTip": "APIDRODIN\\Controllers\\SaltController.cs",
+              "ViewState": "AgIAAFYAAAAAAAAAAAAQwF0AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-02-23T11:05:54.465Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

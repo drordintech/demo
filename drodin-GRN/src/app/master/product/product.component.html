@@ -1,0 +1,234 @@
+<div class="product-container">
+  <!-- Header Section -->
+  <div class="product-header">
+    <div class="header-content">
+      <div class="header-left">
+        <h2 class="page-title">
+          <i class="bi bi-box me-2"></i>Product Management
+        </h2>
+        <p class="page-subtitle">Manage your product catalog and information</p>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-primary add-product-btn" (click)="openAddproductModal()">
+          <i class="bi bi-plus-circle me-2"></i>Add New Product
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-section">
+    <div class="row">
+      <div class="col-md-3">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="bi bi-box"></i>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-number">{{ products.length }}</h3>
+            <p class="stat-label">Total Products</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="bi bi-tags"></i>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-number">{{ getUniqueBrands().length }}</h3>
+            <p class="stat-label">Brands Available</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="bi bi-check-circle"></i>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-number">{{ getProductsWithCode().length }}</h3>
+            <p class="stat-label">With Product Code</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="bi bi-file-text"></i>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-number">{{ getProductsWithDescription().length }}</h3>
+            <p class="stat-label">With Description</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="content-card">
+      <div class="card-header-section">
+        <div class="header-left">
+          <h4 class="card-title">
+            <i class="bi bi-list-ul me-2"></i>Product List
+          </h4>
+          <span class="product-count">{{ filteredproduct().length }} products found</span>
+        </div>
+        <div class="header-right">
+          <div class="search-box">
+            <i class="bi bi-search search-icon"></i>
+            <input type="text" 
+                   class="form-control search-input" 
+                   placeholder="Search products..." 
+                   [(ngModel)]="filters.name" />
+          </div>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <div class="table-responsive">
+          <table class="table table-hover product-table">
+            <thead>
+              <tr>
+                <th class="table-header">
+                  <div class="header-content">
+                    <span>Product Name</span>
+                    <i class="bi bi-arrow-down-up sort-icon"></i>
+                  </div>
+                </th>
+                <th class="table-header">Product Code</th>
+                <th class="table-header">Description</th>
+                <th class="table-header">Brand</th>
+                <th class="table-header actions-header">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let product of filteredproduct(); let i = index" class="product-row">
+                <td class="product-name">
+                  <div class="name-content">
+                    <div class="product-avatar">
+                      <i class="bi bi-box"></i>
+                    </div>
+                    <div class="product-info">
+                      <span class="name">{{ product.name }}</span>
+                    </div>
+                  </div>
+                </td>
+                <td class="product-code">
+                  <span class="code-badge" *ngIf="product.ProductCode">{{ product.ProductCode }}</span>
+                  <span class="no-code" *ngIf="!product.ProductCode">No code</span>
+                </td>
+                <td class="product-description">
+                  <span class="description-text">{{ product.description || 'No description' }}</span>
+                </td>
+                <td class="product-brand">
+                  <span class="brand-badge" *ngIf="getBrandName(product.BrandId)">{{ getBrandName(product.BrandId) }}</span>
+                  <span class="no-brand" *ngIf="!getBrandName(product.BrandId)">No brand</span>
+                </td>
+                <td class="product-actions">
+                  <div class="action-buttons">
+                    <button class="btn btn-sm btn-outline-primary action-btn" (click)="editproduct(product)" title="Edit Product">
+                      <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger action-btn" (click)="deleteproduct(product.productId)" title="Delete Product">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add/Edit Product Modal -->
+  <div class="modal fade" id="addproductModal" tabindex="-1" aria-labelledby="addproductModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addproductModalLabel">
+            <i class="bi bi-box me-2"></i>
+            {{ editingproduct ? 'Edit Product' : 'Add New Product' }}
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form #productForm="ngForm" (submit)="editingproduct ? updateproduct() : addproduct()" class="product-form">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="name" class="form-label">
+                    <i class="bi bi-box me-1"></i>Product Name <span class="text-danger">*</span>
+                  </label>
+                  <input id="name" 
+                         [(ngModel)]="tempproductName" 
+                         name="name"
+                         class="form-control custom-input" 
+                         placeholder="Enter product name" 
+                         required 
+                         #name="ngModel" />
+                  <div *ngIf="name.invalid && name.touched" class="error-message">
+                    <i class="bi bi-exclamation-circle me-1"></i>Product name is required
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="code" class="form-label">
+                    <i class="bi bi-upc-scan me-1"></i>Product Code
+                  </label>
+                  <input id="code" 
+                         [(ngModel)]="tempproductcode" 
+                         name="code"
+                         class="form-control custom-input" 
+                         placeholder="Enter product code" />
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="description" class="form-label">
+                <i class="bi bi-file-text me-1"></i>Description
+              </label>
+              <textarea id="description" 
+                        [(ngModel)]="newproduct.description"
+                        name="description" 
+                        class="form-control custom-textarea" 
+                        placeholder="Enter product description"
+                        rows="3"></textarea>
+            </div>
+            
+            <div class="form-group">
+              <label for="brandDropdown" class="form-label">
+                <i class="bi bi-tags me-1"></i>Select Brand
+              </label>
+              <select id="brandDropdown" 
+                      [(ngModel)]="selectedbrand" 
+                      name="brandDropdown" 
+                      class="form-select custom-dropdown">
+                <option value="" disabled>Select Brand</option>
+                <option *ngFor="let brand of Brands" [value]="brand.brand_id">{{ brand.brand_name }}</option>
+              </select>
+            </div>
+            
+            <div class="form-actions">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                <i class="bi bi-x-circle me-1"></i>Cancel
+              </button>
+              <button type="submit" 
+                      [disabled]="productForm.invalid" 
+                      class="btn btn-primary submit-btn">
+                <i class="bi bi-check-circle me-1"></i>
+                {{ editingproduct ? 'Update Product' : 'Save Product' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

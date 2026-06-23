@@ -1,0 +1,90 @@
+<div class="row">
+  <div class="col-sm-12">
+    <div class="card">
+      <div class="card-body">
+        <div class="container">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0">Location List</h5>
+            <button class="btn btn-primary" (click)="openAddlocationModal()">
+              <i class="bi bi-plus"></i> Add Location
+            </button>
+          </div>
+          <hr />
+          <div class="table-responsive" style="max-height: 400px; overflow: auto;">
+            <table class="table table-bordered table-hover text-start">
+              <thead class="table-dark">
+                <tr>
+                  <th scope="col">Name
+                    <span class="filter-icon" (click)="toggleFilter('name')">
+                      <i class="bi bi-filter"></i>
+                    </span>
+                    <div *ngIf="activeFilter === 'name'" class="filter-popup">
+                      <input type="text" class="form-control form-control-sm" placeholder="Filter Name"
+                        [(ngModel)]="filters.name" />
+                    </div>
+                  </th>
+                  <th scope="col" class="actions-column">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let Location of filteredlocation(); let i = index">
+                  <td>{{ Location.name }}</td>
+                  
+                  <td class="actions-column">
+                    <button class="btn btn-sm hover-text" (click)="editlocation(Location)">
+                      <i class="bi bi-pencil"></i>
+                      <span class="tooltip-text">Edit</span>
+                    </button>
+                    <button class="btn btn-sm hover-text" (click)="deletelocation(Location.locationId)">
+                      <i class="bi bi-trash"></i>
+                      <span class="tooltip-text">Delete</span>
+                    </button>
+                   
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+
+
+
+        </div>
+        <hr />
+        
+        
+        <!-- Add/Edit Location Modal -->
+        <div class="modal fade" id="addLocationModal" tabindex="-1" aria-labelledby="addLocationModalLabel"
+          aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="addLocationModalLabel">
+                  {{ editinglocation ? 'Edit Location' : 'Add Location' }}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <form #LocationForm="ngForm" (submit)="editinglocation ? updatelocation() : addlocation()">
+                  <div class="mb-3">
+                    <label for="name" class="form-label">Name <span class="text-danger">*</span></label>
+                    <input id="name" [(ngModel)]="templocationName" name="name"
+                      class="form-control" placeholder="Location Name" required  #name="ngModel" />
+                      <div *ngIf="name.invalid && name.touched" class="text-danger">
+                        <small>Location Name is required.</small>
+                      </div>
+                  </div>
+              
+                  <button type="submit" [disabled]="LocationForm.invalid" class="btn btn-primary">{{ editinglocation ?  'Update Location' : 'Save
+                    Location' }}</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+
+      </div>
+    </div>
+  </div>
+</div>
