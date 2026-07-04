@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("APIDRODIN")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b17e7dad5077ca0536f66cf7440e67c33010bc26")]
 [assembly: System.Reflection.AssemblyProductAttribute("APIDRODIN")]
 [assembly: System.Reflection.AssemblyTitleAttribute("APIDRODIN")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
