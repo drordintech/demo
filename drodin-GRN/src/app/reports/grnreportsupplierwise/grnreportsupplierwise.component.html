@@ -98,13 +98,17 @@
           </div>
         </div>
 
-        <div class="filters-actions">
+        <div class="filters-actions d-flex gap-2">
           <button class="btn btn-primary generate-btn" (click)="getReport()" [disabled]="!canGenerateReport()">
             <i class="ti ti-chart-bar me-2"></i>Generate Report
           </button>
           
           <button *ngIf="isReportGenerated" class="btn btn-success print-btn" (click)="getPrint()">
             <i class="ti ti-printer me-2"></i>Print Report
+          </button>
+
+          <button class="btn btn-outline-secondary d-flex align-items-center justify-content-center" (click)="resetFilters()" title="Reset Filters" style="height: 42px; width: 42px; border-radius: 8px;">
+            <i class="ti ti-reload"></i>
           </button>
         </div>
       </div>

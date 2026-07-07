@@ -61,6 +61,17 @@ export class GrnreportsupplierwiseComponent implements OnInit,AfterViewInit {
     return supplier ? supplier.name : 'Choose a supplier...';
   }
 
+  resetFilters() {
+    this.selectedsupplier = '';
+    this.selectedSupplierName = '';
+    this.dateFrom = '';
+    this.dateTo = '';
+    this.filteredSuppliers = this.suppliers;
+    this.grnList = [];
+    this.groupedGrnList = [];
+    this.isReportGenerated = false;
+  }
+
   onSupplierChange() {
     this.selectedSupplierName = this.getSelectedSupplierName();
   }
