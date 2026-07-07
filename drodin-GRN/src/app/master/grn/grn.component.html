@@ -94,15 +94,49 @@
                         <i class="bi bi-person-badge me-1"></i>Responsible Person
                       </label>
                     </div>
-                    <select id="ResponsiblePersonDropdown" [(ngModel)]="selectedResponsiblePerson" 
-                            (change)="onResponsiblePersonChange()" 
-                            name="ResponsiblePersonDropdown" 
-                            class="form-select custom-dropdown">
-                      <option value="" disabled>Select Responsible Person</option>
-                      <option *ngFor="let p of ResponsiblePersons" [value]="p.id">
-                        {{ p.name }}
-                      </option>
-                    </select>
+                    <div ngbDropdown container="body" class="w-100">
+                      <style>
+                        .responsible-dropdown-toggle::after { display: none !important; }
+                      </style>
+                      <button 
+                        class="form-select custom-dropdown text-start responsible-dropdown-toggle text-truncate" 
+                        id="dropdownResponsible" 
+                        ngbDropdownToggle 
+                        type="button">
+                        {{ getSelectedResponsiblePersonName() }}
+                      </button>
+                      <div ngbDropdownMenu aria-labelledby="dropdownResponsible" class="w-100 shadow-sm border p-0" style="border-radius: 8px; min-width: 100%;">
+                        <div class="p-2 border-bottom bg-light">
+                          <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                            <input 
+                              type="text" 
+                              class="form-control border-start-0 ps-0" 
+                              placeholder="Search responsible person..." 
+                              (input)="filterResponsiblePersons($event)" 
+                              (click)="$event.stopPropagation()"
+                              style="box-shadow: none;">
+                          </div>
+                        </div>
+                        
+                        <div style="max-height: 250px; overflow-y: auto; overflow-x: hidden; padding: 4px 0;">
+                          <button class="dropdown-item" type="button" (click)="selectResponsiblePerson('')" style="cursor: pointer; font-size: 12px; padding: 6px 10px;">
+                            Select Responsible Person
+                          </button>
+                          <button class="dropdown-item text-truncate" 
+                                  type="button" 
+                                  *ngFor="let p of filteredResponsiblePersons" 
+                                  (click)="selectResponsiblePerson(p.id)" 
+                                  [title]="p.name"
+                                  style="cursor: pointer; font-size: 12px; padding: 6px 10px;">
+                            {{ p.name }}
+                          </button>
+                          <div class="text-center text-muted py-3" *ngIf="filteredResponsiblePersons.length === 0">
+                            <small>No responsible person found</small>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
                   <!-- Docker Number Text Box -->

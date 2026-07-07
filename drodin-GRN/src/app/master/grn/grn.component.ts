@@ -36,6 +36,7 @@ export class grnComponent implements OnInit {
   filteredSuppliers: Supplier[] = [];
   filteredSuppliers2: Supplier[] = [];
   ResponsiblePersons: any[] = [];
+  filteredResponsiblePersons: any[] = [];
   grnList: any[] = [];    challanList: any[] = [];  challanOldList: any[] = [];
   grnListrpt: any[] = [];
   grnListRptold: any[] = [];
@@ -185,7 +186,26 @@ export class grnComponent implements OnInit {
     this.supplierService.getloadResponsiblePerson().subscribe((data) => {
       
       this.ResponsiblePersons = data;
+      this.filteredResponsiblePersons = data;
     });
+  }
+
+  filterResponsiblePersons(event: any) {
+    const search = event.target.value.toLowerCase();
+    this.filteredResponsiblePersons = this.ResponsiblePersons.filter(person => 
+      person.name.toLowerCase().includes(search)
+    );
+  }
+
+  selectResponsiblePerson(id: any) {
+    this.selectedResponsiblePerson = id;
+    this.onResponsiblePersonChange();
+  }
+
+  getSelectedResponsiblePersonName(): string {
+    if (!this.selectedResponsiblePerson) return 'Select Responsible Person';
+    const person = this.ResponsiblePersons.find(p => p.id === +this.selectedResponsiblePerson);
+    return person ? person.name : 'Select Responsible Person';
   }
 
   onSupplierChange() {
@@ -519,6 +539,7 @@ debugger
     this.selectedResponsiblePerson = '';
     this.selectedResponsiblePersonName = null;
     this.selectedRespersonDetails = null;
+    this.filteredResponsiblePersons = this.ResponsiblePersons;
     
     this.dockernumber = '';
     
