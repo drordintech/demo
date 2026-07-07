@@ -31,15 +31,51 @@
               <label for="supplierDropdown" class="form-label">
                 <i class="ti ti-building me-1"></i>Select Supplier
               </label>
-              <select id="supplierDropdown" class="form-select modern-select"
-                  [(ngModel)]="selectedsupplier"
-                  (change)="onSupplierChange()">
-                <option value="" disabled>Choose a supplier...</option>
-                <option value="-2">All Suppliers</option>
-                <option *ngFor="let supplier of suppliers" [value]="supplier.supplierID">
-                  {{ supplier.name }}
-                </option>
-              </select>
+              <div ngbDropdown container="body" class="w-100">
+                <style>
+                  .supplier-dropdown-toggle::after { display: none !important; }
+                </style>
+                <button 
+                  class="form-select text-start supplier-dropdown-toggle modern-select text-truncate" 
+                  id="dropdownSupplier" 
+                  ngbDropdownToggle 
+                  type="button">
+                  {{ getSelectedSupplierName() }}
+                </button>
+                <div ngbDropdownMenu aria-labelledby="dropdownSupplier" class="w-100 shadow-sm border p-0" style="border-radius: 8px; min-width: 100%;">
+                  <!-- Sticky Search Box -->
+                  <div class="p-2 border-bottom bg-light">
+                    <div class="input-group input-group-sm">
+                      <span class="input-group-text bg-white border-end-0"><i class="ti ti-search text-muted"></i></span>
+                      <input 
+                        type="text" 
+                        class="form-control border-start-0 ps-0" 
+                        placeholder="Search supplier..." 
+                        (input)="filterSuppliers($event)" 
+                        (click)="$event.stopPropagation()"
+                        style="box-shadow: none;">
+                    </div>
+                  </div>
+                  
+                  <!-- Scrollable Options List -->
+                  <div style="max-height: 250px; overflow-y: auto; overflow-x: hidden; padding: 4px 0;">
+                    <button class="dropdown-item text-truncate" type="button" (click)="selectSupplier('-2')" style="cursor: pointer;">
+                      All Suppliers
+                    </button>
+                    <button class="dropdown-item text-truncate" 
+                            type="button" 
+                            *ngFor="let supplier of filteredSuppliers" 
+                            (click)="selectSupplier(supplier.supplierID)" 
+                            [title]="supplier.name"
+                            style="cursor: pointer;">
+                      {{ supplier.name }}
+                    </button>
+                    <div class="text-center text-muted py-3" *ngIf="filteredSuppliers.length === 0">
+                      <small>No suppliers found</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
           

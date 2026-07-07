@@ -1,17 +1,17 @@
-import { Component, OnInit, HostListener } from '@angular/core';
-import { ElementRef, ViewChild } from '@angular/core';
-import { grnService } from '../grn/grn.service';
-import { SupplierService, Supplier } from '../supplier/supplier.service';
-import { FormsModule } from '@angular/forms';
+import { Component, ElementRef, OnInit, ViewChild, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { NgbNavModule, NgbModal, NgbDatepickerModule, NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
+import { SharedModule } from 'src/app/theme/shared/shared.module';
 import { Modal } from 'bootstrap';
-import { productService, product } from '../product/product.service';
-
+import { product, productService } from '../product/product.service';
+import { Supplier, SupplierService } from '../supplier/supplier.service';
+import { grnService } from './grn.service';
 
 @Component({
   selector: 'app-grn',
   standalone: true,
-  imports: [FormsModule, CommonModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, NgbNavModule, SharedModule, NgbDatepickerModule, NgbDropdownModule],
   templateUrl: './grn.component.html',
   styleUrls: ['./grn.component.scss']
 })
@@ -33,6 +33,8 @@ export class grnComponent implements OnInit {
   selectedgrnstatus: string = '';  selectedgrnOldstatus: string = '';
   dockernumber:string='';
   suppliers: Supplier[] = [];
+  filteredSuppliers: Supplier[] = [];
+  filteredSuppliers2: Supplier[] = [];
   ResponsiblePersons: any[] = [];
   grnList: any[] = [];    challanList: any[] = [];  challanOldList: any[] = [];
   grnListrpt: any[] = [];
@@ -145,7 +147,38 @@ export class grnComponent implements OnInit {
   loadsuppliers() {
     this.supplierService.getSuppliers().subscribe((data) => {
       this.suppliers = data;
+      this.filteredSuppliers = data;
+      this.filteredSuppliers2 = data;
     });
+  }
+
+  filterSuppliers(event: any, isUpdateTab: boolean = false) {
+    const search = event.target.value.toLowerCase();
+    const filtered = this.suppliers.filter(supplier => 
+      supplier.name.toLowerCase().includes(search)
+    );
+    if (isUpdateTab) {
+      this.filteredSuppliers2 = filtered;
+    } else {
+      this.filteredSuppliers = filtered;
+    }
+  }
+
+  selectSupplier(id: any, isUpdateTab: boolean = false) {
+    if (isUpdateTab) {
+      this.selectedsupplier2 = id;
+      this.onSupplierChange2();
+    } else {
+      this.selectedsupplier = id;
+      this.onSupplierChange();
+    }
+  }
+
+  getSelectedSupplierName(isUpdateTab: boolean = false): string {
+    const selectedId = isUpdateTab ? this.selectedsupplier2 : this.selectedsupplier;
+    if (!selectedId) return 'Select Supplier';
+    const supplier = this.suppliers.find(s => s.supplierID === +selectedId);
+    return supplier ? supplier.name : 'Select Supplier';
   }
   
   loadResponsiblePerson() {
@@ -468,6 +501,30 @@ debugger
         console.error("Error fetching GRN:", err);
       }
     });
+  }
+
+  resetSearch(): void {
+    this.selectedsupplier2 = '';
+    this.date = '';
+    this.grnListrpt = [];
+    this.filteredSuppliers2 = this.suppliers;
+  }
+
+  resetNewGRNForm(): void {
+    this.selectedsupplier = '';
+    this.selectedSupplierName = '';
+    this.selectedSupplierDetails = null;
+    this.filteredSuppliers = this.suppliers;
+    
+    this.selectedResponsiblePerson = '';
+    this.selectedResponsiblePersonName = null;
+    this.selectedRespersonDetails = null;
+    
+    this.dockernumber = '';
+    
+    this.selectedgrnstatus = '';
+    this.selectedGRNName = '';
+    this.selectedGRNDetails = null;
   }
   
   // Utility function to format the date as 'YYYY-MM-DD' if needed

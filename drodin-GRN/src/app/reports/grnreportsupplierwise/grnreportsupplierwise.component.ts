@@ -3,17 +3,19 @@ import { SupplierService, Supplier } from '../../master/supplier/supplier.servic
 import { grnService,Grn  } from '../../master/grn/grn.service';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
   selector: 'app-grnreportsupplierwise',
   standalone: true,
-  imports: [FormsModule, CommonModule],
+  imports: [FormsModule, CommonModule, NgbDropdownModule],
   templateUrl: './grnreportsupplierwise.component.html',
   styleUrl: './grnreportsupplierwise.component.scss'
 })
 
 export class GrnreportsupplierwiseComponent implements OnInit,AfterViewInit {
   suppliers: Supplier[] = [];
+  filteredSuppliers: Supplier[] = [];
   dateTo = '';
   dateFrom = '';
   selectedsupplier = '';
@@ -34,11 +36,33 @@ export class GrnreportsupplierwiseComponent implements OnInit,AfterViewInit {
   }
 
   loadsuppliers() {
-    this.supplierService.getSuppliers().subscribe(data => this.suppliers = data);
+    this.supplierService.getSuppliers().subscribe(data => {
+      this.suppliers = data;
+      this.filteredSuppliers = data;
+    });
+  }
+
+  filterSuppliers(event: any) {
+    const search = event.target.value.toLowerCase();
+    this.filteredSuppliers = this.suppliers.filter(supplier => 
+      supplier.name.toLowerCase().includes(search)
+    );
+  }
+
+  selectSupplier(id: any) {
+    this.selectedsupplier = id;
+    this.onSupplierChange();
+  }
+
+  getSelectedSupplierName(): string {
+    if (this.selectedsupplier === '-2') return 'All Suppliers';
+    if (!this.selectedsupplier) return 'Choose a supplier...';
+    const supplier = this.suppliers.find(s => s.supplierID === +this.selectedsupplier);
+    return supplier ? supplier.name : 'Choose a supplier...';
   }
 
   onSupplierChange() {
-    this.selectedSupplierName = this.suppliers.find(s => s.supplierID === +this.selectedsupplier)?.name || '';
+    this.selectedSupplierName = this.getSelectedSupplierName();
   }
 
   canGenerateReport(): boolean {

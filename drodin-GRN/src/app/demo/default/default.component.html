@@ -36,20 +36,52 @@
               <label for="supplier" class="form-label">
                 <i class="ti ti-building me-1"></i>Supplier
               </label>
-              <select 
-                id="supplier" 
-                class="form-select" 
-                formControlName="supplier"
-                [disabled]="isLoadingSuppliers">
-                <option value="">
-                  {{ isLoadingSuppliers ? 'Loading suppliers...' : 'All Suppliers' }}
-                </option>
-                <option 
-                  *ngFor="let supplier of suppliers" 
-                  [value]="supplier.supplierID">
-                  {{ supplier.name }}
-                </option>
-              </select>
+              <div ngbDropdown container="body" class="w-100">
+                <style>
+                  .supplier-dropdown-toggle::after { display: none !important; }
+                </style>
+                <button 
+                  class="form-select text-start supplier-dropdown-toggle text-truncate" 
+                  id="dropdownSupplier" 
+                  ngbDropdownToggle 
+                  type="button" 
+                  [disabled]="isLoadingSuppliers">
+                  {{ isLoadingSuppliers ? 'Loading suppliers...' : (getSelectedSupplierName() || 'All Suppliers') }}
+                </button>
+                <div ngbDropdownMenu aria-labelledby="dropdownSupplier" class="w-100 shadow-sm border p-0" style="border-radius: 8px; min-width: 100%;">
+                  <!-- Sticky Search Box -->
+                  <div class="p-2 border-bottom bg-light">
+                    <div class="input-group input-group-sm">
+                      <span class="input-group-text bg-white border-end-0"><i class="ti ti-search text-muted"></i></span>
+                      <input 
+                        type="text" 
+                        class="form-control border-start-0 ps-0" 
+                        placeholder="Search supplier..." 
+                        (input)="filterSuppliers($event)" 
+                        (click)="$event.stopPropagation()"
+                        style="box-shadow: none;">
+                    </div>
+                  </div>
+                  
+                  <!-- Scrollable Options List -->
+                  <div style="max-height: 250px; overflow-y: auto; overflow-x: hidden; padding: 4px 0;">
+                    <button class="dropdown-item" type="button" (click)="selectSupplier('')" style="cursor: pointer;">
+                      All Suppliers
+                    </button>
+                    <button class="dropdown-item text-truncate" 
+                            type="button" 
+                            *ngFor="let supplier of filteredSuppliers" 
+                            (click)="selectSupplier(supplier.supplierID)" 
+                            [title]="supplier.name"
+                            style="cursor: pointer;">
+                      {{ supplier.name }}
+                    </button>
+                    <div class="text-center text-muted py-3" *ngIf="filteredSuppliers.length === 0">
+                      <small>No suppliers found</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
             <div class="col-md-3">
               <label for="dateFrom" class="form-label">
@@ -73,12 +105,19 @@
             </div>
             <div class="col-md-2">
               <label class="form-label">&nbsp;</label>
-              <div class="d-grid">
+              <div class="d-flex gap-2">
                 <button 
                   type="submit" 
-                  class="btn btn-primary btn-sm"
+                  class="btn btn-primary btn-sm flex-grow-1"
                   (click)="getReport()">
                   <i class="ti ti-search me-1"></i>Search
+                </button>
+                <button 
+                  type="button" 
+                  class="btn btn-outline-secondary btn-sm px-3"
+                  (click)="clearFilters()"
+                  title="Reset Filters">
+                  <i class="ti ti-refresh"></i>
                 </button>
               </div>
             </div>

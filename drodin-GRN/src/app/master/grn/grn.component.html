@@ -42,15 +42,49 @@
                         <i class="bi bi-info-circle"></i>
                       </button>
                     </div>
-                    <select id="supplierDropdown" [(ngModel)]="selectedsupplier" 
-                            (change)="onSupplierChange()" 
-                            name="supplierDropdown" 
-                            class="form-select custom-dropdown">
-                      <option value="" disabled>Select Supplier</option>
-                      <option *ngFor="let supplier of suppliers" [value]="supplier.supplierID">
-                        {{ supplier.name }}
-                      </option>
-                    </select>
+                    <div ngbDropdown container="body" class="w-100">
+                      <style>
+                        .supplier-dropdown-toggle::after { display: none !important; }
+                      </style>
+                      <button 
+                        class="form-select custom-dropdown text-start supplier-dropdown-toggle text-truncate" 
+                        id="dropdownSupplier1" 
+                        ngbDropdownToggle 
+                        type="button">
+                        {{ getSelectedSupplierName(false) }}
+                      </button>
+                      <div ngbDropdownMenu aria-labelledby="dropdownSupplier1" class="w-100 shadow-sm border p-0" style="border-radius: 8px; min-width: 100%;">
+                        <div class="p-2 border-bottom bg-light">
+                          <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                            <input 
+                              type="text" 
+                              class="form-control border-start-0 ps-0" 
+                              placeholder="Search supplier..." 
+                              (input)="filterSuppliers($event, false)" 
+                              (click)="$event.stopPropagation()"
+                              style="box-shadow: none;">
+                          </div>
+                        </div>
+                        
+                        <div style="max-height: 250px; overflow-y: auto; overflow-x: hidden; padding: 4px 0;">
+                          <button class="dropdown-item" type="button" (click)="selectSupplier('', false)" style="cursor: pointer; font-size: 12px; padding: 6px 10px;">
+                            Select Supplier
+                          </button>
+                          <button class="dropdown-item text-truncate" 
+                                  type="button" 
+                                  *ngFor="let supplier of filteredSuppliers" 
+                                  (click)="selectSupplier(supplier.supplierID, false)" 
+                                  [title]="supplier.name"
+                                  style="cursor: pointer; font-size: 12px; padding: 6px 10px;">
+                            {{ supplier.name }}
+                          </button>
+                          <div class="text-center text-muted py-3" *ngIf="filteredSuppliers.length === 0">
+                            <small>No suppliers found</small>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
                   <!-- Responsible Person Dropdown -->
@@ -88,15 +122,20 @@
                     <label for="grnstatus" class="form-label">
                       <i class="bi bi-flag me-1"></i>GRN Status
                     </label>
-                    <select id="grnstatusDropdown" [(ngModel)]="selectedgrnstatus" 
-                            (change)="onGRNStatusChange()" 
-                            name="grnstatusDropdown" 
-                            class="form-select custom-dropdown">
-                      <option value="" disabled>Select GRN Status</option>
-                      <option *ngFor="let p of grnstatus" [value]="p.name">
-                        {{ p.name }}
-                      </option>
-                    </select>
+                    <div class="d-flex align-items-center gap-2">
+                      <select id="grnstatusDropdown" [(ngModel)]="selectedgrnstatus" 
+                              (change)="onGRNStatusChange()" 
+                              name="grnstatusDropdown" 
+                              class="form-select custom-dropdown w-100">
+                        <option value="" disabled>Select GRN Status</option>
+                        <option *ngFor="let p of grnstatus" [value]="p.name">
+                          {{ p.name }}
+                        </option>
+                      </select>
+                      <button type="button" class="btn btn-outline-secondary d-flex align-items-center justify-content-center flex-shrink-0" (click)="resetNewGRNForm()" title="Reset Form" style="height: 38px; width: 38px; border-radius: 6px; padding: 0;">
+                        <i class="bi bi-arrow-clockwise"></i>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -254,17 +293,51 @@
                         <i class="bi bi-info-circle"></i>
                       </button>
                     </div>
-                    <select id="supplier2Dropdown" [(ngModel)]="selectedsupplier2" 
-                            (change)="onSupplierChange2()" 
-                            name="supplierDropdown" 
-                            class="form-select custom-dropdown">
-                      <option value="" disabled>Select Supplier</option>
-                      <option *ngFor="let supplier of suppliers" [value]="supplier.supplierID">
-                        {{ supplier.name }}
-                      </option>
-                    </select>
+                    <div ngbDropdown container="body" class="w-100">
+                      <style>
+                        .supplier-dropdown-toggle::after { display: none !important; }
+                      </style>
+                      <button 
+                        class="form-select custom-dropdown text-start supplier-dropdown-toggle text-truncate" 
+                        id="dropdownSupplier2" 
+                        ngbDropdownToggle 
+                        type="button">
+                        {{ getSelectedSupplierName(true) }}
+                      </button>
+                      <div ngbDropdownMenu aria-labelledby="dropdownSupplier2" class="w-100 shadow-sm border p-0" style="border-radius: 8px; min-width: 100%;">
+                        <div class="p-2 border-bottom bg-light">
+                          <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                            <input 
+                              type="text" 
+                              class="form-control border-start-0 ps-0" 
+                              placeholder="Search supplier..." 
+                              (input)="filterSuppliers($event, true)" 
+                              (click)="$event.stopPropagation()"
+                              style="box-shadow: none;">
+                          </div>
+                        </div>
+                        
+                        <div style="max-height: 250px; overflow-y: auto; overflow-x: hidden; padding: 4px 0;">
+                          <button class="dropdown-item" type="button" (click)="selectSupplier('', true)" style="cursor: pointer; font-size: 12px; padding: 6px 10px;">
+                            Select Supplier
+                          </button>
+                          <button class="dropdown-item text-truncate" 
+                                  type="button" 
+                                  *ngFor="let supplier of filteredSuppliers2" 
+                                  (click)="selectSupplier(supplier.supplierID, true)" 
+                                  [title]="supplier.name"
+                                  style="cursor: pointer; font-size: 12px; padding: 6px 10px;">
+                            {{ supplier.name }}
+                          </button>
+                          <div class="text-center text-muted py-3" *ngIf="filteredSuppliers2.length === 0">
+                            <small>No suppliers found</small>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                
+
                   <!-- Date Input -->
                   <div class="form-group">
                     <label for="date" class="form-label">
@@ -274,9 +347,12 @@
                   </div>
                 
                   <!-- Search Button -->
-                  <div class="form-group d-flex align-items-end">
+                  <div class="form-group d-flex align-items-end gap-2">
                     <button type="button" class="btn btn-primary search-btn" (click)="searchGRN()" title="Search GRN">
                       <i class="bi bi-search me-1"></i> Search
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary d-flex align-items-center justify-content-center" (click)="resetSearch()" title="Reset Filters" style="height: 44px; width: 44px; border-radius: 8px;">
+                      <i class="bi bi-arrow-clockwise"></i>
                     </button>
                   </div>
                 </div>

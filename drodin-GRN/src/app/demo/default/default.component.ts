@@ -40,6 +40,9 @@ export class DefaultComponent {
   filterForm: FormGroup;
   isLoadingSuppliers: boolean = false;
   
+  supplierSearch: string = '';
+  filteredSuppliers: Supplier[] = [];
+  
   // Report properties
   grnList: any[] = [];
   groupedGrnList: any[] = [];
@@ -244,6 +247,7 @@ export class DefaultComponent {
     this.supplierService.getSuppliers().subscribe({
       next: (suppliers) => {
         this.suppliers = suppliers;
+        this.filteredSuppliers = suppliers;
         this.isLoadingSuppliers = false;
       },
       error: (error) => {
@@ -261,6 +265,22 @@ export class DefaultComponent {
     
     // Refresh dashboard data with filters
     this.toprejectedproducts();
+  }
+
+  filterSuppliers(event: any) {
+    this.supplierSearch = event?.target?.value?.toLowerCase() || '';
+    if (!this.supplierSearch) {
+      this.filteredSuppliers = this.suppliers;
+      return;
+    }
+    this.filteredSuppliers = this.suppliers.filter(s => 
+      s.name?.toLowerCase().includes(this.supplierSearch)
+    );
+  }
+
+  selectSupplier(id: any) {
+    this.filterForm.patchValue({ supplier: id || '' });
+    // Keep filtered list intact
   }
 
   getReport() {
@@ -395,8 +415,9 @@ export class DefaultComponent {
   }
 
   getSelectedSupplierName(): string {
-    if (!this.selectedSupplier) return 'All Suppliers';
-    const supplier = this.suppliers.find(s => s.supplierID === this.selectedSupplier);
+    const formValue = this.filterForm?.get('supplier')?.value;
+    if (!formValue) return 'All Suppliers';
+    const supplier = this.suppliers.find(s => s.supplierID === formValue);
     return supplier ? supplier.name : 'All Suppliers';
   }
 
