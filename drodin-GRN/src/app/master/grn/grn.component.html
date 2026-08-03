@@ -2,1094 +2,1120 @@
   <div class="col-sm-12">
     <div class="card">
       <div class="card-body">
-        
-          <div class="d-flex justify-content-between align-items-center">
-            <ul class="nav nav-tabs" id="myTab" role="tablist">
-              <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" (click)="onTabChange('home')">
-                  <i class="bi bi-building-add me-1"></i>New GRN
-                </button>
-              </li>
-              <li class="nav-item" role="presentation">
-                <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" (click)="onTabChange('profile')">
-                  <i class="bi bi-binoculars me-1"></i>Search Old GRN
-                </button>
-              </li>
-            </ul>
-            <!-- GRN Info Display - moved to right side of tabs -->
-            <div class="grn-info-display" *ngIf="activeTab === 'home'">
-              <div class="info-item">
-                <span class="info-label">GRN NO.:</span>
-                <span class="info-value">{{grnNumber}}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Date:</span>
-                <span class="info-value">{{todayDate}}</span>
-              </div>
+
+        <div class="d-flex justify-content-between align-items-center">
+          <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button"
+                role="tab" (click)="onTabChange('home')">
+                <i class="bi bi-building-add me-1"></i>New GRN
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button"
+                role="tab" (click)="onTabChange('profile')">
+                <i class="bi bi-binoculars me-1"></i>Search Old GRN
+              </button>
+            </li>
+          </ul>
+          <!-- GRN Info Display - moved to right side of tabs -->
+          <div class="grn-info-display" *ngIf="activeTab === 'home'">
+            <div class="info-item">
+              <span class="info-label">GRN NO.:</span>
+              <span class="info-value">{{grnNumber}}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Date:</span>
+              <span class="info-value">{{todayDate}}</span>
             </div>
           </div>
-          <div class="tab-content mt-1" id="myTabContent">
-            <div class="tab-pane fade show active" id="home" role="tabpanel">
-              <div class="grn-form-container">
-                <div class="form-row">
-                  <!-- Supplier Dropdown -->
-                  <div class="form-group">
-                    <div class="d-flex align-items-center mb-1">
-                      <label for="supplier" class="form-label mb-0 me-1">
-                        <i class="bi bi-building me-1"></i>Supplier
-                      </label>
-                      <button type="button" class="btn btn-link p-0 m-0 align-baseline info-btn" style="font-size: 12px;" (click)="openInfoModal()">
-                        <i class="bi bi-info-circle"></i>
-                      </button>
-                    </div>
-                    <div ngbDropdown container="body" class="w-100">
-                      <style>
-                        .supplier-dropdown-toggle::after { display: none !important; }
-                      </style>
-                      <button 
-                        class="form-select custom-dropdown text-start supplier-dropdown-toggle text-truncate" 
-                        id="dropdownSupplier1" 
-                        ngbDropdownToggle 
-                        type="button">
-                        {{ getSelectedSupplierName(false) }}
-                      </button>
-                      <div ngbDropdownMenu aria-labelledby="dropdownSupplier1" class="w-100 shadow-sm border p-0" style="border-radius: 8px; min-width: 100%;">
-                        <div class="p-2 border-bottom bg-light">
-                          <div class="input-group input-group-sm">
-                            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
-                            <input 
-                              type="text" 
-                              class="form-control border-start-0 ps-0" 
-                              placeholder="Search supplier..." 
-                              (input)="filterSuppliers($event, false)" 
-                              (click)="$event.stopPropagation()"
-                              style="box-shadow: none;">
-                          </div>
-                        </div>
-                        
-                        <div style="max-height: 250px; overflow-y: auto; overflow-x: hidden; padding: 4px 0;">
-                          <button class="dropdown-item" type="button" (click)="selectSupplier('', false)" style="cursor: pointer; font-size: 12px; padding: 6px 10px;">
-                            Select Supplier
-                          </button>
-                          <button class="dropdown-item text-truncate" 
-                                  type="button" 
-                                  *ngFor="let supplier of filteredSuppliers" 
-                                  (click)="selectSupplier(supplier.supplierID, false)" 
-                                  [title]="supplier.name"
-                                  style="cursor: pointer; font-size: 12px; padding: 6px 10px;">
-                            {{ supplier.name }}
-                          </button>
-                          <div class="text-center text-muted py-3" *ngIf="filteredSuppliers.length === 0">
-                            <small>No suppliers found</small>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Responsible Person Dropdown -->
-                  <div class="form-group">
-                    <div class="d-flex align-items-center mb-1">
-                      <label for="ResponsiblePerson" class="form-label mb-0 me-1">
-                        <i class="bi bi-person-badge me-1"></i>Responsible Person
-                      </label>
-                    </div>
-                    <div ngbDropdown container="body" class="w-100">
-                      <style>
-                        .responsible-dropdown-toggle::after { display: none !important; }
-                      </style>
-                      <button 
-                        class="form-select custom-dropdown text-start responsible-dropdown-toggle text-truncate" 
-                        id="dropdownResponsible" 
-                        ngbDropdownToggle 
-                        type="button">
-                        {{ getSelectedResponsiblePersonName() }}
-                      </button>
-                      <div ngbDropdownMenu aria-labelledby="dropdownResponsible" class="w-100 shadow-sm border p-0" style="border-radius: 8px; min-width: 100%;">
-                        <div class="p-2 border-bottom bg-light">
-                          <div class="input-group input-group-sm">
-                            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
-                            <input 
-                              type="text" 
-                              class="form-control border-start-0 ps-0" 
-                              placeholder="Search responsible person..." 
-                              (input)="filterResponsiblePersons($event)" 
-                              (click)="$event.stopPropagation()"
-                              style="box-shadow: none;">
-                          </div>
-                        </div>
-                        
-                        <div style="max-height: 250px; overflow-y: auto; overflow-x: hidden; padding: 4px 0;">
-                          <button class="dropdown-item" type="button" (click)="selectResponsiblePerson('')" style="cursor: pointer; font-size: 12px; padding: 6px 10px;">
-                            Select Responsible Person
-                          </button>
-                          <button class="dropdown-item text-truncate" 
-                                  type="button" 
-                                  *ngFor="let p of filteredResponsiblePersons" 
-                                  (click)="selectResponsiblePerson(p.id)" 
-                                  [title]="p.name"
-                                  style="cursor: pointer; font-size: 12px; padding: 6px 10px;">
-                            {{ p.name }}
-                          </button>
-                          <div class="text-center text-muted py-3" *ngIf="filteredResponsiblePersons.length === 0">
-                            <small>No responsible person found</small>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Docker Number Text Box -->
-                  <div class="form-group">
-                    <label for="dockerNumber" class="form-label">
-                      <i class="bi bi-upc-scan me-1"></i>Docker Number
+        </div>
+        <div class="tab-content mt-1" id="myTabContent">
+          <div class="tab-pane fade show active" id="home" role="tabpanel">
+            <div class="grn-form-container">
+              <div class="form-row">
+                <!-- Supplier Dropdown -->
+                <div class="form-group">
+                  <div class="d-flex align-items-center mb-1">
+                    <label for="supplier" class="form-label mb-0 me-1">
+                      <i class="bi bi-building me-1"></i>Supplier
                     </label>
-                    <input type="text" 
-                           id="dockerNumber"
-                           [(ngModel)]="dockernumber" 
-                           class="form-control custom-input" 
-                           placeholder="Enter Docker Number" />
-                  </div>
-
-                  <!-- GRN Status Dropdown -->
-                  <div class="form-group">
-                    <label for="grnstatus" class="form-label">
-                      <i class="bi bi-flag me-1"></i>GRN Status
-                    </label>
-                    <div class="d-flex align-items-center gap-2">
-                      <select id="grnstatusDropdown" [(ngModel)]="selectedgrnstatus" 
-                              (change)="onGRNStatusChange()" 
-                              name="grnstatusDropdown" 
-                              class="form-select custom-dropdown w-100">
-                        <option value="" disabled>Select GRN Status</option>
-                        <option *ngFor="let p of grnstatus" [value]="p.name">
-                          {{ p.name }}
-                        </option>
-                      </select>
-                      <button type="button" class="btn btn-outline-secondary d-flex align-items-center justify-content-center flex-shrink-0" (click)="resetNewGRNForm()" title="Reset Form" style="height: 38px; width: 38px; border-radius: 6px; padding: 0;">
-                        <i class="bi bi-arrow-clockwise"></i>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <hr class="divider" />
-             
-                <div class="d-flex justify-content-between align-items-center mb-1">
-                  <h6 class="mb-0"></h6>
-                  <button class="btn btn-primary btn-sm add-row-btn" (click)="addGrnRow()">
-                    <i class="bi bi-plus"></i> Add Row
-                  </button>
-                </div>
-                <div class="table-container">
-                  <div class="table-responsive" style="max-height: 400px; overflow: auto;">
-                    <table class="table table-bordered table-hover table-sm text-center align-middle fixed-table">
-                      <thead class="table-dark">
-                      <tr>
-                        <th scope="col" style="width: 50px; position: sticky; top: 0; z-index: 2;">S.No</th>
-                          <th scope="col" style="width: 370px; position: sticky; top: 0; z-index: 2;">Product</th>
-                          <th scope="col" colspan="2" style="width: 200px; position: sticky; top: 0; z-index: 2;">Quantity</th>
-                          <th scope="col" colspan="2" style="width: 300px; position: sticky; top: 0; z-index: 2;">Quantity</th>
-                          <th scope="col" style="width: 150px; position: sticky; top: 0; z-index: 2;">Status</th>
-                          <th scope="col" style="width: 150px; position: sticky; top: 0; z-index: 2;">Demanded</th>
-                          <th scope="col" style="width: 80px; position: sticky; top: 0; z-index: 2;">MRP</th>
-                          <th scope="col" style="width: 120px; position: sticky; top: 0; z-index: 2;">Batch</th>
-                          <th scope="col" style="width: 120px; position: sticky; top: 0; z-index: 2;">Expiry</th>
-                          <th scope="col" style="width: 120px; position: sticky; top: 0; z-index: 2;">Retrun To Party</th>
-                          <th scope="col" style="width: 120px; position: sticky; top: 0; z-index: 2;">Retrun Quantity</th>
-                          <th scope="col" style="width: 120px; position: sticky; top: 0; z-index: 2;">Remarks 1</th>
-                          <th scope="col" style="width: 120px; position: sticky; top: 0; z-index: 2;">Remarks 2</th>
-                          <th scope="col" style="width: 60px; position: sticky; top: 0; z-index: 2;">Actions</th>
-                        </tr>
-                        <tr>
-                       <th style="position: sticky; top: 23px;  z-index: 1;"></th>
-                        <th style="position: sticky; top: 23px;  z-index: 1;"></th>
-                        <th style="position: sticky; top: 23px;  z-index: 1;">As per party</th>
-                        <th style="position: sticky; top: 23px;  z-index: 1;">Received</th>
-                        <th style="position: sticky; top: 23px;  z-index: 1;">Passed</th>
-                        <th style="position: sticky; top: 23px;  z-index: 1;">Rejected</th>
-                        <th style="position: sticky; top: 23px;  z-index: 1;"></th>
-                        <th style="position: sticky; top: 23px;  z-index: 1;">By Party</th>
-                        <th style="position: sticky; top: 23px;  z-index: 1;"></th>
-                        <th style="position: sticky; top: 23px;  z-index: 1;"></th>
-                        <th style="position: sticky; top: 23px;  z-index: 1;"></th>
-                        <th style="position: sticky; top: 23px;  z-index: 1;"></th>
-                        <th style="position: sticky; top: 23px;  z-index: 1;"></th>
-                        <th style="position: sticky; top: 23px;  z-index: 1;"></th>
-                        <th style="position: sticky; top: 23px;  z-index: 1;"></th>
-                      
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr *ngFor="let grn of grnList; let i = index">
-                        <td>{{ i + 1 }}</td>
-                        <td style="width: 200px;">
-                          <div class="d-flex align-items-center">
-                            <input type="text" class="form-control form-control-sm" [(ngModel)]="grn.searchText"
-                              (input)="filterProducts(grn)" placeholder="Search Product here..." />
-                            <button type="button" class="btn btn-sm ms-2" style="padding: 2px 5px; font-size: 0.7rem;"
-                              (click)="openproductInfoModal(grn.selectedProduct)">
-                              <i class="bi bi-info-circle"></i>
-                            </button>
-                          </div>
-                          <select [(ngModel)]="grn.selectedProduct" class="form-select form-select-sm w-100 Dropdown">
-                            <option *ngFor="let product of grn.filteredProducts" [ngValue]="product.productId">
-                              {{ product.name }}
-                            </option>
-                          </select>
-                        </td>
-                        <td style="width: 50px;">
-                          <input type="number" [(ngModel)]="grn.quantityasperparty" class="form-control form-control-sm" style="min-width: 50px;" (change)="updateQuantity(grn)" />
-                        </td>
-                        <td style="width: 50px;">
-                          <input type="number" [(ngModel)]="grn.receivedQuantity" class="form-control form-control-sm" style="min-width: 50px;" (change)="updateQuantity(grn)" />
-                        </td>
-                        <td style="width: 100px;">
-                            <input type="number" [(ngModel)]="grn.passed" class="form-control form-control-sm" style="min-width: 50px;" (change)="updateQuantity(grn)" />
-                            <select [(ngModel)]="grn.statusofpassed" class="form-select form-select-sm Dropdown">
-                              <option value="" disabled>Select</option>
-                              <option *ngFor="let p of statusofpassed" [ngValue]="p.name">{{ p.name }}</option>
-                            </select>
-                        </td>
-                        <td style="width: 100px;">
-                          <input type="number" [(ngModel)]="grn.rejected" class="form-control form-control-sm" style="min-width: 50px;" (change)="updateQuantity(grn)" />
-                          <select [(ngModel)]="grn.statusofrejected" class="form-select form-select-sm Dropdown">
-                            <option value="" disabled>Select</option>
-                            <option *ngFor="let p of statusofrejected" [ngValue]="p.name">{{ p.name }}</option>
-                          </select>
-                        </td>
-                        <td style="width: 100px;">
-                          <select [(ngModel)]="grn.status" class="form-select form-select-sm Dropdown">
-                            <option value="" disabled>Select</option>
-                            <option *ngFor="let p of status" [ngValue]="p.name">{{ p.name }}</option>
-                          </select>
-                        </td>
-                        <td style="width: 100px;">
-                          <select [(ngModel)]="grn.demandedbyparty" class="form-select form-select-sm Dropdown">
-                            <option value="" disabled>Select</option>
-                            <option *ngFor="let p of demandedbyparty" [ngValue]="p.name">{{ p.name }}</option>
-                          </select>
-                        </td>
-                        <td style="width: 60px;">
-                          <input type="number" [(ngModel)]="grn.MRP" class="form-control form-control-sm" style="min-width: 60px;" (change)="updateQuantity(grn)" />
-                        </td>
-                        <td>
-                          <input type="text" [(ngModel)]="grn.batchno" class="form-control form-control-sm w-100" placeholder="Batch" />
-                        </td>
-                        <td>
-                          <input type="date" [(ngModel)]="grn.expiryDate" class="form-control form-control-sm w-100" />
-                        </td>
-                        <td>
-                          <input type="checkbox" [(ngModel)]="grn.RetrunToParty" class="form-check-input" id="returnToParty" />
-                        </td>
-                        <td>
-                          <input type="number" [(ngModel)]="grn.retQty" class="form-control form-control-sm w-100" placeholder="Retrun Quantity" />
-                        </td>
-                        
-                        <td>
-                          <input type="text" [(ngModel)]="grn.remarks" class="form-control form-control-sm w-100" placeholder="Remarks" />
-                        </td>
-                        <td>
-                          <input type="text" [(ngModel)]="grn.remarks2" class="form-control form-control-sm w-100" placeholder="Remarks" />
-                        </td>
-                        <td>
-                          <button class="btn  btn-sm" (click)="removeGrnRow(i)">
-                            <i class="bi bi-trash text-danger"></i>
-                          </button>
-                        </td>
-                      </tr>
-                    </tbody>
-                    <tfoot>
-                      <tr class="table-footer">
-                        <td colspan="16" class="text-start fw-bold"><i>Total Product Added: {{ grnList.length }}</i></td>
-                      </tr>
-                    </tfoot>
-                  </table>
-                </div>
-                </div>
-                <div class="text-end mt-2">
-                  <button class="btn btn-primary btn-sm submit-btn" (click)="Save()">
-                    <i class="bi bi-check-circle"></i> Submit
-                  </button>
-                </div>
-            </div>
-            <div class="tab-pane fade" id="profile" role="tabpanel">
-              <div class="grn-form-container">
-                <div class="form-row">
-                  <!-- Supplier Dropdown -->
-                  <div class="form-group">
-                    <div class="d-flex align-items-center mb-1">
-                      <label for="supplier2Dropdown" class="form-label mb-0 me-1">
-                        <i class="bi bi-building me-1"></i>Supplier
-                      </label>
-                      <button type="button" class="btn btn-link p-0 m-0 align-baseline info-btn" style="font-size: 12px;" (click)="openSupplierInfoModal()">
-                        <i class="bi bi-info-circle"></i>
-                      </button>
-                    </div>
-                    <div ngbDropdown container="body" class="w-100">
-                      <style>
-                        .supplier-dropdown-toggle::after { display: none !important; }
-                      </style>
-                      <button 
-                        class="form-select custom-dropdown text-start supplier-dropdown-toggle text-truncate" 
-                        id="dropdownSupplier2" 
-                        ngbDropdownToggle 
-                        type="button">
-                        {{ getSelectedSupplierName(true) }}
-                      </button>
-                      <div ngbDropdownMenu aria-labelledby="dropdownSupplier2" class="w-100 shadow-sm border p-0" style="border-radius: 8px; min-width: 100%;">
-                        <div class="p-2 border-bottom bg-light">
-                          <div class="input-group input-group-sm">
-                            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
-                            <input 
-                              type="text" 
-                              class="form-control border-start-0 ps-0" 
-                              placeholder="Search supplier..." 
-                              (input)="filterSuppliers($event, true)" 
-                              (click)="$event.stopPropagation()"
-                              style="box-shadow: none;">
-                          </div>
-                        </div>
-                        
-                        <div style="max-height: 250px; overflow-y: auto; overflow-x: hidden; padding: 4px 0;">
-                          <button class="dropdown-item" type="button" (click)="selectSupplier('', true)" style="cursor: pointer; font-size: 12px; padding: 6px 10px;">
-                            Select Supplier
-                          </button>
-                          <button class="dropdown-item text-truncate" 
-                                  type="button" 
-                                  *ngFor="let supplier of filteredSuppliers2" 
-                                  (click)="selectSupplier(supplier.supplierID, true)" 
-                                  [title]="supplier.name"
-                                  style="cursor: pointer; font-size: 12px; padding: 6px 10px;">
-                            {{ supplier.name }}
-                          </button>
-                          <div class="text-center text-muted py-3" *ngIf="filteredSuppliers2.length === 0">
-                            <small>No suppliers found</small>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Date Input -->
-                  <div class="form-group">
-                    <label for="date" class="form-label">
-                      <i class="bi bi-calendar me-1"></i>Date
-                    </label>
-                    <input type="date" id="date" class="form-control custom-input" [(ngModel)]="date">
-                  </div>
-                
-                  <!-- Search Button -->
-                  <div class="form-group d-flex align-items-end gap-2">
-                    <button type="button" class="btn btn-primary search-btn" (click)="searchGRN()" title="Search GRN">
-                      <i class="bi bi-search me-1"></i> Search
+                    <button type="button" class="btn btn-link p-0 m-0 align-baseline info-btn" style="font-size: 12px;"
+                      (click)="openInfoModal()">
+                      <i class="bi bi-info-circle"></i>
                     </button>
-                    <button type="button" class="btn btn-outline-secondary d-flex align-items-center justify-content-center" (click)="resetSearch()" title="Reset Filters" style="height: 44px; width: 44px; border-radius: 8px;">
+                  </div>
+                  <div ngbDropdown container="body" class="w-100">
+                    <style>
+                      .supplier-dropdown-toggle::after {
+                        display: none !important;
+                      }
+                    </style>
+                    <button class="form-select custom-dropdown text-start supplier-dropdown-toggle text-truncate"
+                      id="dropdownSupplier1" ngbDropdownToggle type="button">
+                      {{ getSelectedSupplierName(false) }}
+                    </button>
+                    <div ngbDropdownMenu aria-labelledby="dropdownSupplier1" class="w-100 shadow-sm border p-0"
+                      style="border-radius: 8px; min-width: 100%;">
+                      <div class="p-2 border-bottom bg-light">
+                        <div class="input-group input-group-sm">
+                          <span class="input-group-text bg-white border-end-0"><i
+                              class="bi bi-search text-muted"></i></span>
+                          <input type="text" class="form-control border-start-0 ps-0" placeholder="Search supplier..."
+                            (input)="filterSuppliers($event, false)" (click)="$event.stopPropagation()"
+                            style="box-shadow: none;">
+                        </div>
+                      </div>
+
+                      <div style="max-height: 250px; overflow-y: auto; overflow-x: hidden; padding: 4px 0;">
+                        <button class="dropdown-item" type="button" (click)="selectSupplier('', false)"
+                          style="cursor: pointer; font-size: 12px; padding: 6px 10px;">
+                          Select Supplier
+                        </button>
+                        <button class="dropdown-item text-truncate" type="button"
+                          *ngFor="let supplier of filteredSuppliers"
+                          (click)="selectSupplier(supplier.supplierID, false)" [title]="supplier.name"
+                          style="cursor: pointer; font-size: 12px; padding: 6px 10px;">
+                          {{ supplier.name }}
+                        </button>
+                        <div class="text-center text-muted py-3" *ngIf="filteredSuppliers.length === 0">
+                          <small>No suppliers found</small>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Responsible Person Dropdown -->
+                <div class="form-group">
+                  <div class="d-flex align-items-center mb-1">
+                    <label for="ResponsiblePerson" class="form-label mb-0 me-1">
+                      <i class="bi bi-person-badge me-1"></i>Responsible Person
+                    </label>
+                  </div>
+                  <div ngbDropdown container="body" class="w-100">
+                    <style>
+                      .responsible-dropdown-toggle::after {
+                        display: none !important;
+                      }
+                    </style>
+                    <button class="form-select custom-dropdown text-start responsible-dropdown-toggle text-truncate"
+                      id="dropdownResponsible" ngbDropdownToggle type="button">
+                      {{ getSelectedResponsiblePersonName() }}
+                    </button>
+                    <div ngbDropdownMenu aria-labelledby="dropdownResponsible" class="w-100 shadow-sm border p-0"
+                      style="border-radius: 8px; min-width: 100%;">
+                      <div class="p-2 border-bottom bg-light">
+                        <div class="input-group input-group-sm">
+                          <span class="input-group-text bg-white border-end-0"><i
+                              class="bi bi-search text-muted"></i></span>
+                          <input type="text" class="form-control border-start-0 ps-0"
+                            placeholder="Search responsible person..." (input)="filterResponsiblePersons($event)"
+                            (click)="$event.stopPropagation()" style="box-shadow: none;">
+                        </div>
+                      </div>
+
+                      <div style="max-height: 250px; overflow-y: auto; overflow-x: hidden; padding: 4px 0;">
+                        <button class="dropdown-item" type="button" (click)="selectResponsiblePerson('')"
+                          style="cursor: pointer; font-size: 12px; padding: 6px 10px;">
+                          Select Responsible Person
+                        </button>
+                        <button class="dropdown-item text-truncate" type="button"
+                          *ngFor="let p of filteredResponsiblePersons" (click)="selectResponsiblePerson(p.id)"
+                          [title]="p.name" style="cursor: pointer; font-size: 12px; padding: 6px 10px;">
+                          {{ p.name }}
+                        </button>
+                        <div class="text-center text-muted py-3" *ngIf="filteredResponsiblePersons.length === 0">
+                          <small>No responsible person found</small>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Docker Number Text Box -->
+                <div class="form-group">
+                  <label for="dockerNumber" class="form-label">
+                    <i class="bi bi-upc-scan me-1"></i>Docker Number
+                  </label>
+                  <input type="text" id="dockerNumber" [(ngModel)]="dockernumber" class="form-control custom-input"
+                    placeholder="Enter Docker Number" />
+                </div>
+
+                <!-- GRN Status Dropdown -->
+                <div class="form-group">
+                  <label for="grnstatus" class="form-label">
+                    <i class="bi bi-flag me-1"></i>GRN Status
+                  </label>
+                  <div class="d-flex align-items-center gap-2">
+                    <select id="grnstatusDropdown" [(ngModel)]="selectedgrnstatus" (change)="onGRNStatusChange()"
+                      name="grnstatusDropdown" class="form-select custom-dropdown w-100">
+                      <option value="" disabled>Select GRN Status</option>
+                      <option *ngFor="let p of grnstatus" [value]="p.name">
+                        {{ p.name }}
+                      </option>
+                    </select>
+                    <button type="button"
+                      class="btn btn-outline-secondary d-flex align-items-center justify-content-center flex-shrink-0"
+                      (click)="resetNewGRNForm()" title="Reset Form"
+                      style="height: 38px; width: 38px; border-radius: 6px; padding: 0;">
                       <i class="bi bi-arrow-clockwise"></i>
                     </button>
                   </div>
                 </div>
               </div>
-                            <hr />
-            <div class="mt-4">
-                <h5>GRN List of Supplier: {{selectedSupplierName2 }}</h5>
-                <table class="table table-bordered table-striped" *ngIf="grnListrpt.length > 0; else noRecords">
+            </div>
+
+            <hr class="divider" />
+
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <h6 class="mb-0"></h6>
+              <button class="btn btn-primary btn-sm add-row-btn" (click)="addGrnRow()">
+                <i class="bi bi-plus"></i> Add Row
+              </button>
+            </div>
+            <div class="table-container">
+              <div class="table-responsive" style="max-height: 400px; overflow: auto;">
+                <table class="table table-bordered table-hover table-sm text-center align-middle fixed-table">
                   <thead class="table-dark">
                     <tr>
-                      <th>Action</th>
-                      <th>GRN Number</th><th>Challan Number</th>
-                      <th>Responsible Person</th>
-                      <th>Grn Status</th>
-                      
-                      <th>Product Details</th>
+                      <th scope="col" style="width: 50px; position: sticky; top: 0; z-index: 2;">S.No</th>
+                      <th scope="col" style="width: 370px; position: sticky; top: 0; z-index: 2;">Product</th>
+                      <th scope="col" colspan="2" style="width: 200px; position: sticky; top: 0; z-index: 2;">Quantity
+                      </th>
+                      <th scope="col" colspan="2" style="width: 300px; position: sticky; top: 0; z-index: 2;">Quantity
+                      </th>
+                      <th scope="col" style="width: 150px; position: sticky; top: 0; z-index: 2;">Status</th>
+                      <th scope="col" style="width: 150px; position: sticky; top: 0; z-index: 2;">Demanded</th>
+                      <th scope="col" style="width: 80px; position: sticky; top: 0; z-index: 2;">MRP</th>
+                      <th scope="col" style="width: 120px; position: sticky; top: 0; z-index: 2;">Batch</th>
+                      <th scope="col" style="width: 120px; position: sticky; top: 0; z-index: 2;">Expiry</th>
+                      <th scope="col" style="width: 120px; position: sticky; top: 0; z-index: 2;">Retrun To Party</th>
+                      <th scope="col" style="width: 120px; position: sticky; top: 0; z-index: 2;">Retrun Quantity</th>
+                      <th scope="col" style="width: 120px; position: sticky; top: 0; z-index: 2;">Remarks 1</th>
+                      <th scope="col" style="width: 120px; position: sticky; top: 0; z-index: 2;">Remarks 2</th>
+                      <th scope="col" style="width: 60px; position: sticky; top: 0; z-index: 2;">Actions</th>
+                    </tr>
+                    <tr>
+                      <th style="position: sticky; top: 23px;  z-index: 1;"></th>
+                      <th style="position: sticky; top: 23px;  z-index: 1;"></th>
+                      <th style="position: sticky; top: 23px;  z-index: 1;">As per party</th>
+                      <th style="position: sticky; top: 23px;  z-index: 1;">Received</th>
+                      <th style="position: sticky; top: 23px;  z-index: 1;">Passed</th>
+                      <th style="position: sticky; top: 23px;  z-index: 1;">Rejected</th>
+                      <th style="position: sticky; top: 23px;  z-index: 1;"></th>
+                      <th style="position: sticky; top: 23px;  z-index: 1;">By Party</th>
+                      <th style="position: sticky; top: 23px;  z-index: 1;"></th>
+                      <th style="position: sticky; top: 23px;  z-index: 1;"></th>
+                      <th style="position: sticky; top: 23px;  z-index: 1;"></th>
+                      <th style="position: sticky; top: 23px;  z-index: 1;"></th>
+                      <th style="position: sticky; top: 23px;  z-index: 1;"></th>
+                      <th style="position: sticky; top: 23px;  z-index: 1;"></th>
+                      <th style="position: sticky; top: 23px;  z-index: 1;"></th>
+
                     </tr>
                   </thead>
                   <tbody>
-                    <tr *ngFor="let grn of grnListrpt">
-                      <td><button class="btn btn-primary btn-sm" (click)="editGRN(grn)">Edit</button></td>
-                      <td>{{ grn.grnNumber }}</td><td>{{ grn.challanNumber }}</td>
-                      <td>{{ grn.responsiblePerson }}</td>
-                      <td>{{grn.grnStatus}}</td>
+                    <tr *ngFor="let grn of grnList; let i = index">
+                      <td>{{ i + 1 }}</td>
+                      <td style="width: 200px;">
+                        <div class="d-flex align-items-center">
+                          <input type="text" class="form-control form-control-sm" [(ngModel)]="grn.searchText"
+                            (input)="filterProducts(grn)" placeholder="Search Product here..." />
+                          <button type="button" class="btn btn-sm ms-2" style="padding: 2px 5px; font-size: 0.7rem;"
+                            (click)="openproductInfoModal(grn.selectedProduct)">
+                            <i class="bi bi-info-circle"></i>
+                          </button>
+                        </div>
+                        <select [(ngModel)]="grn.selectedProduct" class="form-select form-select-sm w-100 Dropdown">
+                          <option *ngFor="let product of grn.filteredProducts" [ngValue]="product.productId">
+                            {{ product.name }}
+                          </option>
+                        </select>
+                      </td>
+                      <td style="width: 50px;">
+                        <input type="number" [(ngModel)]="grn.quantityasperparty" class="form-control form-control-sm"
+                          style="min-width: 50px;" (change)="updateQuantity(grn)" />
+                      </td>
+                      <td style="width: 50px;">
+                        <input type="number" [(ngModel)]="grn.receivedQuantity" class="form-control form-control-sm"
+                          style="min-width: 50px;" (change)="updateQuantity(grn)" />
+                      </td>
+                      <td style="width: 100px;">
+                        <input type="number" [(ngModel)]="grn.passed" class="form-control form-control-sm"
+                          style="min-width: 50px;" (change)="updateQuantity(grn)" />
+                        <select [(ngModel)]="grn.statusofpassed" class="form-select form-select-sm Dropdown">
+                          <option value="" disabled>Select</option>
+                          <option *ngFor="let p of statusofpassed" [ngValue]="p.name">{{ p.name }}</option>
+                        </select>
+                      </td>
+                      <td style="width: 100px;">
+                        <input type="number" [(ngModel)]="grn.rejected" class="form-control form-control-sm"
+                          style="min-width: 50px;" (change)="updateQuantity(grn)" />
+                        <select [(ngModel)]="grn.statusofrejected" class="form-select form-select-sm Dropdown">
+                          <option value="" disabled>Select</option>
+                          <option *ngFor="let p of statusofrejected" [ngValue]="p.name">{{ p.name }}</option>
+                        </select>
+                      </td>
+                      <td style="width: 100px;">
+                        <select [(ngModel)]="grn.status" class="form-select form-select-sm Dropdown">
+                          <option value="" disabled>Select</option>
+                          <option *ngFor="let p of status" [ngValue]="p.name">{{ p.name }}</option>
+                        </select>
+                      </td>
+                      <td style="width: 100px;">
+                        <select [(ngModel)]="grn.demandedbyparty" class="form-select form-select-sm Dropdown">
+                          <option value="" disabled>Select</option>
+                          <option *ngFor="let p of demandedbyparty" [ngValue]="p.name">{{ p.name }}</option>
+                        </select>
+                      </td>
+                      <td style="width: 60px;">
+                        <input type="number" [(ngModel)]="grn.MRP" class="form-control form-control-sm"
+                          style="min-width: 60px;" (change)="updateQuantity(grn)" />
+                      </td>
                       <td>
-                        <table class="table table-sm table-bordered">
-                          <thead>
-                            <tr>
-                              <th>Product Name</th>
-                              <!-- <th>Pack Size</th> -->
-                              <th>Received Qty</th>
-                              <th>Rejected Qty</th>
-                              <th>Passed Qty</th>
-                              <th>Status</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <tr *ngFor="let detail of grn.grndetails">
-                              <td>{{ detail.productName }}</td>
-                              <!-- <td>{{ detail.packSize }}</td> -->
-                              <td>{{ detail.receivedQuantity }}</td>
-                              <td>{{ detail.rejectedQuantity }}</td>
-                              <td>{{ detail.passedQuantity }}</td>
-                              <td> <span class="badge" [ngClass]="getStatusClass(detail.status)">
-                                {{ detail.status }}
-                              </span></td>
-                            </tr>
-                          </tbody>
-                        </table>
+                        <input type="text" [(ngModel)]="grn.batchno" class="form-control form-control-sm w-100"
+                          placeholder="Batch" />
+                      </td>
+                      <td>
+                        <input type="date" [(ngModel)]="grn.expiryDate" class="form-control form-control-sm w-100" />
+                      </td>
+                      <td>
+                        <input type="checkbox" [(ngModel)]="grn.RetrunToParty" class="form-check-input"
+                          id="returnToParty" />
+                      </td>
+                      <td>
+                        <input type="number" [(ngModel)]="grn.retQty" class="form-control form-control-sm w-100"
+                          placeholder="Retrun Quantity" />
+                      </td>
+
+                      <td>
+                        <input type="text" [(ngModel)]="grn.remarks" class="form-control form-control-sm w-100"
+                          placeholder="Remarks" />
+                      </td>
+                      <td>
+                        <input type="text" [(ngModel)]="grn.remarks2" class="form-control form-control-sm w-100"
+                          placeholder="Remarks" />
+                      </td>
+                      <td>
+                        <button class="btn  btn-sm" (click)="removeGrnRow(i)">
+                          <i class="bi bi-trash text-danger"></i>
+                        </button>
                       </td>
                     </tr>
                   </tbody>
+                  <tfoot>
+                    <tr class="table-footer">
+                      <td colspan="16" class="text-start fw-bold"><i>Total Product Added: {{ grnList.length }}</i></td>
+                    </tr>
+                  </tfoot>
                 </table>
-                
-                <!-- Template for No Records Found -->
-                <ng-template #noRecords>
-                  <div class="alert alert-warning text-center mt-3">
-                    No records are found.
+              </div>
+            </div>
+            <div class="text-end mt-2">
+              <button class="btn btn-primary btn-sm submit-btn" (click)="Save()">
+                <i class="bi bi-check-circle"></i> Submit
+              </button>
+            </div>
+          </div>
+          <div class="tab-pane fade" id="profile" role="tabpanel">
+            <div class="grn-form-container">
+              <div class="form-row">
+                <!-- Supplier Dropdown -->
+                <div class="form-group">
+                  <div class="d-flex align-items-center mb-1">
+                    <label for="supplier2Dropdown" class="form-label mb-0 me-1">
+                      <i class="bi bi-building me-1"></i>Supplier
+                    </label>
+                    <button type="button" class="btn btn-link p-0 m-0 align-baseline info-btn" style="font-size: 12px;"
+                      (click)="openSupplierInfoModal()">
+                      <i class="bi bi-info-circle"></i>
+                    </button>
                   </div>
-                </ng-template>
-                
-              </div> 
-            </div>
-          </div>
-      
-      <!-- Print Area  -->
+                  <div ngbDropdown container="body" class="w-100">
+                    <style>
+                      .supplier-dropdown-toggle::after {
+                        display: none !important;
+                      }
+                    </style>
+                    <button class="form-select custom-dropdown text-start supplier-dropdown-toggle text-truncate"
+                      id="dropdownSupplier2" ngbDropdownToggle type="button">
+                      {{ getSelectedSupplierName(true) }}
+                    </button>
+                    <div ngbDropdownMenu aria-labelledby="dropdownSupplier2" class="w-100 shadow-sm border p-0"
+                      style="border-radius: 8px; min-width: 100%;">
+                      <div class="p-2 border-bottom bg-light">
+                        <div class="input-group input-group-sm">
+                          <span class="input-group-text bg-white border-end-0"><i
+                              class="bi bi-search text-muted"></i></span>
+                          <input type="text" class="form-control border-start-0 ps-0" placeholder="Search supplier..."
+                            (input)="filterSuppliers($event, true)" (click)="$event.stopPropagation()"
+                            style="box-shadow: none;">
+                        </div>
+                      </div>
 
-      
-      <div id="printSectionChallan" style="display: none;">
-        <!--    -->
-        <div class="col-md-12 mb-3 d-flex justify-content-between">
-          <div>GSTIN: 06AAACO7774J1Z2</div> <div>Date: {{ todayDate }}</div>
-        </div>
-        <h3 class="text-center">Odin Healthcare Pvt. Ltd.</h3>
-        <h5 class="text-center">Plotno 45, Industrial Area, Phase-2, Panchkula(Haryana)</h5>
-        <h5 class="text-center">Call Us: 0172-4624664, E-mail: customercare&#64;drodin.in</h5>
-        <h5 class="text-center">CHALLAN</h5>
-        <hr />
-        <div class="d-flex justify-content-between">
-          <div>
-            <label class="form-label">Name of Supplier: &nbsp;&nbsp;</label>
-            <label class="form-label">{{selectedSupplierName}}</label>
-          </div>
-          <div>
-            <label class="form-label">Consignement Number: &nbsp;&nbsp;</label>
-            <label class="form-label">{{dockernumber}}</label>
-          </div>
-                    <div>
-            <label class="form-label">CHALLAN Number: &nbsp;&nbsp;</label>
-            <label class="form-label">{{challanNumber}}</label>
-          </div>
-        </div>
-        <table class="table table-bordered table-hover table-sm text-center align-middle">
-          <thead class="table-dark">
-            <tr>
-              <th scope="col">S.No</th>
-              <th scope="col">Product Name</th>
-              <th scope="col">Quantity</th>
-              <th scope="col">Aprox. Value</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let grn of filteredGrnList(); let i = index">
-              <td>{{ i + 1 }}</td>
-              <td>{{ getProductName(grn.selectedProduct) }}</td>
-              <td>{{ grn.retQty }}</td>
-              <td>{{grn.mrp}}</td>
-            </tr>
-          </tbody>
-          <tfoot>
-            <!-- First Row with 2 Columns -->
-          
-            <tr class="table-footer">
-              <td colspan="2" class="text-start fw-bold">
-                <br/> <i>Order Booked By: ___________________</i>
-              </td>
-              <td colspan="2" class="text-end fw-bold">
-                <br/> <i>For Odin Healthcare Pvt. Ltd.</i>
-              </td>
-            </tr>
-            <!-- Second Row with 2 Columns -->
-            <tr class="table-footer">
-              <td colspan="2" class="text-start fw-bold">
-               <br/> <i>Receiver's Signature ____________
-                <br/> <br/> Received the above goods in good conditions
-                </i>
-              </td>
-              <td colspan="2" class="text-end fw-bold">
-                <br/> <i>Authorized Signatory</i>
-              </td>
-            </tr>
-          </tfoot>
-        </table>
-        
-      
-    </div>
-      
-      <div id="printSection" style="display: none;" >
-        <!--  style="display: none;" -->
-        <div class="col-md-12 mb-3 text-end">Date:&nbsp;&nbsp;{{todayDate}} </div>
-        <h3 class="text-center">Odin Healthcare Pvt. Ltd.</h3>
-        <h5 class="text-center">Plotno 45, Industrial Area, Phase-2, Panchkula(Haryana)</h5>
-        <h5 class="text-center">Call Us: +91 9878785333, E-mail: customercare&#64;drodin.in</h5>
-        <h5 class="text-center">Goods Received Note /Inspection Report</h5>
-        <hr />
-        <div class="d-flex justify-content-between">
-          <div>
-            <label class="form-label">Name of Supplier: &nbsp;&nbsp;</label>
-            <label class="form-label">{{selectedSupplierName}}</label>
-          </div>
-          <div>
-            <label class="form-label">Responsible Person: &nbsp;&nbsp;</label>
-            <label class="form-label">{{selectedResperson}}</label>
-          </div>
-          <div>
-            <label class="form-label">Docker number: &nbsp;&nbsp;</label>
-            <label class="form-label">{{dockernumber}}</label>
-          </div>
-          <div>
-            <label class="form-label">GRN STATUS: &nbsp;&nbsp;</label>
-            <label class="form-label">{{selectedgrnstatus}}</label>
-          </div>
-         <div>
-            <label class="form-label">GRN Number: &nbsp;&nbsp;</label>
-            <label class="form-label">{{grnNumber}}</label>
-          </div>
-        </div>
-        <table class="table table-bordered table-hover table-sm text-center align-middle">
-          <thead class="table-dark">
-            <tr>
-              <th scope="col">S.No</th>
-              <th scope="col">Product Name</th>
-              <th scope="col" colspan="2" class="text-center">Quantity</th>
-              <th scope="col" colspan="2" class="text-center">Quantity</th>
-              <th scope="col">Status</th>
-              <th scope="col">Demanded</th>
-              <th scope="col">MRP</th>
-              <th scope="col">Batch No</th>
-              <th scope="col">Date of Expiry</th>
-              <!-- <th scope="col" >Retrun To Party</th> -->
-              <th scope="col" >Retrun Quantity</th>
-              <th scope="col">Remarks 1</th>
-              <th scope="col">Remarks 2</th>
-          </tr>
-          <tr>
-            <th scope="col"></th>
-              <th scope="col"></th>
-              <th scope="col">As per party</th>
-              <th scope="col">Received</th>
-              <th scope="col">Passed</th>
-              <th scope="col">Rejected</th>
-              <th></th>
-              <th>By Party</th>
-              <th scope="col"></th>
-              <th scope="col"></th><th scope="col"></th>
-              <!-- <th scope="col"></th> -->
-              <th scope="col"></th>
-              <th scope="col"></th>
-              <th scope="col"></th>
-          </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let grn of grnList; let i = index">
-              <td>{{ i + 1 }}</td>
-               <td>{{ getProductName(grn.selectedProduct) }}</td>
-              <td>{{ grn.quantityasperparty }}</td>
-              <td>{{ grn.receivedQuantity }}</td>
-              <td>{{ grn.passed }} <br />{{ grn.statusofpassed }}</td>
-              <td>{{ grn.rejected }} <br />{{ grn.statusofrejected }}</td>
-              <td>{{ grn.status }}</td>
-              <td>{{ grn.demandedbyparty }}</td>
-              <td>{{ grn.MRP }}</td>
-              <td>{{ grn.batchno }}</td>
-              <td>{{ grn.expiryDate }}</td>
-              <!-- <td>{{ grn.RetrunToParty }}</td> -->
-              <td>{{ grn.retQty }}</td>
-              <td>{{ grn.remarks }}</td>
-              <td>{{ grn.remarks2 }}</td>
-            </tr>
-          </tbody>
-          <tfoot>
-            <tr class="table-footer">
-              <td colspan="16" class="text-start fw-bold">
-                <br/>    <i>Total Product Added: {{ grnList.length }}</i>
-              </td>
-            </tr>
-            <tr class="table-footer">
-              <td colspan="6" class="text-start fw-bold">
-                <br/>  <i>Inspection Done By: ___________________</i>
-              </td>
-              <td colspan="6" class="text-center fw-bold">
-                <br/> <i>Authorized Signature ____________</i>
-              </td>
-              <td colspan="6" class="text-end fw-bold">
-                <br/><i>Received By ____________</i>
-              </td>
-            </tr>
-          </tfoot>
-          
-        </table>
-      
-    </div>
-  </div>
-</div>
+                      <div style="max-height: 250px; overflow-y: auto; overflow-x: hidden; padding: 4px 0;">
+                        <button class="dropdown-item" type="button" (click)="selectSupplier('', true)"
+                          style="cursor: pointer; font-size: 12px; padding: 6px 10px;">
+                          Select Supplier
+                        </button>
+                        <button class="dropdown-item" type="button" (click)="selectSupplier(0, true)"
+                          style="cursor: pointer; font-size: 12px; padding: 6px 10px;">
+                          All Suppliers
+                        </button>
+                        <button class="dropdown-item text-truncate" type="button"
+                          *ngFor="let supplier of filteredSuppliers2"
+                          (click)="selectSupplier(supplier.supplierID, true)" [title]="supplier.name"
+                          style="cursor: pointer; font-size: 12px; padding: 6px 10px;">
+                          {{ supplier.name }}
+                        </button>
+                        <div class="text-center text-muted py-3" *ngIf="filteredSuppliers2.length === 0">
+                          <small>No suppliers found</small>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
-<!-- Modal supplierInfoModal-->
-<div #supplierInfoModal class="modal fade" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header bg-primary text-white">
-        <h5 class="modal-title">Supplier Information</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <p *ngIf="selectedSupplierDetails; else noInfo">
-          <strong>Name:</strong> {{ selectedSupplierDetails.name }} <br>
-          <strong>State:</strong> {{ selectedSupplierDetails.state }} <br>
-          <strong>Contact:</strong> {{ selectedSupplierDetails.phoneNumber }} <br>
-          <strong>Address:</strong> {{ selectedSupplierDetails.address }} <br>
-          <strong>Email:</strong> {{ selectedSupplierDetails.email }} <br>
-          <strong>Other Information:</strong> {{ selectedSupplierDetails.otherInformation }} <br>
-        </p>
-        <ng-template #noInfo>
-          <p class="text-muted">No supplier selected.</p>
-        </ng-template>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-      </div>
-    </div>
-  </div>
-</div>
-<div #supplier2InfoModal class="modal fade" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header bg-primary text-white">
-        <h5 class="modal-title">Supplier Information</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <p *ngIf="selectedSupplierDetails2; else noInfo">
-          <strong>Name:</strong> {{ selectedSupplierDetails2.name }} <br>
-          <strong>State:</strong> {{ selectedSupplierDetails2.state }} <br>
-          <strong>Contact:</strong> {{ selectedSupplierDetails2.phoneNumber }} <br>
-          <strong>Address:</strong> {{ selectedSupplierDetails2.address }} <br>
-          <strong>Email:</strong> {{ selectedSupplierDetails2.email }} <br>
-          <strong>Other Information:</strong> {{ selectedSupplierDetails2.otherInformation }} <br>
-        </p>
-        <ng-template #noInfo>
-          <p class="text-muted">No supplier selected.</p>
-        </ng-template>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-      </div>
-    </div>
-  </div>
-</div>
-<!-- Modal -->
-<div #productInfoModal class="modal fade" tabindex="-1" aria-hidden="true"  style="z-index: 100009!important;">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header bg-primary text-white">
-        <h5 class="modal-title">Product Information</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <p *ngIf="selectedProductDetails; else noInfo">
-          <strong>Name:</strong> {{ selectedProductDetails.name }} <br>
-          <strong>Brand:</strong> {{ selectedProductDetails.brand }} <br>
-          <strong>Description:</strong> {{ selectedProductDetails.description }} <br>
-          <strong>Price:</strong> {{ selectedProductDetails.price }} <br>
-        </p>
-        <ng-template #noInfo>
-          <p class="text-muted">No Product selected.</p>
-        </ng-template>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-      </div>
-    </div>
-  </div>
-</div>
+                <!-- Date Input -->
+                <div class="form-group">
+                  <label for="date" class="form-label">
+                    <i class="bi bi-calendar me-1"></i>Date
+                  </label>
+                  <input type="date" id="date" class="form-control custom-input" [(ngModel)]="date">
+                </div>
 
+                <!-- Search Button -->
+                <div class="form-group d-flex align-items-end gap-2">
+                  <button type="button" class="btn btn-primary search-btn" (click)="searchGRN()" title="Search GRN">
+                    <i class="bi bi-search me-1"></i> Search
+                  </button>
+                  <button type="button"
+                    class="btn btn-outline-secondary d-flex align-items-center justify-content-center"
+                    (click)="resetSearch()" title="Reset Filters"
+                    style="height: 44px; width: 44px; border-radius: 8px;">
+                    <i class="bi bi-arrow-clockwise"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <hr />
+            <div class="mt-4">
+              <h5>GRN List of Supplier: {{selectedSupplierName2 }}</h5>
+              <table class="table table-bordered table-striped" *ngIf="grnListrpt.length > 0; else noRecords">
+                <thead class="table-dark">
+                  <tr>
+                    <th>Action</th>
+                    <th>GRN Number</th>
+                    <th>Challan Number</th>
+                    <th>Responsible Person</th>
+                    <th>Grn Status</th>
 
-<div #grnProductListpopup class="modal fade" tabindex="-1" aria-hidden="true" style="z-index: 100008!important;">
-  <div class="modal-dialog modal-xl">
-    <div class="modal-content">
-      <!-- Modal Header -->
-      <div class="modal-header bg-primary text-white">
-        <h5 class="modal-title">GRN Product List</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
+                    <th>Product Details</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let grn of grnListrpt">
+                    <td><button class="btn btn-primary btn-sm" (click)="editGRN(grn)">Edit</button></td>
+                    <td>{{ grn.grnNumber }}</td>
+                    <td>{{ grn.challanNumber }}</td>
+                    <td>{{ grn.responsiblePerson }}</td>
+                    <td>{{grn.grnStatus}}</td>
+                    <td>
+                      <table class="table table-sm table-bordered">
+                        <thead>
+                          <tr>
+                            <th>Product Name</th>
+                            <!-- <th>Pack Size</th> -->
+                            <th>Received Qty</th>
+                            <th>Rejected Qty</th>
+                            <th>Passed Qty</th>
+                            <th>Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr *ngFor="let detail of grn.grndetails">
+                            <td>{{ detail.productName }}</td>
+                            <!-- <td>{{ detail.packSize }}</td> -->
+                            <td>{{ detail.receivedQuantity }}</td>
+                            <td>{{ detail.rejectedQuantity }}</td>
+                            <td>{{ detail.passedQuantity }}</td>
+                            <td> <span class="badge" [ngClass]="getStatusClass(detail.status)">
+                                {{ detail.status }}
+                              </span></td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
 
-      <!-- Modal Body -->
-      <div class="modal-body">
-        <div class="grn-form-container">
-          <div class="form-row">
-            <div class="form-group">
-              <div class="d-flex align-items-center mb-1">
-                <label class="form-label mb-0 me-1">
-                  <i class="bi bi-building me-1"></i>Selected Supplier
-                </label>
-              </div>
-              <div class="info-display-value">{{grnListRptoldSupplierName}}</div>
-            </div>
-            
-            <div class="form-group">
-              <div class="d-flex align-items-center mb-1">
-                <label class="form-label mb-0 me-1">
-                  <i class="bi bi-upc-scan me-1"></i>GRN NO
-                </label>
-              </div>
-              <div class="info-display-value">{{grnListRptoldGrnNo}}</div>
-            </div>
-            
-            <div class="form-group">
-              <div class="d-flex align-items-center mb-1">
-                <label class="form-label mb-0 me-1">
-                  <i class="bi bi-person-badge me-1"></i>Responsible Person
-                </label>
-              </div>
-              <div class="info-display-value">{{grnListRptoldResponsiblePerson}}</div>
-            </div>
-            
-            <div class="form-group">
-              <div class="d-flex align-items-center mb-1">
-                <label class="form-label mb-0 me-1">
-                  <i class="bi bi-box me-1"></i>Docker No
-                </label>
-              </div>
-              <div class="info-display-value">{{grnListRptolddokerno}}</div>
-            </div>
-            
-            <div class="form-group">
-              <div class="d-flex align-items-center mb-1">
-                <label class="form-label mb-0 me-1">
-                  <i class="bi bi-flag me-1"></i>GRN Status
-                </label>
-              </div>
-              <select id="grnstatusDropdown" [(ngModel)]="selectedgrnOldstatus" 
-                      (change)="onGRNStatusChange()" 
-                      name="grnstatusDropdown" 
-                      class="form-select custom-dropdown">
-                <option value="" disabled>Select GRN Status</option>
-                <option *ngFor="let p of grnstatus" [value]="p.name">
-                  {{ p.name }}
-                </option>
-              </select>
+              <!-- Template for No Records Found -->
+              <ng-template #noRecords>
+                <div class="alert alert-warning text-center mt-3">
+                  No records are found.
+                </div>
+              </ng-template>
+
             </div>
           </div>
         </div>
-        <button class="btn btn-sm btn-primary mb-3" (click)="updateGrnRow()">
-          <i class="bi bi-plus-lg"></i> Add New Row
-        </button>
-        <div class="table-container">
-          <div class="table-responsive" style="max-height: 400px; overflow: auto;">
-            <table class="table table-bordered table-hover table-sm text-center align-middle fixed-table">
-              <thead class="table-dark">
+
+        <!-- Print Area  -->
+
+
+        <div id="printSectionChallan" style="display: none;">
+          <!--    -->
+          <div class="col-md-12 mb-3 d-flex justify-content-between">
+            <div>GSTIN: 06AAACO7774J1Z2</div>
+            <div>Date: {{ todayDate }}</div>
+          </div>
+          <h3 class="text-center">Odin Healthcare Pvt. Ltd.</h3>
+          <h5 class="text-center">Plotno 45, Industrial Area, Phase-2, Panchkula(Haryana)</h5>
+          <h5 class="text-center">Call Us: 0172-4624664, E-mail: customercare&#64;drodin.in</h5>
+          <h5 class="text-center">CHALLAN</h5>
+          <hr />
+          <div class="d-flex justify-content-between">
+            <div>
+              <label class="form-label">Name of Supplier: &nbsp;&nbsp;</label>
+              <label class="form-label">{{selectedSupplierName}}</label>
+            </div>
+            <div>
+              <label class="form-label">Consignement Number: &nbsp;&nbsp;</label>
+              <label class="form-label">{{dockernumber}}</label>
+            </div>
+            <div>
+              <label class="form-label">CHALLAN Number: &nbsp;&nbsp;</label>
+              <label class="form-label">{{challanNumber}}</label>
+            </div>
+          </div>
+          <table class="table table-bordered table-hover table-sm text-center align-middle">
+            <thead class="table-dark">
               <tr>
-                <th scope="col" style="width: 50px; position: sticky; top: 0; z-index: 2;">S.No</th>
-                <th scope="col" style="width: 370px; position: sticky; top: 0; z-index: 2;">Product</th>
-                <th scope="col" colspan="2" style="width: 140px; position: sticky; top: 0; z-index: 2;">Quantity</th>
-                <th scope="col" colspan="2" style="width: 300px; position: sticky; top: 0; z-index: 2;">Quantity</th>
-                <th scope="col" style="width: 150px; position: sticky; top: 0; z-index: 2;">Status</th>
-                <th scope="col" style="width: 150px; position: sticky; top: 0; z-index: 2;">Demanded</th>
-                <th scope="col" style="width: 80px; position: sticky; top: 0; z-index: 2;">MRP</th>
-                <th scope="col" style="width: 120px; position: sticky; top: 0; z-index: 2;">Batch</th>
-                <th scope="col" style="width: 120px; position: sticky; top: 0; z-index: 2;">Expiry</th>
-                <th scope="col" style="width: 120px; position: sticky; top: 0; z-index: 2;">Retrun To Party</th>
-                <th scope="col" style="width: 120px; position: sticky; top: 0; z-index: 2;">Retrun Quantity</th>
-                <th scope="col" style="width: 120px; position: sticky; top: 0; z-index: 2;">Remarks 1</th>
-                <th scope="col" style="width: 120px; position: sticky; top: 0; z-index: 2;">Remarks 2</th>
-                <th scope="col" style="width: 60px; position: sticky; top: 0; z-index: 2;">Actions</th>
-              </tr>
-              <tr> 
-                <th style="position: sticky; top: 23px;  z-index: 1;"></th>
-                <th style="position: sticky; top: 23px;  z-index: 1;"></th>
-                <th style="width: 60px; position: sticky; top: 23px;  z-index: 1;">As per party</th>
-                <th style="width: 60px; position: sticky; top: 23px;  z-index: 1;">Received</th>
-                <th style="width: 150px; position: sticky; top: 23px;  z-index: 1;">Passed</th>
-                <th style="width: 150px; position: sticky; top: 23px;  z-index: 1;">Rejected</th>
-                <th style="position: sticky; top: 23px;  z-index: 1;"></th>
-                <th style="position: sticky; top: 23px;  z-index: 1;">By Party</th>
-                <th style="position: sticky; top: 23px;  z-index: 1;"></th>
-                <th style="position: sticky; top: 23px;  z-index: 1;"></th>
-                <th style="position: sticky; top: 23px;  z-index: 1;"></th>
-                <th style="position: sticky; top: 23px;  z-index: 1;"></th>
-                <th style="position: sticky; top: 23px;  z-index: 1;"></th>  
-                <th style="position: sticky; top: 23px;  z-index: 1;"></th>
-                <th style="position: sticky; top: 23px;  z-index: 1;"></th>
+                <th scope="col">S.No</th>
+                <th scope="col">Product Name</th>
+                <th scope="col">Quantity</th>
+                <th scope="col">Aprox. Value</th>
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let grn of grnListRptold; let i = index">
-                <td>{{ i + 1 }}</td> 
-                <td style="width: 200px;">
-                  <div class="d-flex align-items-center">
-                    <select [(ngModel)]="grn.productId" class="form-select form-select-sm w-100 Dropdown">
-                      <option value="" disabled>Select</option>
-                      <option *ngFor="let p of products" [ngValue]="p.productId">{{ p.name }}</option>
-                    </select>
-                    <button type="button" class="btn btn-sm ms-2" style="padding: 2px 5px; font-size: 0.7rem;"  (click)="openproductInfoModal(grn.productId)">
-                      <i class="bi bi-info-circle text-primary"></i>
-                    </button>
-                  </div>
+              <tr *ngFor="let grn of filteredGrnList(); let i = index">
+                <td>{{ i + 1 }}</td>
+                <td>{{ getProductName(grn.selectedProduct) }}</td>
+                <td>{{ grn.retQty }}</td>
+                <td>{{grn.mrp}}</td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <!-- First Row with 2 Columns -->
+
+              <tr class="table-footer">
+                <td colspan="2" class="text-start fw-bold">
+                  <br /> <i>Order Booked By: ___________________</i>
                 </td>
-                <td>
-                  <input type="number" [(ngModel)]="grn.quantityAsPerParty" class="form-control form-control-sm" (change)="updateQuantity(grn)" />
+                <td colspan="2" class="text-end fw-bold">
+                  <br /> <i>For Odin Healthcare Pvt. Ltd.</i>
                 </td>
-                <td>
-                  <input type="number" [(ngModel)]="grn.receivedQuantity" class="form-control form-control-sm" (change)="updateQuantity(grn)" />
+              </tr>
+              <!-- Second Row with 2 Columns -->
+              <tr class="table-footer">
+                <td colspan="2" class="text-start fw-bold">
+                  <br /> <i>Receiver's Signature ____________
+                    <br /> <br /> Received the above goods in good conditions
+                  </i>
                 </td>
-                <td>
-                  <input type="number" [(ngModel)]="grn.passedQuantity" class="form-control form-control-sm" (change)="updateQuantity(grn)" />
-                  <select [(ngModel)]="grn.passedstatus" class="form-select form-select-sm Dropdown">
-                    <option value="" disabled>Select</option>
-                    <option *ngFor="let p of statusofpassed" [ngValue]="p.name">{{ p.name }}</option>
-                  </select>
+                <td colspan="2" class="text-end fw-bold">
+                  <br /> <i>Authorized Signatory</i>
                 </td>
-                <td>
-                  <input type="number" [(ngModel)]="grn.rejectedQuantity" class="form-control form-control-sm" (change)="updateQuantity(grn)" />
-                  <select [(ngModel)]="grn.rejectedstatus" class="form-select form-select-sm Dropdown">
-                    <option value="" disabled>Select</option>
-                    <option *ngFor="let p of statusofrejected" [ngValue]="p.name">{{ p.name }}</option>
-                  </select>
-                </td>
-                <td>
-                  <select [(ngModel)]="grn.status" class="form-select form-select-sm Dropdown">
-                    <option value="" disabled>Select</option>
-                    <option *ngFor="let p of status" [ngValue]="p.name">{{ p.name }}</option>
-                  </select>
-                </td>
-                <td style="width: 100px;">
-                  <select [(ngModel)]="grn.demandedbyparty" class="form-select form-select-sm Dropdown">
-                    <option value="" disabled>Select</option>
-                    <option *ngFor="let p of demandedbyparty" [ngValue]="p.name">{{ p.name }}</option>
-                  </select>
-                </td>
-              
-                <td>
-                  <input type="number" [(ngModel)]="grn.mrp" class="form-control form-control-sm" (change)="updateQuantity(grn)" />
-                </td>
-                <td>
-                  <input type="text" [(ngModel)]="grn.batchNumber" class="form-control form-control-sm" placeholder="Batch" />
-                </td>
-                <td>
-                  <input type="date" [(ngModel)]="grn.expiryDate" class="form-control form-control-sm" />
-                </td>
-                <td>
-                  <input type="checkbox" [(ngModel)]="grn.returnToParty" class="form-check-input" id="returnToParty" />
-                </td>
-                <td>
-                  <input type="number" [(ngModel)]="grn.quantity" class="form-control form-control-sm w-100" placeholder="Retrun Quantity" />
-                </td>
-                <td>
-                  <input type="text" [(ngModel)]="grn.remarks1" class="form-control form-control-sm" placeholder="Remarks" />
-                </td>
-                <td>
-                  <input type="text" [(ngModel)]="grn.remarks2" class="form-control form-control-sm" placeholder="Remarks" />
-                </td>
-                <td>
-                  <button class="btn btn-sm text-danger" (click)="removeGrnOldRow(i)">
-                    <i class="bi bi-trash"></i>
-                  </button>
-                </td>
+              </tr>
+            </tfoot>
+          </table>
+
+
+        </div>
+
+        <div id="printSection" style="display: none;">
+          <!--  style="display: none;" -->
+          <div class="col-md-12 mb-3 text-end">Date:&nbsp;&nbsp;{{todayDate}} </div>
+          <h3 class="text-center">Odin Healthcare Pvt. Ltd.</h3>
+          <h5 class="text-center">Plotno 45, Industrial Area, Phase-2, Panchkula(Haryana)</h5>
+          <h5 class="text-center">Call Us: +91 9878785333, E-mail: customercare&#64;drodin.in</h5>
+          <h5 class="text-center">Goods Received Note /Inspection Report</h5>
+          <hr />
+          <div class="d-flex justify-content-between">
+            <div>
+              <label class="form-label">Name of Supplier: &nbsp;&nbsp;</label>
+              <label class="form-label">{{selectedSupplierName}}</label>
+            </div>
+            <div>
+              <label class="form-label">Responsible Person: &nbsp;&nbsp;</label>
+              <label class="form-label">{{selectedResperson}}</label>
+            </div>
+            <div>
+              <label class="form-label">Docker number: &nbsp;&nbsp;</label>
+              <label class="form-label">{{dockernumber}}</label>
+            </div>
+            <div>
+              <label class="form-label">GRN STATUS: &nbsp;&nbsp;</label>
+              <label class="form-label">{{selectedgrnstatus}}</label>
+            </div>
+            <div>
+              <label class="form-label">GRN Number: &nbsp;&nbsp;</label>
+              <label class="form-label">{{grnNumber}}</label>
+            </div>
+          </div>
+          <table class="table table-bordered table-hover table-sm text-center align-middle">
+            <thead class="table-dark">
+              <tr>
+                <th scope="col">S.No</th>
+                <th scope="col">Product Name</th>
+                <th scope="col" colspan="2" class="text-center">Quantity</th>
+                <th scope="col" colspan="2" class="text-center">Quantity</th>
+                <th scope="col">Status</th>
+                <th scope="col">Demanded</th>
+                <th scope="col">MRP</th>
+                <th scope="col">Batch No</th>
+                <th scope="col">Date of Expiry</th>
+                <!-- <th scope="col" >Retrun To Party</th> -->
+                <th scope="col">Retrun Quantity</th>
+                <th scope="col">Remarks 1</th>
+                <th scope="col">Remarks 2</th>
+              </tr>
+              <tr>
+                <th scope="col"></th>
+                <th scope="col"></th>
+                <th scope="col">As per party</th>
+                <th scope="col">Received</th>
+                <th scope="col">Passed</th>
+                <th scope="col">Rejected</th>
+                <th></th>
+                <th>By Party</th>
+                <th scope="col"></th>
+                <th scope="col"></th>
+                <th scope="col"></th>
+                <!-- <th scope="col"></th> -->
+                <th scope="col"></th>
+                <th scope="col"></th>
+                <th scope="col"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let grn of grnList; let i = index">
+                <td>{{ i + 1 }}</td>
+                <td>{{ getProductName(grn.selectedProduct) }}</td>
+                <td>{{ grn.quantityasperparty }}</td>
+                <td>{{ grn.receivedQuantity }}</td>
+                <td>{{ grn.passed }} <br />{{ grn.statusofpassed }}</td>
+                <td>{{ grn.rejected }} <br />{{ grn.statusofrejected }}</td>
+                <td>{{ grn.status }}</td>
+                <td>{{ grn.demandedbyparty }}</td>
+                <td>{{ grn.MRP }}</td>
+                <td>{{ grn.batchno }}</td>
+                <td>{{ grn.expiryDate }}</td>
+                <!-- <td>{{ grn.RetrunToParty }}</td> -->
+                <td>{{ grn.retQty }}</td>
+                <td>{{ grn.remarks }}</td>
+                <td>{{ grn.remarks2 }}</td>
               </tr>
             </tbody>
             <tfoot>
               <tr class="table-footer">
-                <td colspan="16" class="text-start fw-bold"><i>Total Product Added: {{ grnListRptold.length }}</i></td>
+                <td colspan="16" class="text-start fw-bold">
+                  <br /> <i>Total Product Added: {{ grnList.length }}</i>
+                </td>
+              </tr>
+              <tr class="table-footer">
+                <td colspan="6" class="text-start fw-bold">
+                  <br /> <i>Inspection Done By: ___________________</i>
+                </td>
+                <td colspan="6" class="text-center fw-bold">
+                  <br /> <i>Authorized Signature ____________</i>
+                </td>
+                <td colspan="6" class="text-end fw-bold">
+                  <br /><i>Received By ____________</i>
+                </td>
               </tr>
             </tfoot>
+
           </table>
-        </div>
-        </div>
-        
-      </div>
 
-      <!-- Modal Footer -->
-      <div class="modal-footer">
-        <button class="btn btn-success btn-sm" style="background-color: #2196f3;border: #2196f3;" (click)="UpdateoldGRN()">
-          <i class="bi bi-check-circle"></i> Submit
-        </button>
-        <button type="button" class="btn btn-danger btn-sm" data-bs-dismiss="modal">
-          <i class="bi bi-x-circle"></i> Close
-        </button>
+        </div>
       </div>
     </div>
-  </div>
-</div>
-<!-- PRINT GRN POPUP EDIT -->
-<div id="printSectionpopup" style="display: none;" >
 
-
-    <div class="col-md-12 mb-3 text-end">Date:&nbsp;&nbsp;{{todayDate}} </div>
-    <h3 class="text-center">Odin Healthcare Pvt. Ltd.</h3>
-    <h5 class="text-center">Plotno 45, Industrial Area, Phase-2, Panchkula(Haryana)</h5>
-    <h5 class="text-center">Call Us: +91 9878785333, E-mail: customercare&#64;drodin.in</h5>
-    <h5 class="text-center">Goods Received Note /Inspection Report</h5>
-    <hr />
-    <div class="d-flex justify-content-between">
-      <div>
-        <label class="form-label">Name of Supplier: &nbsp;&nbsp;</label>
-        <label class="form-label">{{grnListRptoldSupplierName}}</label>
-      </div>
-      <div>
-        <label class="form-label">Responsible Person: &nbsp;&nbsp;</label>
-        <label class="form-label">{{grnListRptoldResponsiblePerson}}</label>
-      </div>
-      <div>
-        <label class="form-label">Docker number: &nbsp;&nbsp;</label>
-        <label class="form-label">{{grnListRptolddokerno}}</label>
-      </div>
-      <div>
-        <label class="form-label">GRN STATUS: &nbsp;&nbsp;</label>
-        <label class="form-label">{{selectedgrnOldstatus}}</label>
-      </div>
-                <div>
-        <label class="form-label">GRN Number: &nbsp;&nbsp;</label>
-        <label class="form-label">{{grnListRptoldGrnNo}}</label>
+    <!-- Modal supplierInfoModal-->
+    <div #supplierInfoModal class="modal fade" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title">Supplier Information</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p *ngIf="selectedSupplierDetails; else noInfo">
+              <strong>Name:</strong> {{ selectedSupplierDetails.name }} <br>
+              <strong>State:</strong> {{ selectedSupplierDetails.state }} <br>
+              <strong>Contact:</strong> {{ selectedSupplierDetails.phoneNumber }} <br>
+              <strong>Address:</strong> {{ selectedSupplierDetails.address }} <br>
+              <strong>Email:</strong> {{ selectedSupplierDetails.email }} <br>
+              <strong>Other Information:</strong> {{ selectedSupplierDetails.otherInformation }} <br>
+            </p>
+            <ng-template #noInfo>
+              <p class="text-muted">No supplier selected.</p>
+            </ng-template>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
       </div>
     </div>
-    <table class="table table-bordered table-hover table-sm text-center align-middle">
-      <thead class="table-dark">
-        <tr>
-          <th scope="col" style="width: 50px;">S.No</th>
-          <th scope="col" style="width: 370px;">Product Name</th>
-          <th scope="col" colspan="2" class="text-center" style="width: 140px;">Quantity</th>
-          <th scope="col" colspan="2" class="text-center" style="width: 300px;">Quantity</th>
-          <th scope="col" style="width: 150px;">Status</th>
-          <th scope="col" style="width: 150px;">Demanded</th>
-          <th scope="col" style="width: 80px;">MRP</th>
-          <th scope="col" style="width: 120px;">Batch No</th>
-          <th scope="col" style="width: 120px;">Date of Expiry</th>
-          <th scope="col" style="width: 120px;">Return Quantity</th>
-          <th scope="col" style="width: 120px;">Remarks 1</th>
-          <th scope="col" style="width: 120px;">Remarks 2</th>
-        </tr>
-        <tr>
-          <th></th>
-          <th></th>
-          <th style="width: 60px;">As per party</th>
-          <th style="width: 60px;">Received</th>
-          <th style="width: 150px;">Passed</th>
-          <th style="width: 150px;">Rejected</th>
-          <th></th>
-          <th>By Party</th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let grn of grnListRptold; let i = index">
-          <td>{{ i + 1 }}</td>
-          <td style="width: 370px;">{{ getProductName(grn.productId) }}</td>
-          <td style="width: 60px;">{{ grn.quantityAsPerParty }}</td>
-          <td style="width: 60px;">{{ grn.receivedQuantity }}</td>
-          <td style="width: 150px;">{{ grn.passedQuantity }} <br />{{ grn.passedstatus }}</td>
-          <td style="width: 150px;">{{ grn.rejectedQuantity }} <br />{{ grn.rejectedstatus }}</td>
-          <td style="width: 150px;">{{ grn.status }}</td>
-          <td style="width: 150px;">{{ grn.demandedbyparty }}</td>
-          <td style="width: 80px;">{{ grn.mrp }}</td>
-          <td style="width: 120px;">{{ grn.batchNumber }}</td>
-          <td style="width: 120px;">{{ grn.expiryDate }}</td>
-          <td style="width: 120px;">{{ grn.quantity }}</td>
-          <td style="width: 120px;">{{ grn.remarks1 }}</td>
-          <td style="width: 120px;">{{ grn.remarks2 }}</td>
-        </tr>
-      </tbody>
-      <tfoot>
-        <tr class="table-footer">
-          <td colspan="14" class="text-start fw-bold">
-            <br /><i>Total Product Added: {{ grnListRptold.length }}</i>
-          </td>
-        </tr>
-        <tr class="table-footer">
-          <td colspan="6" class="text-start fw-bold">
-            <br /><i>Inspection Done By: ___________________</i>
-          </td>
-          <td colspan="6" class="text-center fw-bold">
-            <br /><i>Authorized Signature ____________</i>
-          </td>
-          <td colspan="6" class="text-end fw-bold">
-            <br /><i>Received By ____________</i>
-          </td>
-        </tr>
-      </tfoot>
-    </table>
-    
-  
-</div>
-<!-- 
+    <div #supplier2InfoModal class="modal fade" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title">Supplier Information</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p *ngIf="selectedSupplierDetails2; else noInfo">
+              <strong>Name:</strong> {{ selectedSupplierDetails2.name }} <br>
+              <strong>State:</strong> {{ selectedSupplierDetails2.state }} <br>
+              <strong>Contact:</strong> {{ selectedSupplierDetails2.phoneNumber }} <br>
+              <strong>Address:</strong> {{ selectedSupplierDetails2.address }} <br>
+              <strong>Email:</strong> {{ selectedSupplierDetails2.email }} <br>
+              <strong>Other Information:</strong> {{ selectedSupplierDetails2.otherInformation }} <br>
+            </p>
+            <ng-template #noInfo>
+              <p class="text-muted">No supplier selected.</p>
+            </ng-template>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Modal -->
+    <div #productInfoModal class="modal fade" tabindex="-1" aria-hidden="true" style="z-index: 100009!important;">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title">Product Information</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p *ngIf="selectedProductDetails; else noInfo">
+              <strong>Name:</strong> {{ selectedProductDetails.name }} <br>
+              <strong>Brand:</strong> {{ selectedProductDetails.brand }} <br>
+              <strong>Description:</strong> {{ selectedProductDetails.description }} <br>
+              <strong>Price:</strong> {{ selectedProductDetails.price }} <br>
+            </p>
+            <ng-template #noInfo>
+              <p class="text-muted">No Product selected.</p>
+            </ng-template>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <div #grnProductListpopup class="modal fade" tabindex="-1" aria-hidden="true" style="z-index: 100008!important;">
+      <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+          <!-- Modal Header -->
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title">GRN Product List</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+
+          <!-- Modal Body -->
+          <div class="modal-body">
+            <div class="grn-form-container">
+              <div class="form-row">
+                <div class="form-group">
+                  <div class="d-flex align-items-center mb-1">
+                    <label class="form-label mb-0 me-1">
+                      <i class="bi bi-building me-1"></i>Selected Supplier
+                    </label>
+                  </div>
+                  <div class="info-display-value">{{grnListRptoldSupplierName}}</div>
+                </div>
+
+                <div class="form-group">
+                  <div class="d-flex align-items-center mb-1">
+                    <label class="form-label mb-0 me-1">
+                      <i class="bi bi-upc-scan me-1"></i>GRN NO
+                    </label>
+                  </div>
+                  <div class="info-display-value">{{grnListRptoldGrnNo}}</div>
+                </div>
+
+                <div class="form-group">
+                  <div class="d-flex align-items-center mb-1">
+                    <label class="form-label mb-0 me-1">
+                      <i class="bi bi-person-badge me-1"></i>Responsible Person
+                    </label>
+                  </div>
+                  <div class="info-display-value">{{grnListRptoldResponsiblePerson}}</div>
+                </div>
+
+                <div class="form-group">
+                  <div class="d-flex align-items-center mb-1">
+                    <label class="form-label mb-0 me-1">
+                      <i class="bi bi-box me-1"></i>Docker No
+                    </label>
+                  </div>
+                  <div class="info-display-value">{{grnListRptolddokerno}}</div>
+                </div>
+
+                <div class="form-group">
+                  <div class="d-flex align-items-center mb-1">
+                    <label class="form-label mb-0 me-1">
+                      <i class="bi bi-flag me-1"></i>GRN Status
+                    </label>
+                  </div>
+                  <select id="grnstatusDropdown" [(ngModel)]="selectedgrnOldstatus" (change)="onGRNStatusChange()"
+                    name="grnstatusDropdown" class="form-select custom-dropdown">
+                    <option value="" disabled>Select GRN Status</option>
+                    <option *ngFor="let p of grnstatus" [value]="p.name">
+                      {{ p.name }}
+                    </option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <button class="btn btn-sm btn-primary mb-3" (click)="updateGrnRow()">
+              <i class="bi bi-plus-lg"></i> Add New Row
+            </button>
+            <div class="table-container">
+              <div class="table-responsive" style="max-height: 400px; overflow: auto;">
+                <table class="table table-bordered table-hover table-sm text-center align-middle fixed-table">
+                  <thead class="table-dark">
+                    <tr>
+                      <th scope="col" style="width: 50px; position: sticky; top: 0; z-index: 2;">S.No</th>
+                      <th scope="col" style="width: 370px; position: sticky; top: 0; z-index: 2;">Product</th>
+                      <th scope="col" colspan="2" style="width: 140px; position: sticky; top: 0; z-index: 2;">Quantity
+                      </th>
+                      <th scope="col" colspan="2" style="width: 300px; position: sticky; top: 0; z-index: 2;">Quantity
+                      </th>
+                      <th scope="col" style="width: 150px; position: sticky; top: 0; z-index: 2;">Status</th>
+                      <th scope="col" style="width: 150px; position: sticky; top: 0; z-index: 2;">Demanded</th>
+                      <th scope="col" style="width: 80px; position: sticky; top: 0; z-index: 2;">MRP</th>
+                      <th scope="col" style="width: 120px; position: sticky; top: 0; z-index: 2;">Batch</th>
+                      <th scope="col" style="width: 120px; position: sticky; top: 0; z-index: 2;">Expiry</th>
+                      <th scope="col" style="width: 120px; position: sticky; top: 0; z-index: 2;">Retrun To Party</th>
+                      <th scope="col" style="width: 120px; position: sticky; top: 0; z-index: 2;">Retrun Quantity</th>
+                      <th scope="col" style="width: 120px; position: sticky; top: 0; z-index: 2;">Remarks 1</th>
+                      <th scope="col" style="width: 120px; position: sticky; top: 0; z-index: 2;">Remarks 2</th>
+                      <th scope="col" style="width: 60px; position: sticky; top: 0; z-index: 2;">Actions</th>
+                    </tr>
+                    <tr>
+                      <th style="position: sticky; top: 23px;  z-index: 1;"></th>
+                      <th style="position: sticky; top: 23px;  z-index: 1;"></th>
+                      <th style="width: 60px; position: sticky; top: 23px;  z-index: 1;">As per party</th>
+                      <th style="width: 60px; position: sticky; top: 23px;  z-index: 1;">Received</th>
+                      <th style="width: 150px; position: sticky; top: 23px;  z-index: 1;">Passed</th>
+                      <th style="width: 150px; position: sticky; top: 23px;  z-index: 1;">Rejected</th>
+                      <th style="position: sticky; top: 23px;  z-index: 1;"></th>
+                      <th style="position: sticky; top: 23px;  z-index: 1;">By Party</th>
+                      <th style="position: sticky; top: 23px;  z-index: 1;"></th>
+                      <th style="position: sticky; top: 23px;  z-index: 1;"></th>
+                      <th style="position: sticky; top: 23px;  z-index: 1;"></th>
+                      <th style="position: sticky; top: 23px;  z-index: 1;"></th>
+                      <th style="position: sticky; top: 23px;  z-index: 1;"></th>
+                      <th style="position: sticky; top: 23px;  z-index: 1;"></th>
+                      <th style="position: sticky; top: 23px;  z-index: 1;"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let grn of grnListRptold; let i = index">
+                      <td>{{ i + 1 }}</td>
+                      <td style="width: 200px;">
+                        <div class="d-flex align-items-center">
+                          <select [(ngModel)]="grn.productId" class="form-select form-select-sm w-100 Dropdown">
+                            <option value="" disabled>Select</option>
+                            <option *ngFor="let p of products" [ngValue]="p.productId">{{ p.name }}</option>
+                          </select>
+                          <button type="button" class="btn btn-sm ms-2" style="padding: 2px 5px; font-size: 0.7rem;"
+                            (click)="openproductInfoModal(grn.productId)">
+                            <i class="bi bi-info-circle text-primary"></i>
+                          </button>
+                        </div>
+                      </td>
+                      <td>
+                        <input type="number" [(ngModel)]="grn.quantityAsPerParty" class="form-control form-control-sm"
+                          (change)="updateQuantity(grn)" />
+                      </td>
+                      <td>
+                        <input type="number" [(ngModel)]="grn.receivedQuantity" class="form-control form-control-sm"
+                          (change)="updateQuantity(grn)" />
+                      </td>
+                      <td>
+                        <input type="number" [(ngModel)]="grn.passedQuantity" class="form-control form-control-sm"
+                          (change)="updateQuantity(grn)" />
+                        <select [(ngModel)]="grn.passedstatus" class="form-select form-select-sm Dropdown">
+                          <option value="" disabled>Select</option>
+                          <option *ngFor="let p of statusofpassed" [ngValue]="p.name">{{ p.name }}</option>
+                        </select>
+                      </td>
+                      <td>
+                        <input type="number" [(ngModel)]="grn.rejectedQuantity" class="form-control form-control-sm"
+                          (change)="updateQuantity(grn)" />
+                        <select [(ngModel)]="grn.rejectedstatus" class="form-select form-select-sm Dropdown">
+                          <option value="" disabled>Select</option>
+                          <option *ngFor="let p of statusofrejected" [ngValue]="p.name">{{ p.name }}</option>
+                        </select>
+                      </td>
+                      <td>
+                        <select [(ngModel)]="grn.status" class="form-select form-select-sm Dropdown">
+                          <option value="" disabled>Select</option>
+                          <option *ngFor="let p of status" [ngValue]="p.name">{{ p.name }}</option>
+                        </select>
+                      </td>
+                      <td style="width: 100px;">
+                        <select [(ngModel)]="grn.demandedbyparty" class="form-select form-select-sm Dropdown">
+                          <option value="" disabled>Select</option>
+                          <option *ngFor="let p of demandedbyparty" [ngValue]="p.name">{{ p.name }}</option>
+                        </select>
+                      </td>
+
+                      <td>
+                        <input type="number" [(ngModel)]="grn.mrp" class="form-control form-control-sm"
+                          (change)="updateQuantity(grn)" />
+                      </td>
+                      <td>
+                        <input type="text" [(ngModel)]="grn.batchNumber" class="form-control form-control-sm"
+                          placeholder="Batch" />
+                      </td>
+                      <td>
+                        <input type="date" [(ngModel)]="grn.expiryDate" class="form-control form-control-sm" />
+                      </td>
+                      <td>
+                        <input type="checkbox" [(ngModel)]="grn.returnToParty" class="form-check-input"
+                          id="returnToParty" />
+                      </td>
+                      <td>
+                        <input type="number" [(ngModel)]="grn.quantity" class="form-control form-control-sm w-100"
+                          placeholder="Retrun Quantity" />
+                      </td>
+                      <td>
+                        <input type="text" [(ngModel)]="grn.remarks1" class="form-control form-control-sm"
+                          placeholder="Remarks" />
+                      </td>
+                      <td>
+                        <input type="text" [(ngModel)]="grn.remarks2" class="form-control form-control-sm"
+                          placeholder="Remarks" />
+                      </td>
+                      <td>
+                        <button class="btn btn-sm text-danger" (click)="removeGrnOldRow(i)">
+                          <i class="bi bi-trash"></i>
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                  <tfoot>
+                    <tr class="table-footer">
+                      <td colspan="16" class="text-start fw-bold"><i>Total Product Added: {{ grnListRptold.length }}</i>
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Modal Footer -->
+          <div class="modal-footer">
+            <button class="btn btn-success btn-sm" style="background-color: #2196f3;border: #2196f3;"
+              (click)="UpdateoldGRN()">
+              <i class="bi bi-check-circle"></i> Submit
+            </button>
+            <button type="button" class="btn btn-danger btn-sm" data-bs-dismiss="modal">
+              <i class="bi bi-x-circle"></i> Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- PRINT GRN POPUP EDIT -->
+    <div id="printSectionpopup" style="display: none;">
+
+
+      <div class="col-md-12 mb-3 text-end">Date:&nbsp;&nbsp;{{todayDate}} </div>
+      <h3 class="text-center">Odin Healthcare Pvt. Ltd.</h3>
+      <h5 class="text-center">Plotno 45, Industrial Area, Phase-2, Panchkula(Haryana)</h5>
+      <h5 class="text-center">Call Us: +91 9878785333, E-mail: customercare&#64;drodin.in</h5>
+      <h5 class="text-center">Goods Received Note /Inspection Report</h5>
+      <hr />
+      <div class="d-flex justify-content-between">
+        <div>
+          <label class="form-label">Name of Supplier: &nbsp;&nbsp;</label>
+          <label class="form-label">{{grnListRptoldSupplierName}}</label>
+        </div>
+        <div>
+          <label class="form-label">Responsible Person: &nbsp;&nbsp;</label>
+          <label class="form-label">{{grnListRptoldResponsiblePerson}}</label>
+        </div>
+        <div>
+          <label class="form-label">Docker number: &nbsp;&nbsp;</label>
+          <label class="form-label">{{grnListRptolddokerno}}</label>
+        </div>
+        <div>
+          <label class="form-label">GRN STATUS: &nbsp;&nbsp;</label>
+          <label class="form-label">{{selectedgrnOldstatus}}</label>
+        </div>
+        <div>
+          <label class="form-label">GRN Number: &nbsp;&nbsp;</label>
+          <label class="form-label">{{grnListRptoldGrnNo}}</label>
+        </div>
+      </div>
+      <table class="table table-bordered table-hover table-sm text-center align-middle">
+        <thead class="table-dark">
+          <tr>
+            <th scope="col" style="width: 50px;">S.No</th>
+            <th scope="col" style="width: 370px;">Product Name</th>
+            <th scope="col" colspan="2" class="text-center" style="width: 140px;">Quantity</th>
+            <th scope="col" colspan="2" class="text-center" style="width: 300px;">Quantity</th>
+            <th scope="col" style="width: 150px;">Status</th>
+            <th scope="col" style="width: 150px;">Demanded</th>
+            <th scope="col" style="width: 80px;">MRP</th>
+            <th scope="col" style="width: 120px;">Batch No</th>
+            <th scope="col" style="width: 120px;">Date of Expiry</th>
+            <th scope="col" style="width: 120px;">Return Quantity</th>
+            <th scope="col" style="width: 120px;">Remarks 1</th>
+            <th scope="col" style="width: 120px;">Remarks 2</th>
+          </tr>
+          <tr>
+            <th></th>
+            <th></th>
+            <th style="width: 60px;">As per party</th>
+            <th style="width: 60px;">Received</th>
+            <th style="width: 150px;">Passed</th>
+            <th style="width: 150px;">Rejected</th>
+            <th></th>
+            <th>By Party</th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let grn of grnListRptold; let i = index">
+            <td>{{ i + 1 }}</td>
+            <td style="width: 370px;">{{ getProductName(grn.productId) }}</td>
+            <td style="width: 60px;">{{ grn.quantityAsPerParty }}</td>
+            <td style="width: 60px;">{{ grn.receivedQuantity }}</td>
+            <td style="width: 150px;">{{ grn.passedQuantity }} <br />{{ grn.passedstatus }}</td>
+            <td style="width: 150px;">{{ grn.rejectedQuantity }} <br />{{ grn.rejectedstatus }}</td>
+            <td style="width: 150px;">{{ grn.status }}</td>
+            <td style="width: 150px;">{{ grn.demandedbyparty }}</td>
+            <td style="width: 80px;">{{ grn.mrp }}</td>
+            <td style="width: 120px;">{{ grn.batchNumber }}</td>
+            <td style="width: 120px;">{{ grn.expiryDate }}</td>
+            <td style="width: 120px;">{{ grn.quantity }}</td>
+            <td style="width: 120px;">{{ grn.remarks1 }}</td>
+            <td style="width: 120px;">{{ grn.remarks2 }}</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr class="table-footer">
+            <td colspan="14" class="text-start fw-bold">
+              <br /><i>Total Product Added: {{ grnListRptold.length }}</i>
+            </td>
+          </tr>
+          <tr class="table-footer">
+            <td colspan="6" class="text-start fw-bold">
+              <br /><i>Inspection Done By: ___________________</i>
+            </td>
+            <td colspan="6" class="text-center fw-bold">
+              <br /><i>Authorized Signature ____________</i>
+            </td>
+            <td colspan="6" class="text-end fw-bold">
+              <br /><i>Received By ____________</i>
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+
+
+    </div>
+    <!-- 
 printPOPUPSectionChallan -->
-<div id="printPOPUPSectionChallan" style="display: none;">
-  <!--    -->
-  <div class="col-md-12 mb-3 d-flex justify-content-between">
-    <div>GSTIN: 06AAACO7774J1Z2</div> <div>Date: {{ todayDate }}</div>
-  </div>
-  <h3 class="text-center">Odin Healthcare Pvt. Ltd.</h3>
-  <h5 class="text-center">Plotno 45, Industrial Area, Phase-2, Panchkula(Haryana)</h5>
-  <h5 class="text-center">Call Us: 0172-4624664, E-mail: customercare&#64;drodin.in</h5>
-  <h5 class="text-center">CHALLAN</h5>
-  <hr />
-  <div class="d-flex justify-content-between">
-    <div>
-      <label class="form-label">Name of Supplier: &nbsp;&nbsp;</label>
-      <label class="form-label">{{grnListRptoldSupplierName}}</label>
-    </div>
-    <div>
-      <label class="form-label">Consignement Number: &nbsp;&nbsp;</label>
-      <label class="form-label">{{grnListRptolddokerno}}</label>
-    </div>
-    <div>
-      <label class="form-label">CHALLAN Number: &nbsp;&nbsp;</label>
-      <label class="form-label">{{grnListRptoldchallanno}}</label>
-    </div>
-  </div>
-  <table class="table table-bordered table-hover table-sm text-center align-middle">
-    <thead class="table-dark">
-      <tr>
-        <th scope="col">S.No</th>
-        <th scope="col">Product Name</th>
-        <th scope="col">Quantity</th>
-        <th scope="col">Aprox. Value</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let grn of filteredGrnOldList(); let i = index">
-        <td>{{ i + 1 }}</td>
-        <td>{{ getProductName(grn.productId) }}</td>
-        <td>{{ grn.quantity }}</td>
-        <td>{{grn.mrp}}</td>
-      </tr>
-    </tbody>
-    <tfoot>
-      <!-- First Row with 2 Columns -->
-    
-      <tr class="table-footer">
-        <td colspan="2" class="text-start fw-bold">
-          <br/> <i>Order Booked By: ___________________</i>
-        </td>
-        <td colspan="2" class="text-end fw-bold">
-          <br/> <i>For Odin Healthcare Pvt. Ltd.</i>
-        </td>
-      </tr>
-      <!-- Second Row with 2 Columns -->
-      <tr class="table-footer">
-        <td colspan="2" class="text-start fw-bold">
-         <br/> <i>Receiver's Signature ____________
-          <br/> <br/> Received the above goods in good conditions
-          </i>
-        </td>
-        <td colspan="2" class="text-end fw-bold">
-          <br/> <i>Authorized Signatory</i>
-        </td>
-      </tr>
-    </tfoot>
-  </table>
-  
+    <div id="printPOPUPSectionChallan" style="display: none;">
+      <!--    -->
+      <div class="col-md-12 mb-3 d-flex justify-content-between">
+        <div>GSTIN: 06AAACO7774J1Z2</div>
+        <div>Date: {{ todayDate }}</div>
+      </div>
+      <h3 class="text-center">Odin Healthcare Pvt. Ltd.</h3>
+      <h5 class="text-center">Plotno 45, Industrial Area, Phase-2, Panchkula(Haryana)</h5>
+      <h5 class="text-center">Call Us: 0172-4624664, E-mail: customercare&#64;drodin.in</h5>
+      <h5 class="text-center">CHALLAN</h5>
+      <hr />
+      <div class="d-flex justify-content-between">
+        <div>
+          <label class="form-label">Name of Supplier: &nbsp;&nbsp;</label>
+          <label class="form-label">{{grnListRptoldSupplierName}}</label>
+        </div>
+        <div>
+          <label class="form-label">Consignement Number: &nbsp;&nbsp;</label>
+          <label class="form-label">{{grnListRptolddokerno}}</label>
+        </div>
+        <div>
+          <label class="form-label">CHALLAN Number: &nbsp;&nbsp;</label>
+          <label class="form-label">{{grnListRptoldchallanno}}</label>
+        </div>
+      </div>
+      <table class="table table-bordered table-hover table-sm text-center align-middle">
+        <thead class="table-dark">
+          <tr>
+            <th scope="col">S.No</th>
+            <th scope="col">Product Name</th>
+            <th scope="col">Quantity</th>
+            <th scope="col">Aprox. Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let grn of filteredGrnOldList(); let i = index">
+            <td>{{ i + 1 }}</td>
+            <td>{{ getProductName(grn.productId) }}</td>
+            <td>{{ grn.quantity }}</td>
+            <td>{{grn.mrp}}</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <!-- First Row with 2 Columns -->
 
-</div>
+          <tr class="table-footer">
+            <td colspan="2" class="text-start fw-bold">
+              <br /> <i>Order Booked By: ___________________</i>
+            </td>
+            <td colspan="2" class="text-end fw-bold">
+              <br /> <i>For Odin Healthcare Pvt. Ltd.</i>
+            </td>
+          </tr>
+          <!-- Second Row with 2 Columns -->
+          <tr class="table-footer">
+            <td colspan="2" class="text-start fw-bold">
+              <br /> <i>Receiver's Signature ____________
+                <br /> <br /> Received the above goods in good conditions
+              </i>
+            </td>
+            <td colspan="2" class="text-end fw-bold">
+              <br /> <i>Authorized Signatory</i>
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+
+
+    </div>

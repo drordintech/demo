@@ -177,14 +177,14 @@ export class grnComponent implements OnInit {
 
   getSelectedSupplierName(isUpdateTab: boolean = false): string {
     const selectedId = isUpdateTab ? this.selectedsupplier2 : this.selectedsupplier;
-    if (!selectedId) return 'Select Supplier';
+    if (selectedId === '' || selectedId === null || selectedId === undefined) return 'Select Supplier';
+    if (isUpdateTab && String(selectedId) === '0') return 'All Suppliers';
     const supplier = this.suppliers.find(s => s.supplierID === +selectedId);
     return supplier ? supplier.name : 'Select Supplier';
   }
-  
+
   loadResponsiblePerson() {
     this.supplierService.getloadResponsiblePerson().subscribe((data) => {
-      
       this.ResponsiblePersons = data;
       this.filteredResponsiblePersons = data;
     });
@@ -213,26 +213,30 @@ export class grnComponent implements OnInit {
     this.selectedSupplierName = selectedSupplier ? selectedSupplier.name : '';
     this.selectedSupplierDetails = selectedSupplier;
   }
-  onGRNStatusChange(){
-    
 
+  onGRNStatusChange(){
     const selectedGRN = this.grnstatus.find(grn => grn.id === Number(this.selectedgrnstatus));
     this.selectedGRNName = selectedGRN ? selectedGRN.name : '';
     this.selectedGRNDetails = selectedGRN;
   }
-  onResponsiblePersonChange() {
-    
 
+  onResponsiblePersonChange() {
     const selectedSup = this.ResponsiblePersons.find(a => a.id === Number(this.selectedResponsiblePerson));
     this.selectedResperson = selectedSup ? selectedSup.name : '';
     this.selectedRespersonDetails = selectedSup;
-
-    // const selectedResponsiblePerson = this.ResponsiblePersons.find(a => a.id === Number(this.selectedResponsiblePerson));
-    // this.selectedResponsiblePersonname = selectedResponsiblePerson ? selectedResponsiblePerson.name : '';
-    // this.selectedResponsiblePersondetail = this.selectedResponsiblePersonname;
   }
 
   onSupplierChange2() {
+    if (this.selectedsupplier2 === '' || this.selectedsupplier2 === null || this.selectedsupplier2 === undefined) {
+      this.selectedSupplierName2 = '';
+      this.selectedSupplierDetails2 = null;
+      return;
+    }
+    if (String(this.selectedsupplier2) === '0') {
+      this.selectedSupplierName2 = 'All Suppliers';
+      this.selectedSupplierDetails2 = null;
+      return;
+    }
     const selectedSupplier = this.suppliers.find(supplier => supplier.supplierID === Number(this.selectedsupplier2));
     this.selectedSupplierName2 = selectedSupplier ? selectedSupplier.name : '';
     this.selectedSupplierDetails2 = selectedSupplier;
@@ -503,24 +507,37 @@ debugger
   }
 
   searchGRN(): void {
-
-    if (!this.selectedsupplier2 || !this.date) {
+    if (this.selectedsupplier2 === '' || this.selectedsupplier2 === null || this.selectedsupplier2 === undefined || !this.date) {
       alert("Please select both Supplier and Date before searching.");
       return;
     }
   
+    const supplierIdNum = Number(this.selectedsupplier2);
     const formattedDate = this.formatDate(this.date);
-    const params = { supplierId: this.selectedsupplier2, date: formattedDate };
-  
-    this.GrnService.getGRN(params).subscribe({
-      next: (response) => {
-        
-        this.grnListrpt = response;
-      },
-      error: (err) => {
-        console.error("Error fetching GRN:", err);
-      }
-    });
+
+    if (supplierIdNum === 0) {
+      // Search all suppliers
+      const params = { supplierId: 0, date: formattedDate };
+      this.GrnService.getGRN(params).subscribe({
+        next: (response) => {
+          this.grnListrpt = response;
+        },
+        error: (err) => {
+          console.error("Error fetching GRN:", err);
+        }
+      });
+    } else {
+      // Search selected supplier
+      const params = { supplierId: this.selectedsupplier2, date: formattedDate };
+      this.GrnService.getGRN(params).subscribe({
+        next: (response) => {
+          this.grnListrpt = response;
+        },
+        error: (err) => {
+          console.error("Error fetching GRN:", err);
+        }
+      });
+    }
   }
 
   resetSearch(): void {

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
@@ -307,7 +307,7 @@ namespace APIDRODIN.Controllers
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
-                    cmd.Parameters.AddWithValue("@SupplierId", (object?)filter.SupplierId ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@SupplierId", (filter.SupplierId.HasValue && filter.SupplierId.Value > 0) ? (object)filter.SupplierId.Value : DBNull.Value);
                     cmd.Parameters.AddWithValue("@Date", (object?)filter.date ?? DBNull.Value);
 
                     using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
