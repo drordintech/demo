@@ -8,6 +8,74 @@ import { product, productService } from '../product/product.service';
 import { Supplier, SupplierService } from '../supplier/supplier.service';
 import { grnService } from './grn.service';
 
+export interface FieldConfig {
+  label: string;
+  type: 'text' | 'number' | 'select' | 'readonly' | 'checkbox' | 'date';
+}
+
+export const FIELD_CONFIG: Record<string, FieldConfig> = {
+  sno: { label: 'S.No', type: 'readonly' },
+  product: { label: 'Product', type: 'select' },
+  sku: { label: 'SKU / Code', type: 'text' },
+  asPerParty: { label: 'As Per Party', type: 'number' },
+  quantityasperparty: { label: 'As Per Party', type: 'number' },
+  received: { label: 'Received Qty', type: 'number' },
+  receivedQuantity: { label: 'Received Qty', type: 'number' },
+  passed: { label: 'Passed Qty', type: 'number' },
+  rejected: { label: 'Rejected Qty', type: 'number' },
+  miscellaneous: { label: 'Miscellaneous Qty', type: 'number' },
+  status: { label: 'Status', type: 'select' },
+  demandedByParty: { label: 'Demanded By Party', type: 'select' },
+  MRP: { label: 'MRP', type: 'number' },
+  batchno: { label: 'Batch No', type: 'text' },
+  expiryDate: { label: 'Expiry Date', type: 'date' },
+  returnToParty: { label: 'Return to Party', type: 'checkbox' },
+  retQty: { label: 'Return Qty', type: 'number' },
+  remarks: { label: 'Remarks 1', type: 'text' },
+  remarks2: { label: 'Remarks 2', type: 'text' }
+};
+
+export const TAB_COLUMNS: Record<string, string[]> = {
+  intake: ['sno', 'product', 'asPerParty', 'received'],
+  center: [
+    'sno', 'product', 'passed', 'rejected', 'miscellaneous', 'status', 'demandedByParty',
+    'MRP', 'batchno', 'expiryDate', 'returnToParty', 'retQty', 'remarks', 'remarks2'
+  ]
+};
+
+export interface GrnRow {
+  sno: number;
+  product: any;
+  sku: string;
+  asPerParty: number;
+  received: number;
+  passed: number;
+  rejected: number;
+  miscellaneous?: number;
+  status: string;
+  demandedByParty: string;
+  demandedbyparty?: string;
+  isEditingStatus?: boolean;
+  selectedProduct?: any;
+  searchText?: string;
+  quantityasperparty?: number;
+  receivedQuantity?: number;
+  MRP?: number;
+  batchno?: string;
+  dateofexpiry?: string;
+  expiryDate?: string;
+  remarks?: string;
+  remarks2?: string;
+  statusofrejected?: string;
+  statusofpassed?: string;
+  statusofmiscellaneous?: string;
+  RetrunToParty?: boolean;
+  returnToParty?: boolean;
+  retQty?: number;
+  filteredProducts?: any[];
+  qtyWarning?: string;
+}
+
 @Component({
   selector: 'app-grn',
   standalone: true,
@@ -17,6 +85,28 @@ import { grnService } from './grn.service';
 })
 
 export class grnComponent implements OnInit {
+  FIELD_CONFIG = FIELD_CONFIG;
+  TAB_COLUMNS = TAB_COLUMNS;
+
+  getActiveColumns(): string[] {
+    const rawCols = TAB_COLUMNS[this.activeTab] || TAB_COLUMNS['intake'] || [];
+    const otherCols = rawCols.filter(c => c !== 'sno' && c !== 'product');
+    return ['sno', 'product', ...otherCols];
+  }
+
+  getFieldConfig(colKey: string): FieldConfig {
+    return FIELD_CONFIG[colKey] || { label: colKey, type: 'text' };
+  }
+
+  getStatusBadgeClass(status: string): string {
+    if (!status) return 'badge bg-secondary';
+    const s = status.toLowerCase();
+    if (s.includes('pending')) return 'badge bg-warning text-dark';
+    if (s.includes('passed') || s.includes('approved') || s.includes('complete')) return 'badge bg-success';
+    if (s.includes('rejected')) return 'badge bg-danger';
+    return 'badge bg-secondary';
+  }
+
   @ViewChild('supplierInfoModal') supplierInfoModal!: ElementRef;
   @ViewChild('supplier2InfoModal') supplier2InfoModal!: ElementRef;
   @ViewChild('productInfoModal') productInfoModal!: ElementRef;
@@ -37,7 +127,10 @@ export class grnComponent implements OnInit {
   filteredSuppliers2: Supplier[] = [];
   ResponsiblePersons: any[] = [];
   filteredResponsiblePersons: any[] = [];
-  grnList: any[] = [];    challanList: any[] = [];  challanOldList: any[] = [];
+  rows: GrnRow[] = [];
+  get grnList(): GrnRow[] { return this.rows; }
+  set grnList(val: GrnRow[]) { this.rows = val; }
+  challanList: any[] = [];  challanOldList: any[] = [];
   grnListrpt: any[] = [];
   grnListRptold: any[] = [];
   grnListRptoldSupplierName: string = '';
@@ -86,14 +179,45 @@ export class grnComponent implements OnInit {
     { id: 7, name: 'In Office Panchkula' },
   ];
 
+  statusofmiscellaneous = [
+    { id: 1, name: 'Credit Note' },
+    { id: 2, name: 'Replacement' },
+    { id: 3, name: 'Repaired' },
+    { id: 4, name: 'Scrap' },
+    { id: 5, name: 'Other' },
+  ];
+
   grnstatus = [
     { id: 1, name: 'Pending ' },
     { id: 2, name: 'Complete' },
   ];
 
   date = '';
+  fromDate: string = '';
+  toDate: string = '';
+  selectedPreset: string = '';
   searchText: string = '';
-  activeTab: string = 'home'; // Track active tab
+  activeTab: string = 'intake'; // Track active tab: 'intake' | 'service' | 'center' | 'profile'
+  stepError: string = '';
+
+  /** Editable footer fields — printed on GRN & Challan PDF */
+  stockRepair = {
+    stockReceivedParty: '',
+    docketNoDate: '',
+    transport: '',
+    debitNoteInvoice: '',
+    dateTime: ''
+  };
+
+  dispatch = {
+    stockSentTo: '',
+    challanInvoiceCreditNote: '',
+    docketNoDate: '',
+    transport: '',
+    grnNo: '',
+    noCreditNoteRemark: '',
+    needDebitNoteRemark: ''
+  };
 
   constructor(
       private GrnService: grnService,
@@ -109,6 +233,9 @@ export class grnComponent implements OnInit {
     this.genaratetodayDate();
     this.loadResponsiblePerson();
     this.genratechallanNumber();
+    if (this.rows.length === 0) {
+      this.addGrnRow();
+    }
   }
 
   genrateGRN(){
@@ -245,12 +372,27 @@ export class grnComponent implements OnInit {
   loadproducts() {
     this.productService.getproducts().subscribe((data) => {
       this.products = data;
+      this.refreshRowProducts();
+    });
+  }
+
+  /** Keep each row's product dropdown in sync after products load or when adding rows. */
+  refreshRowProducts(): void {
+    this.rows.forEach(row => {
+      if (!row.searchText) {
+        row.filteredProducts = [...this.products];
+      } else {
+        const search = row.searchText.toLowerCase();
+        row.filteredProducts = this.products.filter(
+          product => product.name.toLowerCase().includes(search)
+        );
+      }
     });
   }
   
   filterProducts(grn: any) {
     if (!grn.searchText) {
-      grn.filteredProducts = [...this.products]; // Reset to full list
+      grn.filteredProducts = [...this.products];
       grn.selectedProduct = grn.filteredProducts.length ? grn.filteredProducts[0].productId : null;
     } else {
       const search = grn.searchText.toLowerCase();
@@ -262,56 +404,69 @@ export class grnComponent implements OnInit {
   }
   
   addGrnRow() {
-    this.grnList.push({ 
-      selectedProduct: null ,
-      searchText:'',
-      quantityasperparty:0,
+    const newRow: GrnRow = {
+      sno: this.rows.length + 1,
+      product: null,
+      sku: '',
+      asPerParty: 0,
+      received: 0,
+      passed: 0,
+      rejected: 0,
+      miscellaneous: 0,
+      status: '',
+      demandedByParty: '',
+      demandedbyparty: '',
+      selectedProduct: null,
+      searchText: '',
+      quantityasperparty: 0,
       receivedQuantity: 0,
-      rejected:0,
-      passed:0,
-      status:'',
-      demandedbyparty:'',
-      MRP:0,
-      batchno:'',
-      dateofexpiry:'',
-      remarks:'',
-      remarks2:'' ,
-      statusofrejected:'',
-      statusofpassed:'',
-      RetrunToParty:false,
-      retQty:0,
-    });
-
-      this.grnList = this.grnList.map(grn => ({
-        ...grn,
-        filteredProducts: [...this.products] 
-      }));
-
+      MRP: 0,
+      batchno: '',
+      dateofexpiry: '',
+      remarks: '',
+      remarks2: '',
+      statusofrejected: '',
+      statusofpassed: '',
+      statusofmiscellaneous: '',
+      RetrunToParty: false,
+      returnToParty: false,
+      retQty: 0,
+      filteredProducts: [...this.products]
+    };
+    this.rows.push(newRow);
   }
 
   removeGrnRow(index: number) {
-    this.grnList.splice(index, 1);
+    this.rows.splice(index, 1);
+    this.rows.forEach((row, i) => row.sno = i + 1);
   }
   
   updateQuantity(grn: any) {
-    if (grn.receivedQuantity < 0) {
-      alert('Warning: Quantity is negative!');
+    if (grn.quantityasperparty !== undefined) grn.asPerParty = grn.quantityasperparty;
+    if (grn.receivedQuantity !== undefined) grn.received = grn.receivedQuantity;
+    this.validateRow(grn);
+  }
+
+  validateRow(grn: any) {
+    if (grn.quantityasperparty !== undefined) grn.asPerParty = grn.quantityasperparty;
+    if (grn.receivedQuantity !== undefined) grn.received = grn.receivedQuantity;
+
+    const received = Number(grn.receivedQuantity || grn.received || 0);
+    const asPerParty = Number(grn.quantityasperparty || grn.asPerParty || 0);
+    const passed = Number(grn.passed || 0);
+    const rejected = Number(grn.rejected || 0);
+    const miscellaneous = Number(grn.miscellaneous || 0);
+
+    // Non-blocking warning — do NOT use alert() on blur (it locks focus and blocks further edits)
+    let warning = '';
+    if (asPerParty > 0 && received > asPerParty) {
+      warning = `Row #${grn.sno || ''}: Received (${received}) exceeds As Per Party (${asPerParty}).`;
+    } else if (received > 0 && (passed + rejected + miscellaneous) > received) {
+      warning = `Row #${grn.sno || ''}: Passed + Rejected + Miscellaneous (${passed + rejected + miscellaneous}) exceeds Received (${received}).`;
     }
-    if (grn.quantityasperparty < 0) {
-      alert('Warning: Quantity is negative!');
-    }
-    if (grn.MRP < 0) {
-      alert('Warning: MRP is negative!');
-    }
-    if (grn.passed < 0) {
-      alert('Warning: Passed quantity is negative!');
-    }
-    if (grn.passed < 0) {
-      alert('Warning: Passed quantity is negative!');
-    }
-    if (grn.rejected < 0) {
-      alert('Warning: Rejected quantity is negative!');
-    }
+
+    grn.qtyWarning = warning;
+    this.stepError = warning;
   }
 
   navMobClick() {
@@ -332,95 +487,127 @@ export class grnComponent implements OnInit {
   }
 
   Save() {
-debugger
+    // Final submit only from Repair Center — ensure intake + center data are both filled
+    if (this.activeTab !== 'center') {
+      this.goToRepairCenter();
+      return;
+    }
+
+    if (!this.validateIntakeStep()) {
+      this.activeTab = 'intake';
+      return;
+    }
+
     this.filteredGrnList();
 
-    if (this.grnList.length === 0) {
+    if (this.rows.length === 0) {
       alert("No GRN data to submit.");
       return;
     }
   
-    for (const grn of this.grnList) {
-      if (!grn.selectedProduct) {
+    for (const grn of this.rows) {
+      const prodId = grn.selectedProduct || (typeof grn.product === 'number' ? grn.product : grn.product?.productId);
+      if (!prodId) {
         alert("Please select a product for all rows.");
         return;
       }
-      
-      // if (!grn.packsize || grn.packsize.trim() === '') {
-      //   alert("Pack size cannot be empty.");
-      //   return;
-      // }
 
-      if (grn.receivedQuantity < 0 || grn.quantityasperparty < 0 || grn.MRP < 0) {
+      if ((grn.receivedQuantity ?? grn.received) < 0 || (grn.quantityasperparty ?? grn.asPerParty) < 0 || (grn.MRP ?? 0) < 0) {
         alert("Negative values are not allowed.");
         return;
       }
     }
+
+    // Ensure challan list is ready before save/print (Return checkbox, Ret Qty, or rejected return status)
+    this.buildChallanList();
   
-    // Prepare payload for API
+    // Prepare payload for API (Flattening rows[] back into the original single-table payload shape)
     const payload = {
       grnNumber: this.grnNumber, 
-      responsiblePerson:Number(this.selectedResponsiblePerson),
-      dockerNo:this.dockernumber,
-      Grnstatus:this.selectedgrnstatus,
-      supplierId: this.selectedsupplier,
-      grnDetails: this.grnList.map(grn => ({
-        productId: grn.selectedProduct,
-        quantityAsPerParty: grn.quantityasperparty,
-        receivedQuantity: grn.receivedQuantity,
-        rejectedQuantity: grn.rejected,
-        passedQuantity: grn.passed,
-        status: grn.status,
-        demandedbyparty:grn.demandedbyparty,
-        mrp: grn.MRP,
-        batchNumber: grn.batchno,
-        expiryDate: grn.expiryDate,
-        remarks1: grn.remarks,
-        remarks2: grn.remarks2,
-        statusofrejected:grn.statusofrejected,
-        statusofpassed:grn.statusofpassed,
-        approvedbycompany:"y",
-        passedstatus:grn.statusofpassed,
-        rejectedstatus:grn.statusofrejected,
-        returnToParty:grn.RetrunToParty,
-        quantity:grn.retQty
+      responsiblePerson: Number(this.selectedResponsiblePerson) || 0,
+      dockerNo: this.dockernumber || '',
+      Grnstatus: this.selectedgrnstatus || '',
+      supplierId: Number(this.selectedsupplier) || 0,
+      grnDetails: this.rows.map(grn => ({
+        productId: grn.selectedProduct || (typeof grn.product === 'number' ? grn.product : grn.product?.productId || null),
+        quantityAsPerParty: Number(grn.quantityasperparty ?? grn.asPerParty ?? 0),
+        receivedQuantity: Number(grn.receivedQuantity ?? grn.received ?? 0),
+        rejectedQuantity: Number(grn.rejected ?? 0),
+        passedQuantity: Number(grn.passed ?? 0),
+        miscellaneousQuantity: Number(grn.miscellaneous ?? 0),
+        status: grn.status || '',
+        demandedbyparty: grn.demandedbyparty || grn.demandedByParty || '',
+        mrp: Number(grn.MRP ?? 0),
+        batchNumber: grn.batchno || '',
+        // Empty string breaks API DateTime binding — send null when not set
+        expiryDate: grn.expiryDate ? grn.expiryDate : null,
+        remarks1: grn.remarks || '',
+        remarks2: grn.remarks2 || '',
+        statusofrejected: grn.statusofrejected || '',
+        statusofpassed: grn.statusofpassed || '',
+        statusofmiscellaneous: grn.statusofmiscellaneous || '',
+        approvedbycompany: "y",
+        passedstatus: grn.statusofpassed || '',
+        rejectedstatus: grn.statusofrejected || '',
+        returnToParty: !!(grn.RetrunToParty || grn.returnToParty),
+        quantity: Number(grn.retQty ?? 0)
       }))
     };
     this.GrnService.saveGrn(payload).subscribe({
-      next: (response) => {
-        alert("GRN submitted successfully!");
-        this.printGRN();
-        debugger
-        if (this.challanList && this.challanList.length > 0) {
-          this.savechallan();
-          this.printChallan();
+      next: async (response) => {
+        alert("GRN submitted successfully! GRN print/download window will open.");
+        this.syncDispatchDefaults();
+        this.buildChallanList();
+        try {
+          await this.printGRN();
+          
+          if (!this.challanList.length) {
+            this.challanList = this.rows
+              .filter(r => {
+                const prodId = r.selectedProduct || (typeof r.product === 'number' ? r.product : r.product?.productId);
+                return !!prodId;
+              })
+              .map(r => ({
+                ...r,
+                retQty: Number(r.retQty) > 0 ? r.retQty : (Number(r.rejected) > 0 ? r.rejected : (r.receivedQuantity ?? r.received ?? 0))
+              }));
+          }
+          if (this.challanList.length > 0) {
+            const downloadChallan = confirm("GRN print complete. Do you want to download/print the Challan as well?");
+            if (downloadChallan) {
+              this.savechallan();
+              await this.printChallan();
+            }
+          }
+        } catch (e) {
+          console.error('Print failed:', e);
+          alert('GRN saved, but print/PDF failed. You can reprint from Search Old GRN.');
         }
-
-        this.grnList = []; 
+        this.grnList = [];
         window.location.reload();
       },
       error: (error) => {
         console.error("Error submitting GRN:", error);
-        alert("Failed to submit GRN. Please try again.");
+        const apiMsg = error?.error?.message || error?.error?.error || error?.message || 'Please try again.';
+        alert("Failed to submit GRN: " + apiMsg);
       }
     });
   }
   savechallan(){
-debugger
     const payload = {
       challanNumber: this.challanNumber, 
-      GRNNumber:this.grnNumber,
-      supplierId: Number(this.selectedsupplier),
+      GRNNumber: this.grnNumber,
+      supplierId: Number(this.selectedsupplier) || 0,
       challanDetails: this.challanList.map(grn => ({
-        productId: grn.selectedProduct,
-        quantity: grn.retQty,
-        remarks: grn.remarks,
-        aproxvalue: grn.MRP,
+        productId: grn.selectedProduct || (typeof grn.product === 'number' ? grn.product : grn.product?.productId),
+        quantity: Number(grn.retQty) > 0 ? Number(grn.retQty) : Number(grn.rejected || 0),
+        remarks: grn.remarks || '',
+        aproxvalue: Number(grn.MRP ?? grn.mrp ?? 0),
       }))
     };
     this.GrnService.SaveChallan(payload).subscribe({
       next: (response) => {
-        this.challanList = []; 
+        // keep challanList until print finishes
       },
       error: (error) => {
         console.error("Error submitting CHALLAN:", error);
@@ -430,9 +617,52 @@ debugger
     
   }
 
-  filteredGrnList(): any[] {
-    this.challanList=this.grnList.filter(grn => grn.RetrunToParty === true);
+  /** Rows that belong on Challan: Return ticked, Ret Qty > 0, or reject reason is return-to-party. */
+  buildChallanList(): any[] {
+    this.challanList = this.rows.filter(grn => {
+      const retQty = Number(grn.retQty || 0);
+      const rejected = Number(grn.rejected || 0);
+      const rejectStatus = String(grn.statusofrejected || '').toLowerCase();
+      const isReturnFlag = !!(grn.RetrunToParty || grn.returnToParty);
+      const isReturnStatus = rejectStatus.includes('retrun') || rejectStatus.includes('return');
+      return isReturnFlag || retQty > 0 || (rejected > 0 && isReturnStatus);
+    }).map(grn => {
+      const retQty = Number(grn.retQty || 0);
+      const rejected = Number(grn.rejected || 0);
+      return {
+        ...grn,
+        retQty: retQty > 0 ? retQty : (rejected > 0 ? rejected : 0),
+        RetrunToParty: true,
+        returnToParty: true
+      };
+    });
     return this.challanList;
+  }
+
+  filteredGrnList(): any[] {
+    // Prefer current challanList (built for print); otherwise rebuild
+    if (this.challanList?.length) {
+      return this.challanList;
+    }
+    return this.buildChallanList();
+  }
+
+  onReturnQtyChange(grn: any): void {
+    if (Number(grn.retQty) > 0) {
+      grn.returnToParty = true;
+      grn.RetrunToParty = true;
+    }
+  }
+
+  onRejectStatusChange(grn: any): void {
+    const s = String(grn.statusofrejected || '').toLowerCase();
+    if (s.includes('retrun') || s.includes('return')) {
+      grn.returnToParty = true;
+      grn.RetrunToParty = true;
+      if (!Number(grn.retQty) && Number(grn.rejected) > 0) {
+        grn.retQty = grn.rejected;
+      }
+    }
   }
 
   getProductName(productId: string): string {
@@ -440,48 +670,387 @@ debugger
     return product ? product.name : 'Unknown';
   }
  
-  printGRN() {
+  printGRN(): Promise<void> {
     const printContent = document.getElementById('printSection')?.innerHTML;
-    const originalContent = document.body.innerHTML;
-    document.body.innerHTML = `<html><head><title>GRN</title>
-    <link rel="stylesheet" href="styles.css">
-    </head><body>${printContent}</body></html>`;
-    window.print();
-    document.body.innerHTML = originalContent;
-   // window.location.reload();  // Reload page to restore original content
+    if (!printContent) {
+      return Promise.resolve();
+    }
+    const fileName = `GRN-${(this.grnNumber || 'document').replace(/[\\/:*?"<>|]/g, '-')}.pdf`;
+    return this.openPrintWindow('Goods Received Note', printContent, fileName);
   }
 
-  printChallan() {
+  printChallan(): Promise<void> {
     const printContent = document.getElementById('printSectionChallan')?.innerHTML;
-    const originalContent = document.body.innerHTML;
-    document.body.innerHTML = `<html><head><title>Challan</title>
-    <link rel="stylesheet" href="styles.css">
-    </head><body>${printContent}</body></html>`;
-    window.print();
-    document.body.innerHTML = originalContent;
-    //window.location.reload();  // Reload page to restore original content
+    if (!printContent) {
+      return Promise.resolve();
+    }
+    const fileName = `Challan-${(this.challanNumber || 'document').toString().replace(/[\\/:*?"<>|]/g, '-')}.pdf`;
+    return this.openPrintWindow('Challan', printContent, fileName);
   }
-  
-  printGRNPopup() {
+
+  printGRNPopup(): Promise<void> {
     const printContent = document.getElementById('printSectionpopup')?.innerHTML;
-    const originalContent = document.body.innerHTML;
-    document.body.innerHTML = `<html><head><title>Print GRN</title>
-    <link rel="stylesheet" href="styles.css">
-    </head><body>${printContent}</body></html>`;
-    window.print();
-    document.body.innerHTML = originalContent;
-    //window.location.reload();  // Reload page to restore original content
+    if (!printContent) {
+      return Promise.resolve();
+    }
+    const fileName = `GRN-${(this.grnListRptoldGrnNo || this.grnNumber || 'document').replace(/[\\/:*?"<>|]/g, '-')}.pdf`;
+    return this.openPrintWindow('Goods Received Note', printContent, fileName);
   }
-  
-  printChallanOldPopup() {
+
+  printChallanOldPopup(): Promise<void> {
     const printContent = document.getElementById('printPOPUPSectionChallan')?.innerHTML;
-    const originalContent = document.body.innerHTML;
-    document.body.innerHTML = `<html><head><title>Challan</title>
-    <link rel="stylesheet" href="styles.css">
-    </head><body>${printContent}</body></html>`;
-    window.print();
-    document.body.innerHTML = originalContent;
-    //window.location.reload();  // Reload page to restore original content
+    if (!printContent) {
+      return Promise.resolve();
+    }
+    const fileName = `Challan-${(this.grnListRptoldchallanno || this.challanNumber || 'document').toString().replace(/[\\/:*?"<>|]/g, '-')}.pdf`;
+    return this.openPrintWindow('Challan', printContent, fileName);
+  }
+
+  /** Shared print styles — zero @page margin so browser chrome has no room; PDF export bypasses browser headers entirely. */
+  private getPrintStyles(): string {
+    return `
+      @page { size: A4 landscape; margin: 0 !important; }
+      @page :left, @page :right, @page :first { margin: 0 !important; }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0 !important;
+        padding: 0 !important;
+        font-family: Arial, Helvetica, sans-serif;
+        color: #161c25;
+        font-size: 9px;
+      }
+      body { padding: 5mm 6mm !important; }
+      .grn-print-doc {
+        width: 100%;
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+      .grn-print-date { text-align: right; font-size: 9px; margin: 0 0 2px; color: #525b69; }
+      .grn-print-header { text-align: center; margin-bottom: 4px; }
+      .grn-print-header h2 { margin: 0; font-size: 14px; color: #161c25; line-height: 1.2; }
+      .grn-print-header h3 {
+        margin: 3px 0 0;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.2px;
+        color: #2196f3;
+        border-top: 1px solid #2196f3;
+        border-bottom: 1px solid #2196f3;
+        padding: 2px 0;
+        display: inline-block;
+        min-width: 55%;
+      }
+      .grn-print-header p { margin: 0; font-size: 9px; color: #525b69; line-height: 1.25; }
+      .grn-print-meta {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 4px 0 6px;
+        table-layout: fixed;
+      }
+      .grn-print-meta td {
+        border: 1px solid #90caf9;
+        padding: 3px 5px;
+        vertical-align: top;
+        background: #e3f2fd;
+      }
+      .grn-print-meta span {
+        display: block;
+        font-size: 7px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        color: #525b69;
+        margin-bottom: 1px;
+      }
+      .grn-print-meta strong {
+        font-size: 9px;
+        color: #161c25;
+        word-break: break-word;
+      }
+      .grn-print-table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+        font-size: 8px;
+      }
+      .grn-print-table th, .grn-print-table td {
+        border: 1px solid #90caf9;
+        padding: 2px 3px;
+        text-align: center;
+        vertical-align: middle;
+        word-wrap: break-word;
+        line-height: 1.2;
+      }
+      .grn-print-table thead th {
+        background: #2196f3 !important;
+        color: #fff !important;
+        font-weight: 700;
+        font-size: 7.5px;
+        text-transform: uppercase;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .grn-print-table thead .group-intake,
+      .grn-print-table thead .group-repair {
+        background: #1c76da !important;
+      }
+      .grn-print-table .col-sno { width: 28px; }
+      .grn-print-table .col-product { width: 120px; }
+      .grn-print-table .text-start { text-align: left !important; padding-left: 4px; }
+      .grn-print-table .text-end { text-align: right !important; }
+      .grn-print-table .text-center { text-align: center !important; }
+      .grn-print-table tbody tr:nth-child(even) td { background: #e3f2fd; }
+      .grn-print-table tfoot td {
+        background: #fff;
+        font-size: 9px;
+        padding: 3px 5px;
+      }
+      .grn-print-footer-blocks {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+        align-items: start;
+        margin-top: 6px;
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+      .grn-print-footer-blocks--grn-only { grid-template-columns: 1fr; }
+      .grn-print-footer-blocks .grn-print-dispatch { width: 100%; margin-bottom: 0; }
+      .grn-print-footer-blocks .grn-print-sign-table { grid-column: 1 / -1; }
+      .grn-print-dispatch {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 4px;
+        font-size: 8px;
+        table-layout: fixed;
+      }
+      .grn-print-dispatch th, .grn-print-dispatch td {
+        border: 1px solid #90caf9;
+        padding: 2px 4px;
+        vertical-align: middle;
+        line-height: 1.2;
+      }
+      .grn-print-dispatch .section-repair,
+      .grn-print-dispatch .section-dispatch {
+        background: #2196f3 !important;
+        color: #fff !important;
+        text-align: left;
+        font-size: 8px;
+        letter-spacing: 0.2px;
+        padding: 3px 4px !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .grn-print-dispatch .lbl-repair,
+      .grn-print-dispatch .lbl-dispatch {
+        width: 42%;
+        color: #1c76da;
+        font-weight: 700;
+        text-transform: uppercase;
+        background: #e3f2fd;
+        font-size: 7px;
+      }
+      .grn-print-dispatch .val-edit input {
+        width: 100%;
+        border: 1px dashed #90caf9;
+        background: #fff;
+        padding: 1px 3px;
+        font-size: 8px;
+        color: #161c25;
+        height: 16px;
+      }
+      .grn-print-dispatch .val-edit .frozen-value {
+        display: inline-block;
+        width: 100%;
+        min-height: 14px;
+        border-bottom: 1px solid #90caf9;
+        font-size: 8px;
+        color: #161c25;
+        padding: 1px 2px;
+      }
+      .grn-print-sign-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 6px;
+        font-size: 9px;
+        clear: both;
+      }
+      .grn-print-sign-table td { border: none; padding: 8px 4px 2px; }
+      .print-toolbar {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+        padding: 10px 12px;
+        background: #2196f3;
+        color: #fff;
+      }
+      .print-toolbar button {
+        border: 0;
+        border-radius: 6px;
+        padding: 8px 14px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .print-toolbar .btn-print { background: #1c76da; color: #fff; }
+      .print-toolbar .btn-close-preview { background: #e3f2fd; color: #161c25; }
+      .print-toolbar button:disabled { opacity: 0.65; cursor: wait; }
+    `;
+  }
+
+  /**
+   * Preview + download PDF via html2pdf (not browser print).
+   * Browser print headers/footers inject localhost URLs — client-side PDF avoids that entirely
+   * for both GRN and Challan.
+   */
+  private openPrintWindow(title: string, bodyHtml: string, fileName: string): Promise<void> {
+    const styles = this.getPrintStyles();
+
+    return new Promise((resolve) => {
+      const existing = document.getElementById('grn-print-preview-root');
+      if (existing) {
+        existing.remove();
+      }
+
+      const root = document.createElement('div');
+      root.id = 'grn-print-preview-root';
+      root.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(33,150,243,.25);overflow:auto;';
+      root.innerHTML = `
+        <div class="print-toolbar">
+          <span style="margin-right:auto;font-size:12px;align-self:center;">
+            ${title} — edit footer fields if needed, then <b>Download PDF</b> (no browser URL/footer).
+          </span>
+          <button type="button" class="btn-print" id="grnPrintBtn">Download PDF</button>
+          <button type="button" class="btn-close-preview" id="grnClosePreviewBtn">Close</button>
+        </div>
+        <div id="grnPrintableArea" style="max-width:1100px;margin:16px auto 40px;background:#fff;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.25);">
+          ${bodyHtml}
+        </div>
+        <style>${styles}</style>
+      `;
+      document.body.appendChild(root);
+
+      let settled = false;
+      const finish = () => {
+        if (settled) {
+          return;
+        }
+        settled = true;
+        try {
+          root.remove();
+        } catch { /* ignore */ }
+        resolve();
+      };
+
+      const printBtn = root.querySelector('#grnPrintBtn') as HTMLButtonElement | null;
+      const closeBtn = root.querySelector('#grnClosePreviewBtn') as HTMLButtonElement | null;
+      const printable = root.querySelector('#grnPrintableArea') as HTMLElement | null;
+
+      closeBtn?.addEventListener('click', finish);
+      printBtn?.addEventListener('click', async () => {
+        if (!printable || !printBtn) {
+          finish();
+          return;
+        }
+        printBtn.disabled = true;
+        printBtn.textContent = 'Generating PDF…';
+        try {
+          await this.downloadCleanPdf(printable, fileName, styles);
+          finish();
+        } catch (err) {
+          console.error(err);
+          printBtn.disabled = false;
+          printBtn.textContent = 'Download PDF';
+          alert('PDF download failed. Please try again.');
+        }
+      });
+    });
+  }
+
+  /** Replace editable inputs with plain text so the PDF captures current values (no localhost URL). */
+  private freezeInputsForPdf(source: HTMLElement): HTMLElement {
+    const clone = source.cloneNode(true) as HTMLElement;
+    const liveControls = Array.from(source.querySelectorAll('input, textarea, select'));
+    const cloneControls = Array.from(clone.querySelectorAll('input, textarea, select'));
+
+    cloneControls.forEach((el, index) => {
+      const live = liveControls[index] as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | undefined;
+      let value = '';
+      if (live instanceof HTMLSelectElement) {
+        value = live.options[live.selectedIndex]?.text || live.value || '';
+      } else if (live instanceof HTMLInputElement && live.type === 'checkbox') {
+        value = live.checked ? 'Yes' : '';
+      } else if (live) {
+        value = (live as HTMLInputElement | HTMLTextAreaElement).value || '';
+      }
+      const span = document.createElement('span');
+      span.className = 'frozen-value';
+      span.textContent = value;
+      el.replaceWith(span);
+    });
+    return clone;
+  }
+
+  /**
+   * Build PDF with html2pdf.js — content + page numbers only.
+   * Never uses window.print(), so Chrome/Edge cannot inject localhost / route footers.
+   */
+  private async downloadCleanPdf(printable: HTMLElement, fileName: string, styles: string): Promise<void> {
+    const html2pdfModule: any = await import('html2pdf.js');
+    const html2pdf = html2pdfModule.default || html2pdfModule;
+
+    const frozen = this.freezeInputsForPdf(printable);
+    const host = document.createElement('div');
+    host.style.cssText = 'position:fixed;left:-10000px;top:0;width:1100px;background:#fff;z-index:-1;';
+    host.innerHTML = `<style>${styles}</style>`;
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'padding:5mm 6mm;background:#fff;width:1100px;';
+    wrap.appendChild(frozen);
+    host.appendChild(wrap);
+    document.body.appendChild(host);
+
+    try {
+      // Allow layout/styles to apply before canvas capture
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+
+      const opt = {
+        margin: [8, 8, 12, 8],
+        filename: fileName,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          backgroundColor: '#ffffff',
+          scrollX: 0,
+          scrollY: 0,
+          windowWidth: 1100
+        },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
+        pagebreak: { mode: ['css', 'legacy'] }
+      };
+
+      const worker = html2pdf().set(opt).from(wrap);
+      await worker.toPdf();
+      const pdf = await worker.get('pdf');
+      const total = pdf.internal.getNumberOfPages();
+      for (let i = 1; i <= total; i++) {
+        pdf.setPage(i);
+        pdf.setFontSize(8);
+        pdf.setTextColor(80);
+        const w = pdf.internal.pageSize.getWidth();
+        const h = pdf.internal.pageSize.getHeight();
+        // Page number only — never URL / title / date from the browser
+        pdf.text(`Page ${i} of ${total}`, w / 2, h - 5, { align: 'center' });
+      }
+      pdf.save(fileName);
+    } finally {
+      try {
+        host.remove();
+      } catch { /* ignore */ }
+    }
   }
 
   openInfoModal() {
@@ -506,43 +1075,80 @@ debugger
     }
   }
 
+  setQuickDateRange(preset: string): void {
+    this.selectedPreset = preset;
+    const today = new Date();
+    const formatDateStr = (d: Date) => {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+
+    if (preset === 'today') {
+      this.fromDate = formatDateStr(today);
+      this.toDate = formatDateStr(today);
+    } else if (preset === 'week') {
+      const startOfWeek = new Date(today);
+      startOfWeek.setDate(today.getDate() - 6);
+      this.fromDate = formatDateStr(startOfWeek);
+      this.toDate = formatDateStr(today);
+    } else if (preset === 'month') {
+      const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+      this.fromDate = formatDateStr(startOfMonth);
+      this.toDate = formatDateStr(today);
+    } else if (preset === 'all') {
+      this.fromDate = '';
+      this.toDate = '';
+      this.date = '';
+    }
+  }
+
   searchGRN(): void {
-    if (this.selectedsupplier2 === '' || this.selectedsupplier2 === null || this.selectedsupplier2 === undefined || !this.date) {
-      alert("Please select both Supplier and Date before searching.");
+    if (this.selectedsupplier2 === '' || this.selectedsupplier2 === null || this.selectedsupplier2 === undefined) {
+      alert("Please select a Supplier before searching.");
+      return;
+    }
+  
+    if (!this.fromDate && !this.toDate && !this.date) {
+      alert("Please select a Date or Date Range before searching.");
+      return;
+    }
+
+    if (this.fromDate && this.toDate && this.fromDate > this.toDate) {
+      alert("From Date cannot be after To Date.");
       return;
     }
   
     const supplierIdNum = Number(this.selectedsupplier2);
-    const formattedDate = this.formatDate(this.date);
+    const params: any = { supplierId: supplierIdNum };
 
-    if (supplierIdNum === 0) {
-      // Search all suppliers
-      const params = { supplierId: 0, date: formattedDate };
-      this.GrnService.getGRN(params).subscribe({
-        next: (response) => {
-          this.grnListrpt = response;
-        },
-        error: (err) => {
-          console.error("Error fetching GRN:", err);
-        }
-      });
-    } else {
-      // Search selected supplier
-      const params = { supplierId: this.selectedsupplier2, date: formattedDate };
-      this.GrnService.getGRN(params).subscribe({
-        next: (response) => {
-          this.grnListrpt = response;
-        },
-        error: (err) => {
-          console.error("Error fetching GRN:", err);
-        }
-      });
+    if (this.fromDate) {
+      params.dateFrom = this.formatDate(this.fromDate);
     }
+    if (this.toDate) {
+      params.dateTo = this.formatDate(this.toDate);
+    }
+    if (!this.fromDate && !this.toDate && this.date) {
+      params.date = this.formatDate(this.date);
+    }
+
+    this.GrnService.getGRN(params).subscribe({
+      next: (response) => {
+        this.grnListrpt = response;
+      },
+      error: (err) => {
+        console.error("Error fetching GRN:", err);
+      }
+    });
   }
 
   resetSearch(): void {
     this.selectedsupplier2 = '';
     this.date = '';
+    this.fromDate = '';
+    this.toDate = '';
+    this.selectedPreset = '';
     this.grnListrpt = [];
     this.filteredSuppliers2 = this.suppliers;
   }
@@ -610,8 +1216,10 @@ debugger
       receivedQuantity: 0,
       rejectedQuantity:0,
       passedQuantity:0,
+      miscellaneousQuantity:0,
       passedstatus:'',
       rejectedstatus:'',
+      statusofmiscellaneous:'',
       returnToParty:false,
       quantity:0,
       status:'',
@@ -669,15 +1277,17 @@ debugger
         receivedQuantity: grn.receivedQuantity,
         rejectedQuantity: grn.rejectedQuantity,
         passedQuantity: grn.passedQuantity,
+        miscellaneousQuantity: grn.miscellaneousQuantity || 0,
         status: grn.status,
         demandedbyparty:grn.demandedbyparty,
         mrp: grn.mrp,
         batchNumber: grn.batchNumber,
-        expiryDate: grn.expiryDate,
+        expiryDate: grn.expiryDate ? grn.expiryDate : null,
         remarks1: grn.remarks1,
         remarks2: grn.remarks2,
         statusofrejected:grn.rejectedstatus,
         statusofpassed:grn.passedstatus,
+        statusofmiscellaneous:grn.statusofmiscellaneous || '',
         approvedbycompany:"y",
         passedstatus:grn.passedstatus,
         rejectedstatus:grn.rejectedstatus,
@@ -687,12 +1297,19 @@ debugger
     };
 
     this.GrnService.UpdateGrn(this.grnID,payload).subscribe({
-      next: (response) => {
-        alert("GRN Updated successfully!");
-        this.printGRNPopup();
-        if (this.challanOldList && this.challanOldList.length > 0) {
-          this.updatechallan();
-          this.printChallanOldPopup();
+      next: async (response) => {
+        alert("GRN Updated successfully! GRN print/download window will open.");
+        try {
+          await this.printGRNPopup();
+          if (this.challanOldList && this.challanOldList.length > 0) {
+            const downloadChallan = confirm("GRN print complete. Do you want to download/print the Challan as well?");
+            if (downloadChallan) {
+              this.updatechallan();
+              await this.printChallanOldPopup();
+            }
+          }
+        } catch (e) {
+          console.error('Print failed:', e);
         }
         this.grnListRptold = []; 
         window.location.reload();
@@ -746,7 +1363,80 @@ debugger
 
   // Method to handle tab changes
   onTabChange(tabId: string) {
+    if (tabId === 'center') {
+      this.goToRepairCenter();
+      return;
+    }
+    this.stepError = '';
     this.activeTab = tabId;
+  }
+
+  /** Validate Product Intake fields, then move to Repair Center step. */
+  goToRepairCenter(): void {
+    this.stepError = '';
+    if (!this.validateIntakeStep()) {
+      return;
+    }
+    this.syncDispatchDefaults();
+    this.activeTab = 'center';
+  }
+
+  /** Prefill dispatch / stock-repair footer fields from current GRN data (editable). */
+  syncDispatchDefaults(): void {
+    const supplier = this.selectedSupplierName || '';
+    if (!this.stockRepair.stockReceivedParty) {
+      this.stockRepair.stockReceivedParty = supplier;
+    }
+    if (!this.dispatch.stockSentTo) {
+      this.dispatch.stockSentTo = supplier;
+    }
+    if (!this.dispatch.grnNo) {
+      this.dispatch.grnNo = this.grnNumber || '';
+    }
+    if (!this.dispatch.challanInvoiceCreditNote && this.challanNumber) {
+      this.dispatch.challanInvoiceCreditNote = `CHALLAN NO:- ${this.challanNumber}`;
+    }
+    if (!this.stockRepair.dateTime) {
+      this.stockRepair.dateTime = this.getLocalDateTimeValue();
+    }
+  }
+
+  /** Format for input[type=datetime-local]: YYYY-MM-DDTHH:mm */
+  getLocalDateTimeValue(date: Date = new Date()): string {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    const hh = String(date.getHours()).padStart(2, '0');
+    const mm = String(date.getMinutes()).padStart(2, '0');
+    return `${y}-${m}-${d}T${hh}:${mm}`;
+  }
+
+  backToIntake(): void {
+    this.stepError = '';
+    this.activeTab = 'intake';
+  }
+
+  /** Old logic: only product is required to continue / submit. */
+  validateIntakeStep(): boolean {
+    if (!this.rows.length) {
+      this.stepError = 'Please add at least one product row.';
+      return false;
+    }
+
+    for (const grn of this.rows) {
+      const prodId = grn.selectedProduct ?? (typeof grn.product === 'number' ? grn.product : grn.product?.productId);
+      if (prodId === null || prodId === undefined || prodId === '') {
+        this.stepError = 'Please select a product for all rows.';
+        return false;
+      }
+      if ((grn.receivedQuantity ?? grn.received ?? 0) < 0 || (grn.quantityasperparty ?? grn.asPerParty ?? 0) < 0) {
+        this.stepError = 'Negative quantity values are not allowed.';
+        return false;
+      }
+    }
+
+    this.stepError = '';
+    return true;
   }
 
   

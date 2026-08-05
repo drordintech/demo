@@ -43,3 +43,11 @@ File: style.css
 @import url('scss/fonts/berry/berry-icons.css'); /** custom font icons - berry **/
 @import 'scss/fonts/tabler-icons.min.css';
 @import 'scss/fonts/phosphor/duotone/style.css';
+
+@page {
+  size: A4 landscape;
+  margin: 0mm !important;
+}
+@page :left { margin: 0mm !important; }
+@page :right { margin: 0mm !important; }
+@page :first { margin: 0mm !important; }

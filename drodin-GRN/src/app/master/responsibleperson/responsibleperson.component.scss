@@ -13,7 +13,7 @@
 }
 
 .custom-striped tbody tr:nth-child(even) {
-  background-color: #362a2a;
+  background-color: #e3f2fd;
   /* Light gray for even rows */
 }
 
@@ -117,7 +117,7 @@
 
 // Header Section
 .responsibleperson-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #2196f3 0%, #1c76da 100%);
   border-radius: 20px;
   padding: 30px;
   margin-bottom: 30px;
@@ -137,7 +137,7 @@
         text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         
         i {
-          color: #ffd700;
+          color: #ffffff;
         }
       }
       
@@ -194,7 +194,7 @@
       width: 40px;
       height: 40px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #2196f3 0%, #1c76da 100%);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -251,7 +251,7 @@
           margin: 0;
           
           i {
-            color: #667eea;
+            color: #2196f3;
           }
         }
         
@@ -285,7 +285,7 @@
             transition: all 0.3s ease;
             
             &:focus {
-              border-color: #667eea;
+              border-color: #2196f3;
               box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
               outline: none;
             }
@@ -301,7 +301,7 @@
         margin: 0;
         
         thead {
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          background: linear-gradient(135deg, #2196f3 0%, #1c76da 100%);
           
           .table-header {
             border: none;
@@ -359,7 +359,7 @@
                     width: 25px;
                     height: 25px;
                     border-radius: 50%;
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    background: linear-gradient(135deg, #2196f3 0%, #1c76da 100%);
                     display: flex;
                     align-items: center;
                     justify-content: center;
@@ -420,11 +420,11 @@
                     border: 2px solid;
                     
                     &.btn-outline-primary {
-                      border-color: #667eea;
-                      color: #667eea;
+                      border-color: #2196f3;
+                      color: #2196f3;
                       
                       &:hover {
-                        background: #667eea;
+                        background: #2196f3;
                         color: white;
                         transform: scale(1.1);
                       }
@@ -462,7 +462,7 @@
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
   
   .modal-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #2196f3 0%, #1c76da 100%);
     color: white;
     border-radius: 20px 20px 0 0;
     padding: 25px 30px;
@@ -472,7 +472,7 @@
       font-weight: 600;
       
       i {
-        color: #ffd700;
+        color: #ffffff;
       }
     }
     
@@ -500,7 +500,7 @@
           margin-bottom: 6px;
           
           i {
-            color: #667eea;
+            color: #2196f3;
           }
           
           .text-danger {
@@ -516,7 +516,7 @@
           transition: all 0.3s ease;
           
           &:focus {
-            border-color: #667eea;
+            border-color: #2196f3;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
             outline: none;
           }
@@ -562,7 +562,7 @@
           }
           
           &.submit-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #2196f3 0%, #1c76da 100%);
             border: none;
             
             &:hover:not(:disabled) {
@@ -682,11 +682,11 @@
   }
   
   &::-webkit-scrollbar-thumb {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #2196f3 0%, #1c76da 100%);
     border-radius: 10px;
     
     &:hover {
-      background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+      background: linear-gradient(135deg, #1c76da 0%, #2196f3 100%);
     }
   }
 }

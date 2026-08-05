@@ -19,19 +19,19 @@
   <!-- Stats Cards -->
   <div class="stats-section">
     <div class="row">
-      <div class="col-md-3">
-        <div class="stat-card">
+      <div class="col-md-3 mb-3 mb-md-0">
+        <div class="stat-card" [class.active]="activeCardFilter === 'all'" (click)="setCardFilter('all')" role="button" title="Click to view all suppliers">
           <div class="stat-icon">
             <i class="bi bi-building"></i>
           </div>
-                     <div class="stat-content">
-             <h3 class="stat-number">{{ Suppliers.length }}</h3>
-             <p class="stat-label">Total Suppliers</p>
-           </div>
+          <div class="stat-content">
+            <h3 class="stat-number">{{ Suppliers.length }}</h3>
+            <p class="stat-label">Total Suppliers</p>
+          </div>
         </div>
       </div>
-      <div class="col-md-3">
-        <div class="stat-card">
+      <div class="col-md-3 mb-3 mb-md-0">
+        <div class="stat-card" [class.active]="activeCardFilter === 'states'" (click)="setCardFilter('states')" role="button" title="Click to filter suppliers with states">
           <div class="stat-icon">
             <i class="bi bi-geo-alt"></i>
           </div>
@@ -41,8 +41,8 @@
           </div>
         </div>
       </div>
-      <div class="col-md-3">
-        <div class="stat-card">
+      <div class="col-md-3 mb-3 mb-md-0">
+        <div class="stat-card" [class.active]="activeCardFilter === 'email'" (click)="setCardFilter('email')" role="button" title="Click to filter suppliers with email">
           <div class="stat-icon">
             <i class="bi bi-envelope"></i>
           </div>
@@ -52,8 +52,8 @@
           </div>
         </div>
       </div>
-      <div class="col-md-3">
-        <div class="stat-card">
+      <div class="col-md-3 mb-3 mb-md-0">
+        <div class="stat-card" [class.active]="activeCardFilter === 'phone'" (click)="setCardFilter('phone')" role="button" title="Click to filter suppliers with phone">
           <div class="stat-icon">
             <i class="bi bi-telephone"></i>
           </div>
@@ -74,7 +74,12 @@
           <h4 class="card-title">
             <i class="bi bi-list-ul me-2"></i>Supplier List
           </h4>
-          <span class="supplier-count">{{ filteredSuppliers().length }} suppliers found</span>
+          <div class="d-flex align-items-center gap-2 mt-1">
+            <span class="supplier-count">{{ filteredSuppliers().length }} suppliers found</span>
+            <span *ngIf="activeCardFilter !== 'all'" class="badge bg-primary text-white cursor-pointer" (click)="setCardFilter('all')" title="Click to clear card filter">
+              Filtered: {{ activeCardFilter | uppercase }} <i class="bi bi-x-circle ms-1"></i>
+            </span>
+          </div>
         </div>
         <div class="header-right">
           <div class="search-box">

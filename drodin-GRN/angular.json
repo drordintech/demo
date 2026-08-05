@@ -17,7 +17,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
-            "allowedCommonJsDependencies": ["apexcharts"],
+            "allowedCommonJsDependencies": ["apexcharts", "html2pdf.js", "html2canvas", "jspdf"],
             "outputPath": "dist",
             "index": "src/index.html",
             "main": "src/main.ts",

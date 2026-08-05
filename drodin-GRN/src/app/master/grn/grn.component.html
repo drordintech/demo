@@ -1,36 +1,41 @@
-<div class="row">
-  <div class="col-sm-12">
-    <div class="card">
-      <div class="card-body">
+<div class="grn-page">
+  <div class="grn-page-header">
+    <div class="header-left">
+      <h5 class="page-title"><i class="bi bi-clipboard-check me-2"></i>Goods Received Note</h5>
+      <p class="page-subtitle">Create, inspect, and search GRN records</p>
+    </div>
+  </div>
 
-        <div class="d-flex justify-content-between align-items-center">
-          <ul class="nav nav-tabs" id="myTab" role="tablist">
+  <div class="card grn-content-card border-0 shadow-sm">
+    <div class="card-body">
+
+        <div class="grn-toolbar">
+          <ul class="nav nav-tabs grn-main-tabs" id="myTab" role="tablist">
             <li class="nav-item" role="presentation">
-              <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button"
-                role="tab" (click)="onTabChange('home')">
+              <button class="nav-link" [class.active]="activeTab !== 'profile'" id="home-tab" data-bs-toggle="tab"
+                data-bs-target="#home" type="button" role="tab" (click)="onTabChange('intake')">
                 <i class="bi bi-building-add me-1"></i>New GRN
               </button>
             </li>
             <li class="nav-item" role="presentation">
-              <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button"
-                role="tab" (click)="onTabChange('profile')">
+              <button class="nav-link" [class.active]="activeTab === 'profile'" id="profile-tab" data-bs-toggle="tab"
+                data-bs-target="#profile" type="button" role="tab" (click)="onTabChange('profile')">
                 <i class="bi bi-binoculars me-1"></i>Search Old GRN
               </button>
             </li>
           </ul>
-          <!-- GRN Info Display - moved to right side of tabs -->
-          <div class="grn-info-display" *ngIf="activeTab === 'home'">
+          <div class="grn-info-display" *ngIf="activeTab !== 'profile'">
             <div class="info-item">
-              <span class="info-label">GRN NO.:</span>
+              <span class="info-label">GRN NO.</span>
               <span class="info-value">{{grnNumber}}</span>
             </div>
             <div class="info-item">
-              <span class="info-label">Date:</span>
+              <span class="info-label">Date</span>
               <span class="info-value">{{todayDate}}</span>
             </div>
           </div>
         </div>
-        <div class="tab-content mt-1" id="myTabContent">
+        <div class="tab-content mt-3" id="myTabContent">
           <div class="tab-pane fade show active" id="home" role="tabpanel">
             <div class="grn-form-container">
               <div class="form-row">
@@ -156,9 +161,8 @@
                       </option>
                     </select>
                     <button type="button"
-                      class="btn btn-outline-secondary d-flex align-items-center justify-content-center flex-shrink-0"
-                      (click)="resetNewGRNForm()" title="Reset Form"
-                      style="height: 38px; width: 38px; border-radius: 6px; padding: 0;">
+                      class="btn btn-outline-secondary d-flex align-items-center justify-content-center flex-shrink-0 icon-square-btn"
+                      (click)="resetNewGRNForm()" title="Reset Form">
                       <i class="bi bi-arrow-clockwise"></i>
                     </button>
                   </div>
@@ -168,153 +172,366 @@
 
             <hr class="divider" />
 
-            <div class="d-flex justify-content-between align-items-center mb-1">
-              <h6 class="mb-0"></h6>
-              <button class="btn btn-primary btn-sm add-row-btn" (click)="addGrnRow()">
-                <i class="bi bi-plus"></i> Add Row
+            <!-- Step navigation -->
+            <div class="grn-step-bar">
+              <div class="nav nav-pills step-pills" id="subStepTab" role="tablist">
+                <button class="nav-link step-btn" [class.active]="activeTab === 'intake'" type="button"
+                  (click)="onTabChange('intake')">
+                  <span class="step-num">1</span>
+                  <i class="bi bi-box-seam me-1"></i> Product Intake
+                </button>
+                <button class="nav-link step-btn" [class.active]="activeTab === 'center'" type="button"
+                  (click)="onTabChange('center')">
+                  <span class="step-num">2</span>
+                  <i class="bi bi-building-gear me-1"></i> Repair Center
+                </button>
+              </div>
+
+              <button *ngIf="activeTab === 'intake'" class="btn btn-primary btn-sm px-3 rounded-pill"
+                (click)="addGrnRow()">
+                <i class="bi bi-plus-lg me-1"></i> Add Row
               </button>
             </div>
-            <div class="table-container">
-              <div class="table-responsive" style="max-height: 400px; overflow: auto;">
-                <table class="table table-bordered table-hover table-sm text-center align-middle fixed-table">
-                  <thead class="table-dark">
-                    <tr>
-                      <th scope="col" style="width: 50px; position: sticky; top: 0; z-index: 2;">S.No</th>
-                      <th scope="col" style="width: 370px; position: sticky; top: 0; z-index: 2;">Product</th>
-                      <th scope="col" colspan="2" style="width: 200px; position: sticky; top: 0; z-index: 2;">Quantity
-                      </th>
-                      <th scope="col" colspan="2" style="width: 300px; position: sticky; top: 0; z-index: 2;">Quantity
-                      </th>
-                      <th scope="col" style="width: 150px; position: sticky; top: 0; z-index: 2;">Status</th>
-                      <th scope="col" style="width: 150px; position: sticky; top: 0; z-index: 2;">Demanded</th>
-                      <th scope="col" style="width: 80px; position: sticky; top: 0; z-index: 2;">MRP</th>
-                      <th scope="col" style="width: 120px; position: sticky; top: 0; z-index: 2;">Batch</th>
-                      <th scope="col" style="width: 120px; position: sticky; top: 0; z-index: 2;">Expiry</th>
-                      <th scope="col" style="width: 120px; position: sticky; top: 0; z-index: 2;">Retrun To Party</th>
-                      <th scope="col" style="width: 120px; position: sticky; top: 0; z-index: 2;">Retrun Quantity</th>
-                      <th scope="col" style="width: 120px; position: sticky; top: 0; z-index: 2;">Remarks 1</th>
-                      <th scope="col" style="width: 120px; position: sticky; top: 0; z-index: 2;">Remarks 2</th>
-                      <th scope="col" style="width: 60px; position: sticky; top: 0; z-index: 2;">Actions</th>
-                    </tr>
-                    <tr>
-                      <th style="position: sticky; top: 23px;  z-index: 1;"></th>
-                      <th style="position: sticky; top: 23px;  z-index: 1;"></th>
-                      <th style="position: sticky; top: 23px;  z-index: 1;">As per party</th>
-                      <th style="position: sticky; top: 23px;  z-index: 1;">Received</th>
-                      <th style="position: sticky; top: 23px;  z-index: 1;">Passed</th>
-                      <th style="position: sticky; top: 23px;  z-index: 1;">Rejected</th>
-                      <th style="position: sticky; top: 23px;  z-index: 1;"></th>
-                      <th style="position: sticky; top: 23px;  z-index: 1;">By Party</th>
-                      <th style="position: sticky; top: 23px;  z-index: 1;"></th>
-                      <th style="position: sticky; top: 23px;  z-index: 1;"></th>
-                      <th style="position: sticky; top: 23px;  z-index: 1;"></th>
-                      <th style="position: sticky; top: 23px;  z-index: 1;"></th>
-                      <th style="position: sticky; top: 23px;  z-index: 1;"></th>
-                      <th style="position: sticky; top: 23px;  z-index: 1;"></th>
-                      <th style="position: sticky; top: 23px;  z-index: 1;"></th>
 
-                    </tr>
+            <div class="table-container shadow-sm rounded-3 overflow-hidden border">
+              <div class="table-responsive grn-table-scroll">
+                <table class="table modern-grn-table align-middle text-center mb-0">
+                  <thead>
+                    <!-- Tab 1: Product Intake Headers -->
+                    <ng-container *ngIf="activeTab === 'intake'">
+                      <tr class="header-main-row">
+                        <th rowspan="2" scope="col" class="align-middle main-th sticky-th">S.No</th>
+                        <th rowspan="2" scope="col" class="align-middle main-th sticky-th sticky-th-product">Product Name</th>
+                        <th colspan="2" scope="col" class="text-center group-header-qty py-1 sticky-th">QUANTITY</th>
+                        <th rowspan="2" scope="col" class="align-middle main-th text-center sticky-th sticky-th-actions">Actions</th>
+                      </tr>
+                      <tr class="header-sub-row">
+                        <th scope="col" class="sub-th sticky-sub-th">As Per Party</th>
+                        <th scope="col" class="sub-th sticky-sub-th">Received</th>
+                      </tr>
+                    </ng-container>
+
+                    <!-- Tab 2: Repair Center Headers -->
+                    <ng-container *ngIf="activeTab === 'center'">
+                      <tr class="header-main-row">
+                        <th rowspan="2" scope="col" class="align-middle main-th sticky-th">S.No</th>
+                        <th rowspan="2" scope="col" class="align-middle main-th sticky-th sticky-th-product-sm">Product Name</th>
+                        <th colspan="3" scope="col" class="text-center group-header-qty py-1 sticky-th">QUANTITY</th>
+                        <th rowspan="2" scope="col" class="align-middle main-th text-center sticky-th">Status</th>
+                        <th rowspan="2" scope="col" class="align-middle main-th text-center sticky-th">Demanded</th>
+                        <th rowspan="2" scope="col" class="align-middle main-th text-center sticky-th">MRP</th>
+                        <th rowspan="2" scope="col" class="align-middle main-th text-center sticky-th">Batch No</th>
+                        <th rowspan="2" scope="col" class="align-middle main-th text-center sticky-th">Date Of Expiry</th>
+                        <th rowspan="2" scope="col" class="align-middle main-th text-center sticky-th">Return</th>
+                        <th rowspan="2" scope="col" class="align-middle main-th text-center sticky-th">Ret Qty</th>
+                        <th rowspan="2" scope="col" class="align-middle main-th text-center sticky-th">Remarks 1</th>
+                        <th rowspan="2" scope="col" class="align-middle main-th text-center sticky-th">Remarks 2</th>
+                      </tr>
+                      <tr class="header-sub-row">
+                        <th scope="col" class="sub-th sticky-sub-th">Passed</th>
+                        <th scope="col" class="sub-th sticky-sub-th">Rejected</th>
+                        <th scope="col" class="sub-th sticky-sub-th">Miscellaneous</th>
+                      </tr>
+                    </ng-container>
                   </thead>
                   <tbody>
-                    <tr *ngFor="let grn of grnList; let i = index">
-                      <td>{{ i + 1 }}</td>
-                      <td style="width: 200px;">
-                        <div class="d-flex align-items-center">
-                          <input type="text" class="form-control form-control-sm" [(ngModel)]="grn.searchText"
-                            (input)="filterProducts(grn)" placeholder="Search Product here..." />
-                          <button type="button" class="btn btn-sm ms-2" style="padding: 2px 5px; font-size: 0.7rem;"
-                            (click)="openproductInfoModal(grn.selectedProduct)">
-                            <i class="bi bi-info-circle"></i>
-                          </button>
-                        </div>
-                        <select [(ngModel)]="grn.selectedProduct" class="form-select form-select-sm w-100 Dropdown">
-                          <option *ngFor="let product of grn.filteredProducts" [ngValue]="product.productId">
-                            {{ product.name }}
-                          </option>
-                        </select>
-                      </td>
-                      <td style="width: 50px;">
-                        <input type="number" [(ngModel)]="grn.quantityasperparty" class="form-control form-control-sm"
-                          style="min-width: 50px;" (change)="updateQuantity(grn)" />
-                      </td>
-                      <td style="width: 50px;">
-                        <input type="number" [(ngModel)]="grn.receivedQuantity" class="form-control form-control-sm"
-                          style="min-width: 50px;" (change)="updateQuantity(grn)" />
-                      </td>
-                      <td style="width: 100px;">
-                        <input type="number" [(ngModel)]="grn.passed" class="form-control form-control-sm"
-                          style="min-width: 50px;" (change)="updateQuantity(grn)" />
-                        <select [(ngModel)]="grn.statusofpassed" class="form-select form-select-sm Dropdown">
-                          <option value="" disabled>Select</option>
-                          <option *ngFor="let p of statusofpassed" [ngValue]="p.name">{{ p.name }}</option>
-                        </select>
-                      </td>
-                      <td style="width: 100px;">
-                        <input type="number" [(ngModel)]="grn.rejected" class="form-control form-control-sm"
-                          style="min-width: 50px;" (change)="updateQuantity(grn)" />
-                        <select [(ngModel)]="grn.statusofrejected" class="form-select form-select-sm Dropdown">
-                          <option value="" disabled>Select</option>
-                          <option *ngFor="let p of statusofrejected" [ngValue]="p.name">{{ p.name }}</option>
-                        </select>
-                      </td>
-                      <td style="width: 100px;">
-                        <select [(ngModel)]="grn.status" class="form-select form-select-sm Dropdown">
-                          <option value="" disabled>Select</option>
-                          <option *ngFor="let p of status" [ngValue]="p.name">{{ p.name }}</option>
-                        </select>
-                      </td>
-                      <td style="width: 100px;">
-                        <select [(ngModel)]="grn.demandedbyparty" class="form-select form-select-sm Dropdown">
-                          <option value="" disabled>Select</option>
-                          <option *ngFor="let p of demandedbyparty" [ngValue]="p.name">{{ p.name }}</option>
-                        </select>
-                      </td>
-                      <td style="width: 60px;">
-                        <input type="number" [(ngModel)]="grn.MRP" class="form-control form-control-sm"
-                          style="min-width: 60px;" (change)="updateQuantity(grn)" />
-                      </td>
-                      <td>
-                        <input type="text" [(ngModel)]="grn.batchno" class="form-control form-control-sm w-100"
-                          placeholder="Batch" />
-                      </td>
-                      <td>
-                        <input type="date" [(ngModel)]="grn.expiryDate" class="form-control form-control-sm w-100" />
-                      </td>
-                      <td>
-                        <input type="checkbox" [(ngModel)]="grn.RetrunToParty" class="form-check-input"
-                          id="returnToParty" />
-                      </td>
-                      <td>
-                        <input type="number" [(ngModel)]="grn.retQty" class="form-control form-control-sm w-100"
-                          placeholder="Retrun Quantity" />
+                    <tr *ngFor="let grn of rows; let i = index">
+                      <td *ngFor="let col of getActiveColumns()">
+                        <!-- S.No / Readonly -->
+                        <ng-container *ngIf="col === 'sno'">
+                          <span class="fw-semibold text-secondary">{{ i + 1 }}</span>
+                        </ng-container>
+
+                        <!-- Product: editable on Intake, read-only name on Repair Center -->
+                        <ng-container *ngIf="col === 'product'">
+                          <div *ngIf="activeTab === 'intake'" class="product-picker-container">
+                            <div class="input-group input-group-sm mb-1">
+                              <span class="input-group-text bg-white border-end-0 text-muted"><i
+                                  class="bi bi-search"></i></span>
+                              <input type="text" class="form-control border-start-0 ps-0" [(ngModel)]="grn.searchText"
+                                (input)="filterProducts(grn)" placeholder="Search Product..." />
+                              <button type="button" class="btn btn-sm btn-outline-secondary border-start-0"
+                                (click)="openproductInfoModal(grn.selectedProduct)" title="Product Info">
+                                <i class="bi bi-info-circle"></i>
+                              </button>
+                            </div>
+                            <select [(ngModel)]="grn.selectedProduct" class="form-select form-select-sm product-select">
+                              <option [ngValue]="null" disabled>Select product</option>
+                              <option
+                                *ngFor="let product of (grn.filteredProducts?.length ? grn.filteredProducts : products)"
+                                [ngValue]="product.productId">
+                                {{ product.name }}
+                              </option>
+                            </select>
+                          </div>
+                          <div *ngIf="activeTab === 'center'" class="text-start px-2">
+                            <span class="fw-semibold">{{ getProductName(grn.selectedProduct) }}</span>
+                          </div>
+                        </ng-container>
+
+                        <!-- As Per Party -->
+                        <ng-container *ngIf="col === 'asPerParty'">
+                          <input type="number" [(ngModel)]="grn.quantityasperparty"
+                            class="form-control form-control-sm text-center qty-input"
+                            (change)="updateQuantity(grn)" (blur)="validateRow(grn)" />
+                        </ng-container>
+
+                        <!-- Received Qty -->
+                        <ng-container *ngIf="col === 'received'">
+                          <input type="number" [(ngModel)]="grn.receivedQuantity"
+                            class="form-control form-control-sm text-center qty-input"
+                            (change)="updateQuantity(grn)" (blur)="validateRow(grn)" />
+                        </ng-container>
+
+                        <!-- Passed Qty -->
+                        <ng-container *ngIf="col === 'passed'">
+                          <input type="number" [(ngModel)]="grn.passed" class="form-control form-control-sm text-center qty-input" (change)="updateQuantity(grn)"
+                            (blur)="validateRow(grn)" />
+                          <select [(ngModel)]="grn.statusofpassed" class="form-select form-select-sm Dropdown mt-1 reason-select">
+                            <option value="" disabled>Select</option>
+                            <option *ngFor="let p of statusofpassed" [ngValue]="p.name">{{ p.name }}</option>
+                          </select>
+                        </ng-container>
+
+                        <!-- Rejected Qty -->
+                        <ng-container *ngIf="col === 'rejected'">
+                          <input type="number" [(ngModel)]="grn.rejected"
+                            class="form-control form-control-sm text-center qty-input" (change)="updateQuantity(grn)" (blur)="validateRow(grn)" />
+                          <select [(ngModel)]="grn.statusofrejected" class="form-select form-select-sm Dropdown mt-1 reason-select" (change)="onRejectStatusChange(grn)">
+                            <option value="" disabled>Select</option>
+                            <option *ngFor="let p of statusofrejected" [ngValue]="p.name">{{ p.name }}</option>
+                          </select>
+                        </ng-container>
+
+                        <!-- Miscellaneous Qty -->
+                        <ng-container *ngIf="col === 'miscellaneous'">
+                          <input type="number" [(ngModel)]="grn.miscellaneous"
+                            class="form-control form-control-sm text-center qty-input" (change)="updateQuantity(grn)" (blur)="validateRow(grn)" />
+                          <select [(ngModel)]="grn.statusofmiscellaneous"
+                            class="form-select form-select-sm Dropdown mt-1 reason-select">
+                            <option value="" disabled>Select</option>
+                            <option *ngFor="let p of statusofmiscellaneous" [ngValue]="p.name">{{ p.name }}</option>
+                          </select>
+                        </ng-container>
+
+                        <!-- Status Dropdown / Badge -->
+                        <ng-container *ngIf="col === 'status'">
+                          <div *ngIf="grn.status && !grn.isEditingStatus" (click)="grn.isEditingStatus = true"
+                            style="cursor: pointer;" title="Click to change status">
+                            <span [class]="getStatusBadgeClass(grn.status)"
+                              style="font-size: 0.825rem; padding: 5px 12px; border-radius: 12px; display: inline-block; font-weight: 500;">
+                              {{ grn.status }} <i class="bi bi-pencil-square ms-1" style="font-size: 0.75rem;"></i>
+                            </span>
+                          </div>
+                          <select *ngIf="!grn.status || grn.isEditingStatus" [(ngModel)]="grn.status"
+                            (change)="grn.isEditingStatus = false" (blur)="grn.isEditingStatus = false"
+                            class="form-select form-select-sm" >
+                            <option value="" disabled>Select</option>
+                            <option *ngFor="let p of status" [ngValue]="p.name">{{ p.name }}</option>
+                          </select>
+                        </ng-container>
+
+                        <!-- Demanded By Party Dropdown -->
+                        <ng-container *ngIf="col === 'demandedByParty'">
+                          <select [(ngModel)]="grn.demandedByParty" (change)="grn.demandedbyparty = grn.demandedByParty"
+                            class="form-select form-select-sm" style="min-width: 130px; margin: 0 auto;">
+                            <option value="" disabled>Select</option>
+                            <option *ngFor="let p of demandedbyparty" [ngValue]="p.name">{{ p.name }}</option>
+                          </select>
+                        </ng-container>
+
+                        <!-- MRP -->
+                        <ng-container *ngIf="col === 'MRP'">
+                          <input type="number" [(ngModel)]="grn.MRP" class="form-control form-control-sm text-center qty-input" />
+                        </ng-container>
+
+                        <!-- Batch No -->
+                        <ng-container *ngIf="col === 'batchno'">
+                          <input type="text" [(ngModel)]="grn.batchno" class="form-control form-control-sm"
+                            placeholder="Batch" style="min-width: 100px; margin: 0 auto;" />
+                        </ng-container>
+
+                        <!-- Expiry Date -->
+                        <ng-container *ngIf="col === 'expiryDate'">
+                          <input type="date" [(ngModel)]="grn.expiryDate" class="form-control form-control-sm"
+                            style="min-width: 130px; margin: 0 auto;" />
+                        </ng-container>
+
+                        <!-- Return to Party -->
+                        <ng-container *ngIf="col === 'returnToParty'">
+                          <input type="checkbox" [(ngModel)]="grn.returnToParty"
+                            (ngModelChange)="grn.RetrunToParty = $event" class="form-check-input" />
+                        </ng-container>
+
+                        <!-- Return Qty -->
+                        <ng-container *ngIf="col === 'retQty'">
+                          <input type="number" [(ngModel)]="grn.retQty" class="form-control form-control-sm text-center qty-input" (change)="onReturnQtyChange(grn)" />
+                        </ng-container>
+
+                        <!-- Remarks 1 -->
+                        <ng-container *ngIf="col === 'remarks'">
+                          <input type="text" [(ngModel)]="grn.remarks" class="form-control form-control-sm"
+                            placeholder="Remarks"  />
+                        </ng-container>
+
+                        <!-- Remarks 2 -->
+                        <ng-container *ngIf="col === 'remarks2'">
+                          <input type="text" [(ngModel)]="grn.remarks2" class="form-control form-control-sm"
+                            placeholder="Remarks 2"  />
+                        </ng-container>
                       </td>
 
-                      <td>
-                        <input type="text" [(ngModel)]="grn.remarks" class="form-control form-control-sm w-100"
-                          placeholder="Remarks" />
-                      </td>
-                      <td>
-                        <input type="text" [(ngModel)]="grn.remarks2" class="form-control form-control-sm w-100"
-                          placeholder="Remarks" />
-                      </td>
-                      <td>
-                        <button class="btn  btn-sm" (click)="removeGrnRow(i)">
-                          <i class="bi bi-trash text-danger"></i>
+                      <!-- Actions only on Product Intake -->
+                      <td *ngIf="activeTab === 'intake'">
+                        <button class="btn btn-sm btn-outline-danger border-0 rounded-circle" (click)="removeGrnRow(i)"
+                          title="Remove Row" style="width: 32px; height: 32px; padding: 0;">
+                          <i class="bi bi-trash-fill"></i>
                         </button>
                       </td>
                     </tr>
                   </tbody>
                   <tfoot>
-                    <tr class="table-footer">
-                      <td colspan="16" class="text-start fw-bold"><i>Total Product Added: {{ grnList.length }}</i></td>
+                    <tr class="bg-light">
+                      <td [attr.colspan]="getActiveColumns().length + (activeTab === 'intake' ? 1 : 0)"
+                        class="text-start fw-semibold py-2 px-3 text-muted">
+                        <i class="bi bi-info-circle me-1"></i> Total Product Added: {{ rows.length }}
+                      </td>
                     </tr>
                   </tfoot>
                 </table>
               </div>
             </div>
-            <div class="text-end mt-2">
-              <button class="btn btn-primary btn-sm submit-btn" (click)="Save()">
-                <i class="bi bi-check-circle"></i> Submit
+
+            <!-- Editable Stock Repair + Dispatch Details (printed on GRN & Challan PDF) -->
+            <div class="dispatch-edit-panel mt-3" *ngIf="activeTab === 'center'">
+              <div class="alert alert-warning py-2 px-3 mb-2 small" *ngIf="stepError" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-1"></i>{{ stepError }}
+                <span class="ms-1 text-muted">— you can still edit the quantities above.</span>
+              </div>
+              <div class="alert alert-info py-2 px-3 mb-2 small mb-3">
+                <i class="bi bi-pencil-square me-1"></i>
+                Fill <strong>Stock Repair</strong> and <strong>Dispatch Details</strong> below — they appear editable in
+                the footer of GRN &amp; Challan PDF. Edit anytime before Submit.
+              </div>
+
+              <div class="row g-3">
+                <div class="col-lg-6">
+                  <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header text-white py-2 fw-bold text-uppercase small panel-header-primary">
+                      Stock Repair &amp; Sent To Party As Per Details
+                    </div>
+                    <div class="card-body p-0">
+                      <table class="table table-sm table-bordered mb-0 dispatch-edit-table">
+                        <tr>
+                          <th class="label-repair">Stock Received Party</th>
+                          <td><input type="text" class="form-control form-control-sm"
+                              [(ngModel)]="stockRepair.stockReceivedParty" name="srParty"
+                              placeholder="Enter party name" /></td>
+                        </tr>
+                        <tr>
+                          <th class="label-repair">Docket No / Date</th>
+                          <td><input type="text" class="form-control form-control-sm"
+                              [(ngModel)]="stockRepair.docketNoDate" name="srDocket" placeholder="Docket no / date" />
+                          </td>
+                        </tr>
+                        <tr>
+                          <th class="label-repair">Transport</th>
+                          <td><input type="text" class="form-control form-control-sm"
+                              [(ngModel)]="stockRepair.transport" name="srTransport" placeholder="Transport name" />
+                          </td>
+                        </tr>
+                        <tr>
+                          <th class="label-repair">Debit Note No / Invoice No / Date</th>
+                          <td><input type="text" class="form-control form-control-sm"
+                              [(ngModel)]="stockRepair.debitNoteInvoice" name="srDebit"
+                              placeholder="Debit / invoice no &amp; date" /></td>
+                        </tr>
+                        <tr>
+                          <th class="label-repair">Date &amp; Time</th>
+                          <td>
+                            <input type="datetime-local" class="form-control form-control-sm"
+                              [(ngModel)]="stockRepair.dateTime" name="srDateTime"
+                              title="Choose date and time from calendar" />
+                          </td>
+                        </tr>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-lg-6">
+                  <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header text-white py-2 fw-bold text-uppercase small panel-header-primary">
+                      Dispatch Details
+                    </div>
+                    <div class="card-body p-0">
+                      <table class="table table-sm table-bordered mb-0 dispatch-edit-table">
+                        <tr>
+                          <th class="label-dispatch">Stock Sent To</th>
+                          <td><input type="text" class="form-control form-control-sm" [(ngModel)]="dispatch.stockSentTo"
+                              name="dStockSent" placeholder="Party name" /></td>
+                        </tr>
+                        <tr>
+                          <th class="label-dispatch">Challan No / Invoice No / Credit Note No / Dated</th>
+                          <td><input type="text" class="form-control form-control-sm"
+                              [(ngModel)]="dispatch.challanInvoiceCreditNote" name="dChallan"
+                              placeholder="Challan / invoice / credit note &amp; date" /></td>
+                        </tr>
+                        <tr>
+                          <th class="label-dispatch">Docket No / Date</th>
+                          <td><input type="text" class="form-control form-control-sm"
+                              [(ngModel)]="dispatch.docketNoDate" name="dDocket" placeholder="Docket no / date" /></td>
+                        </tr>
+                        <tr>
+                          <th class="label-dispatch">Transport</th>
+                          <td><input type="text" class="form-control form-control-sm" [(ngModel)]="dispatch.transport"
+                              name="dTransport" placeholder="Transport name" /></td>
+                        </tr>
+                        <tr>
+                          <th class="label-dispatch">GRN No</th>
+                          <td><input type="text" class="form-control form-control-sm" [(ngModel)]="dispatch.grnNo"
+                              name="dGrn" placeholder="GRN number" /></td>
+                        </tr>
+                        <tr>
+                          <th class="label-dispatch">No credit note will be issued for these products</th>
+                          <td><input type="text" class="form-control form-control-sm"
+                              [(ngModel)]="dispatch.noCreditNoteRemark" name="dNoCn" placeholder="Remark (optional)" />
+                          </td>
+                        </tr>
+                        <tr>
+                          <th class="label-dispatch">Need debit note from the party for these products to issue credit
+                            note</th>
+                          <td><input type="text" class="form-control form-control-sm"
+                              [(ngModel)]="dispatch.needDebitNoteRemark" name="dNeedDn"
+                              placeholder="Remark (optional)" /></td>
+                        </tr>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step actions -->
+            <div class="grn-step-actions" *ngIf="activeTab === 'intake'">
+              <div class="alert alert-danger py-2 px-3 mb-2" *ngIf="stepError" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-1"></i>{{ stepError }}
+              </div>
+              <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <span class="text-muted small"><i class="bi bi-info-circle me-1"></i>Only product is required. Select a
+                  product, then continue.</span>
+                <button class="btn btn-primary px-4 rounded-pill" type="button"
+                  (click)="goToRepairCenter()">
+                  Save &amp; Continue <i class="bi bi-arrow-right ms-1"></i>
+                </button>
+              </div>
+            </div>
+            <div class="grn-step-actions d-flex justify-content-between align-items-center flex-wrap gap-2" *ngIf="activeTab === 'center'">
+              <button class="btn btn-outline-secondary px-4 rounded-pill" type="button" (click)="backToIntake()">
+                <i class="bi bi-arrow-left me-1"></i> Back to Intake
+              </button>
+              <button class="btn btn-primary px-4 rounded-pill" type="button" (click)="Save()">
+                <i class="bi bi-check-circle-fill me-1"></i> Submit GRN
               </button>
             </div>
           </div>
@@ -377,12 +594,20 @@
                   </div>
                 </div>
 
-                <!-- Date Input -->
+                <!-- From Date Input -->
                 <div class="form-group">
-                  <label for="date" class="form-label">
-                    <i class="bi bi-calendar me-1"></i>Date
+                  <label for="fromDate" class="form-label">
+                    <i class="bi bi-calendar-event me-1"></i>From Date
                   </label>
-                  <input type="date" id="date" class="form-control custom-input" [(ngModel)]="date">
+                  <input type="date" id="fromDate" class="form-control custom-input" [(ngModel)]="fromDate">
+                </div>
+
+                <!-- To Date Input -->
+                <div class="form-group">
+                  <label for="toDate" class="form-label">
+                    <i class="bi bi-calendar-event me-1"></i>To Date
+                  </label>
+                  <input type="date" id="toDate" class="form-control custom-input" [(ngModel)]="toDate">
                 </div>
 
                 <!-- Search Button -->
@@ -391,26 +616,55 @@
                     <i class="bi bi-search me-1"></i> Search
                   </button>
                   <button type="button"
-                    class="btn btn-outline-secondary d-flex align-items-center justify-content-center"
-                    (click)="resetSearch()" title="Reset Filters"
-                    style="height: 44px; width: 44px; border-radius: 8px;">
+                    class="btn btn-outline-secondary d-flex align-items-center justify-content-center icon-square-btn-lg" (click)="resetSearch()" title="Reset Filters"
+                    >
                     <i class="bi bi-arrow-clockwise"></i>
                   </button>
                 </div>
               </div>
+
+              <!-- Quick Date Range Presets -->
+              <div class="mt-2 d-flex align-items-center gap-2 flex-wrap">
+                <span class="text-muted small fw-semibold me-1"><i class="bi bi-lightning-charge me-1"></i>Quick
+                  Range:</span>
+                <button type="button" class="btn btn-sm preset-chip"
+                  [ngClass]="selectedPreset === 'today' ? 'btn-primary' : 'btn-outline-primary'"
+                  (click)="setQuickDateRange('today')">
+                  Today
+                </button>
+                <button type="button" class="btn btn-sm preset-chip"
+                  [ngClass]="selectedPreset === 'week' ? 'btn-primary' : 'btn-outline-primary'"
+                  (click)="setQuickDateRange('week')">
+                  This Week
+                </button>
+                <button type="button" class="btn btn-sm preset-chip"
+                  [ngClass]="selectedPreset === 'month' ? 'btn-primary' : 'btn-outline-primary'"
+                  (click)="setQuickDateRange('month')">
+                  This Month
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary preset-chip" (click)="setQuickDateRange('all')"
+                  *ngIf="fromDate || toDate">
+                  Clear Dates
+                </button>
+              </div>
             </div>
-            <hr />
-            <div class="mt-4">
-              <h5>GRN List of Supplier: {{selectedSupplierName2 }}</h5>
-              <table class="table table-bordered table-striped" *ngIf="grnListrpt.length > 0; else noRecords">
-                <thead class="table-dark">
+            <hr class="divider" />
+            <div class="mt-3">
+              <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
+                <h6 class="mb-0 fw-bold text-secondary">
+                  <i class="bi bi-list-ul me-1 text-primary"></i>
+                  GRN List of Supplier: <span class="text-dark">{{ selectedSupplierName2 || '—' }}</span>
+                </h6>
+              </div>
+              <div class="table-responsive rounded-3 border shadow-sm">
+              <table class="table table-bordered table-hover align-middle mb-0" *ngIf="grnListrpt.length > 0; else noRecords">
+                <thead class="table-primary">
                   <tr>
                     <th>Action</th>
                     <th>GRN Number</th>
                     <th>Challan Number</th>
                     <th>Responsible Person</th>
                     <th>Grn Status</th>
-
                     <th>Product Details</th>
                   </tr>
                 </thead>
@@ -450,10 +704,11 @@
                   </tr>
                 </tbody>
               </table>
+              </div>
 
               <!-- Template for No Records Found -->
               <ng-template #noRecords>
-                <div class="alert alert-warning text-center mt-3">
+                <div class="alert alert-warning text-center mt-3 mb-0">
                   No records are found.
                 </div>
               </ng-template>
@@ -500,16 +755,17 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let grn of filteredGrnList(); let i = index">
+              <tr *ngFor="let grn of challanList; let i = index">
                 <td>{{ i + 1 }}</td>
                 <td>{{ getProductName(grn.selectedProduct) }}</td>
-                <td>{{ grn.retQty }}</td>
-                <td>{{grn.mrp}}</td>
+                <td>{{ grn.retQty || grn.rejected || 0 }}</td>
+                <td>{{ grn.MRP || grn.mrp || 0 }}</td>
+              </tr>
+              <tr *ngIf="!challanList?.length">
+                <td colspan="4">No products for challan</td>
               </tr>
             </tbody>
             <tfoot>
-              <!-- First Row with 2 Columns -->
-
               <tr class="table-footer">
                 <td colspan="2" class="text-start fw-bold">
                   <br /> <i>Order Booked By: ___________________</i>
@@ -518,7 +774,6 @@
                   <br /> <i>For Odin Healthcare Pvt. Ltd.</i>
                 </td>
               </tr>
-              <!-- Second Row with 2 Columns -->
               <tr class="table-footer">
                 <td colspan="2" class="text-start fw-bold">
                   <br /> <i>Receiver's Signature ____________
@@ -532,117 +787,203 @@
             </tfoot>
           </table>
 
+          <div class="grn-print-footer-blocks">
+            <table class="grn-print-dispatch">
+              <thead>
+                <tr>
+                  <th colspan="2" class="section-repair">STOCK REPAIR &amp; SENT TO PARTY AS PER DETAILS</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="lbl-repair">STOCK RECEIVED PARTY</td>
+                  <td class="val-edit"><input type="text" [attr.value]="stockRepair.stockReceivedParty || ''" /></td>
+                </tr>
+                <tr>
+                  <td class="lbl-repair">DOCKET NO / DATE</td>
+                  <td class="val-edit"><input type="text" [attr.value]="stockRepair.docketNoDate || ''" /></td>
+                </tr>
+                <tr>
+                  <td class="lbl-repair">TRANSPORT</td>
+                  <td class="val-edit"><input type="text" [attr.value]="stockRepair.transport || ''" /></td>
+                </tr>
+                <tr>
+                  <td class="lbl-repair">DEBIT NOTE NO / INVOICE NO / DATE</td>
+                  <td class="val-edit"><input type="text" [attr.value]="stockRepair.debitNoteInvoice || ''" /></td>
+                </tr>
+                <tr>
+                  <td class="lbl-repair">DATE &amp; TIME</td>
+                  <td class="val-edit"><input type="datetime-local" [attr.value]="stockRepair.dateTime || ''" /></td>
+                </tr>
+              </tbody>
+            </table>
+            <table class="grn-print-dispatch">
+              <thead>
+                <tr>
+                  <th colspan="2" class="section-dispatch">DISPATCH DETAILS</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="lbl-dispatch">STOCK SENT TO</td>
+                  <td class="val-edit"><input type="text" [attr.value]="dispatch.stockSentTo || ''" /></td>
+                </tr>
+                <tr>
+                  <td class="lbl-dispatch">CHALLAN NO / INVOICE NO / CREDIT NOTE NO / DATED</td>
+                  <td class="val-edit"><input type="text" [attr.value]="dispatch.challanInvoiceCreditNote || ''" /></td>
+                </tr>
+                <tr>
+                  <td class="lbl-dispatch">DOCKET NO / DATE</td>
+                  <td class="val-edit"><input type="text" [attr.value]="dispatch.docketNoDate || ''" /></td>
+                </tr>
+                <tr>
+                  <td class="lbl-dispatch">TRANSPORT</td>
+                  <td class="val-edit"><input type="text" [attr.value]="dispatch.transport || ''" /></td>
+                </tr>
+                <tr>
+                  <td class="lbl-dispatch">GRN NO</td>
+                  <td class="val-edit"><input type="text" [attr.value]="dispatch.grnNo || ''" /></td>
+                </tr>
+                <tr>
+                  <td class="lbl-dispatch">NO CREDIT NOTE WILL BE ISSUED FOR THESE PRODUCTS</td>
+                  <td class="val-edit"><input type="text" [attr.value]="dispatch.noCreditNoteRemark || ''" /></td>
+                </tr>
+                <tr>
+                  <td class="lbl-dispatch">NEED DEBIT NOTE FROM THE PARTY FOR THESE PRODUCTS TO ISSUE CREDIT NOTE</td>
+                  <td class="val-edit"><input type="text" [attr.value]="dispatch.needDebitNoteRemark || ''" /></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
 
         </div>
 
         <div id="printSection" style="display: none;">
-          <!--  style="display: none;" -->
-          <div class="col-md-12 mb-3 text-end">Date:&nbsp;&nbsp;{{todayDate}} </div>
-          <h3 class="text-center">Odin Healthcare Pvt. Ltd.</h3>
-          <h5 class="text-center">Plotno 45, Industrial Area, Phase-2, Panchkula(Haryana)</h5>
-          <h5 class="text-center">Call Us: +91 9878785333, E-mail: customercare&#64;drodin.in</h5>
-          <h5 class="text-center">Goods Received Note /Inspection Report</h5>
-          <hr />
-          <div class="d-flex justify-content-between">
-            <div>
-              <label class="form-label">Name of Supplier: &nbsp;&nbsp;</label>
-              <label class="form-label">{{selectedSupplierName}}</label>
+          <div class="grn-print-doc">
+            <div class="grn-print-date">Date: {{ todayDate }}</div>
+            <div class="grn-print-header">
+              <h2>Odin Healthcare Pvt. Ltd.</h2>
+              <p>Plot No. 45, Industrial Area, Phase-2, Panchkula (Haryana)</p>
+              <p>Call Us: +91 9878785333 &nbsp;|&nbsp; E-mail: customercare&#64;drodin.in</p>
+              <h3>Goods Received Note / Inspection Report</h3>
             </div>
-            <div>
-              <label class="form-label">Responsible Person: &nbsp;&nbsp;</label>
-              <label class="form-label">{{selectedResperson}}</label>
-            </div>
-            <div>
-              <label class="form-label">Docker number: &nbsp;&nbsp;</label>
-              <label class="form-label">{{dockernumber}}</label>
-            </div>
-            <div>
-              <label class="form-label">GRN STATUS: &nbsp;&nbsp;</label>
-              <label class="form-label">{{selectedgrnstatus}}</label>
-            </div>
-            <div>
-              <label class="form-label">GRN Number: &nbsp;&nbsp;</label>
-              <label class="form-label">{{grnNumber}}</label>
+
+            <table class="grn-print-meta">
+              <tr>
+                <td><span>Supplier</span><strong>{{ selectedSupplierName || '—' }}</strong></td>
+                <td><span>Responsible Person</span><strong>{{ selectedResperson || '—' }}</strong></td>
+                <td><span>Docker No.</span><strong>{{ dockernumber || '—' }}</strong></td>
+                <td><span>GRN Status</span><strong>{{ selectedGRNName || selectedgrnstatus || '—' }}</strong></td>
+                <td><span>GRN Number</span><strong>{{ grnNumber || '—' }}</strong></td>
+              </tr>
+            </table>
+
+            <table class="grn-print-table">
+              <thead>
+                <tr>
+                  <th rowspan="2" class="col-sno">S.No</th>
+                  <th rowspan="2" class="col-product">Product Name</th>
+                  <th colspan="2" class="group-intake">Product Intake</th>
+                  <th colspan="6" class="group-repair">Repair Center</th>
+                  <th rowspan="2">Status</th>
+                  <th rowspan="2">Demanded</th>
+                  <th rowspan="2">MRP</th>
+                  <th rowspan="2">Batch No</th>
+                  <th rowspan="2">Expiry</th>
+                  <th rowspan="2">Return Qty</th>
+                  <th rowspan="2">Remarks 1</th>
+                  <th rowspan="2">Remarks 2</th>
+                </tr>
+                <tr>
+                  <th>As Per Party</th>
+                  <th>Received</th>
+                  <th>Passed</th>
+                  <th>Pass Reason</th>
+                  <th>Rejected</th>
+                  <th>Reject Reason</th>
+                  <th>Miscellaneous</th>
+                  <th>Misc Reason</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let grn of rows; let i = index">
+                  <td class="col-sno">{{ i + 1 }}</td>
+                  <td class="col-product text-start">{{ getProductName(grn.selectedProduct) }}</td>
+                  <td>{{ grn.quantityasperparty ?? grn.asPerParty }}</td>
+                  <td>{{ grn.receivedQuantity ?? grn.received }}</td>
+                  <td>{{ grn.passed }}</td>
+                  <td>{{ grn.statusofpassed || '—' }}</td>
+                  <td>{{ grn.rejected }}</td>
+                  <td>{{ grn.statusofrejected || '—' }}</td>
+                  <td>{{ grn.miscellaneous || 0 }}</td>
+                  <td>{{ grn.statusofmiscellaneous || '—' }}</td>
+                  <td>{{ grn.status || '—' }}</td>
+                  <td>{{ grn.demandedByParty || grn.demandedbyparty || '—' }}</td>
+                  <td>{{ grn.MRP }}</td>
+                  <td>{{ grn.batchno || '—' }}</td>
+                  <td>{{ grn.expiryDate || '—' }}</td>
+                  <td>{{ grn.retQty ?? 0 }}</td>
+                  <td class="text-start">{{ grn.remarks || '—' }}</td>
+                  <td class="text-start">{{ grn.remarks2 || '—' }}</td>
+                </tr>
+                <tr *ngIf="!rows?.length">
+                  <td colspan="18">No products added</td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="18" class="text-start"><strong>Total Product Added: {{ rows.length }}</strong></td>
+                </tr>
+              </tfoot>
+            </table>
+
+            <!-- Stock Repair only on GRN; Dispatch Details print on Challan download -->
+            <div class="grn-print-footer-blocks grn-print-footer-blocks--grn-only">
+              <table class="grn-print-dispatch">
+                <thead>
+                  <tr>
+                    <th colspan="2" class="section-repair">STOCK REPAIR DETAILS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="lbl-repair">STOCK RECEIVED PARTY</td>
+                    <td class="val-edit"><input type="text" [attr.value]="stockRepair.stockReceivedParty || ''" /></td>
+                  </tr>
+                  <tr>
+                    <td class="lbl-repair">DOCKET NO / DATE</td>
+                    <td class="val-edit"><input type="text" [attr.value]="stockRepair.docketNoDate || ''" /></td>
+                  </tr>
+                  <tr>
+                    <td class="lbl-repair">TRANSPORT</td>
+                    <td class="val-edit"><input type="text" [attr.value]="stockRepair.transport || ''" /></td>
+                  </tr>
+                  <tr>
+                    <td class="lbl-repair">DEBIT NOTE NO / INVOICE NO / DATE</td>
+                    <td class="val-edit"><input type="text" [attr.value]="stockRepair.debitNoteInvoice || ''" /></td>
+                  </tr>
+                  <tr>
+                    <td class="lbl-repair">DATE &amp; TIME</td>
+                    <td class="val-edit">
+                      <input type="datetime-local" [attr.value]="stockRepair.dateTime || ''" />
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <table class="grn-print-sign-table">
+                <tr>
+                  <td>Inspection Done By: ____________________</td>
+                  <td class="text-center">Authorized Signature: ____________________</td>
+                  <td class="text-end">Received By: ____________________</td>
+                </tr>
+              </table>
             </div>
           </div>
-          <table class="table table-bordered table-hover table-sm text-center align-middle">
-            <thead class="table-dark">
-              <tr>
-                <th scope="col">S.No</th>
-                <th scope="col">Product Name</th>
-                <th scope="col" colspan="2" class="text-center">Quantity</th>
-                <th scope="col" colspan="2" class="text-center">Quantity</th>
-                <th scope="col">Status</th>
-                <th scope="col">Demanded</th>
-                <th scope="col">MRP</th>
-                <th scope="col">Batch No</th>
-                <th scope="col">Date of Expiry</th>
-                <!-- <th scope="col" >Retrun To Party</th> -->
-                <th scope="col">Retrun Quantity</th>
-                <th scope="col">Remarks 1</th>
-                <th scope="col">Remarks 2</th>
-              </tr>
-              <tr>
-                <th scope="col"></th>
-                <th scope="col"></th>
-                <th scope="col">As per party</th>
-                <th scope="col">Received</th>
-                <th scope="col">Passed</th>
-                <th scope="col">Rejected</th>
-                <th></th>
-                <th>By Party</th>
-                <th scope="col"></th>
-                <th scope="col"></th>
-                <th scope="col"></th>
-                <!-- <th scope="col"></th> -->
-                <th scope="col"></th>
-                <th scope="col"></th>
-                <th scope="col"></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let grn of grnList; let i = index">
-                <td>{{ i + 1 }}</td>
-                <td>{{ getProductName(grn.selectedProduct) }}</td>
-                <td>{{ grn.quantityasperparty }}</td>
-                <td>{{ grn.receivedQuantity }}</td>
-                <td>{{ grn.passed }} <br />{{ grn.statusofpassed }}</td>
-                <td>{{ grn.rejected }} <br />{{ grn.statusofrejected }}</td>
-                <td>{{ grn.status }}</td>
-                <td>{{ grn.demandedbyparty }}</td>
-                <td>{{ grn.MRP }}</td>
-                <td>{{ grn.batchno }}</td>
-                <td>{{ grn.expiryDate }}</td>
-                <!-- <td>{{ grn.RetrunToParty }}</td> -->
-                <td>{{ grn.retQty }}</td>
-                <td>{{ grn.remarks }}</td>
-                <td>{{ grn.remarks2 }}</td>
-              </tr>
-            </tbody>
-            <tfoot>
-              <tr class="table-footer">
-                <td colspan="16" class="text-start fw-bold">
-                  <br /> <i>Total Product Added: {{ grnList.length }}</i>
-                </td>
-              </tr>
-              <tr class="table-footer">
-                <td colspan="6" class="text-start fw-bold">
-                  <br /> <i>Inspection Done By: ___________________</i>
-                </td>
-                <td colspan="6" class="text-center fw-bold">
-                  <br /> <i>Authorized Signature ____________</i>
-                </td>
-                <td colspan="6" class="text-end fw-bold">
-                  <br /><i>Received By ____________</i>
-                </td>
-              </tr>
-            </tfoot>
-
-          </table>
-
         </div>
       </div>
     </div>
+  </div>
 
     <!-- Modal supplierInfoModal-->
     <div #supplierInfoModal class="modal fade" tabindex="-1" aria-hidden="true">
@@ -801,7 +1142,7 @@
                       <th scope="col" style="width: 370px; position: sticky; top: 0; z-index: 2;">Product</th>
                       <th scope="col" colspan="2" style="width: 140px; position: sticky; top: 0; z-index: 2;">Quantity
                       </th>
-                      <th scope="col" colspan="2" style="width: 300px; position: sticky; top: 0; z-index: 2;">Quantity
+                      <th scope="col" colspan="3" style="width: 450px; position: sticky; top: 0; z-index: 2;">Quantity
                       </th>
                       <th scope="col" style="width: 150px; position: sticky; top: 0; z-index: 2;">Status</th>
                       <th scope="col" style="width: 150px; position: sticky; top: 0; z-index: 2;">Demanded</th>
@@ -821,6 +1162,7 @@
                       <th style="width: 60px; position: sticky; top: 23px;  z-index: 1;">Received</th>
                       <th style="width: 150px; position: sticky; top: 23px;  z-index: 1;">Passed</th>
                       <th style="width: 150px; position: sticky; top: 23px;  z-index: 1;">Rejected</th>
+                      <th style="width: 150px; position: sticky; top: 23px;  z-index: 1;">Miscellaneous</th>
                       <th style="position: sticky; top: 23px;  z-index: 1;"></th>
                       <th style="position: sticky; top: 23px;  z-index: 1;">By Party</th>
                       <th style="position: sticky; top: 23px;  z-index: 1;"></th>
@@ -869,6 +1211,14 @@
                         <select [(ngModel)]="grn.rejectedstatus" class="form-select form-select-sm Dropdown">
                           <option value="" disabled>Select</option>
                           <option *ngFor="let p of statusofrejected" [ngValue]="p.name">{{ p.name }}</option>
+                        </select>
+                      </td>
+                      <td>
+                        <input type="number" [(ngModel)]="grn.miscellaneousQuantity"
+                          class="form-control form-control-sm" (change)="updateQuantity(grn)" />
+                        <select [(ngModel)]="grn.statusofmiscellaneous" class="form-select form-select-sm Dropdown">
+                          <option value="" disabled>Select</option>
+                          <option *ngFor="let p of statusofmiscellaneous" [ngValue]="p.name">{{ p.name }}</option>
                         </select>
                       </td>
                       <td>
@@ -945,108 +1295,117 @@
     </div>
     <!-- PRINT GRN POPUP EDIT -->
     <div id="printSectionpopup" style="display: none;">
+      <div class="grn-print-doc">
+        <div class="grn-print-date">Date: {{ todayDate }}</div>
+        <div class="grn-print-header">
+          <h2>Odin Healthcare Pvt. Ltd.</h2>
+          <p>Plot No. 45, Industrial Area, Phase-2, Panchkula (Haryana)</p>
+          <p>Call Us: +91 9878785333 &nbsp;|&nbsp; E-mail: customercare&#64;drodin.in</p>
+          <h3>Goods Received Note / Inspection Report</h3>
+        </div>
 
+        <table class="grn-print-meta">
+          <tr>
+            <td><span>Supplier</span><strong>{{ grnListRptoldSupplierName || '—' }}</strong></td>
+            <td><span>Responsible Person</span><strong>{{ grnListRptoldResponsiblePerson || '—' }}</strong></td>
+            <td><span>Docker No.</span><strong>{{ grnListRptolddokerno || '—' }}</strong></td>
+            <td><span>GRN Status</span><strong>{{ selectedgrnOldstatus || '—' }}</strong></td>
+            <td><span>GRN Number</span><strong>{{ grnListRptoldGrnNo || '—' }}</strong></td>
+          </tr>
+        </table>
 
-      <div class="col-md-12 mb-3 text-end">Date:&nbsp;&nbsp;{{todayDate}} </div>
-      <h3 class="text-center">Odin Healthcare Pvt. Ltd.</h3>
-      <h5 class="text-center">Plotno 45, Industrial Area, Phase-2, Panchkula(Haryana)</h5>
-      <h5 class="text-center">Call Us: +91 9878785333, E-mail: customercare&#64;drodin.in</h5>
-      <h5 class="text-center">Goods Received Note /Inspection Report</h5>
-      <hr />
-      <div class="d-flex justify-content-between">
-        <div>
-          <label class="form-label">Name of Supplier: &nbsp;&nbsp;</label>
-          <label class="form-label">{{grnListRptoldSupplierName}}</label>
-        </div>
-        <div>
-          <label class="form-label">Responsible Person: &nbsp;&nbsp;</label>
-          <label class="form-label">{{grnListRptoldResponsiblePerson}}</label>
-        </div>
-        <div>
-          <label class="form-label">Docker number: &nbsp;&nbsp;</label>
-          <label class="form-label">{{grnListRptolddokerno}}</label>
-        </div>
-        <div>
-          <label class="form-label">GRN STATUS: &nbsp;&nbsp;</label>
-          <label class="form-label">{{selectedgrnOldstatus}}</label>
-        </div>
-        <div>
-          <label class="form-label">GRN Number: &nbsp;&nbsp;</label>
-          <label class="form-label">{{grnListRptoldGrnNo}}</label>
+        <table class="grn-print-table">
+          <thead>
+            <tr>
+              <th rowspan="2" class="col-sno">S.No</th>
+              <th rowspan="2" class="col-product">Product Name</th>
+              <th colspan="2" class="group-intake">Product Intake</th>
+              <th colspan="4" class="group-repair">Repair Center</th>
+              <th rowspan="2">Status</th>
+              <th rowspan="2">Demanded</th>
+              <th rowspan="2">MRP</th>
+              <th rowspan="2">Batch No</th>
+              <th rowspan="2">Expiry</th>
+              <th rowspan="2">Return Qty</th>
+              <th rowspan="2">Remarks 1</th>
+              <th rowspan="2">Remarks 2</th>
+            </tr>
+            <tr>
+              <th>As Per Party</th>
+              <th>Received</th>
+              <th>Passed</th>
+              <th>Pass Reason</th>
+              <th>Rejected</th>
+              <th>Reject Reason</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let grn of grnListRptold; let i = index">
+              <td class="col-sno">{{ i + 1 }}</td>
+              <td class="col-product text-start">{{ getProductName(grn.productId) }}</td>
+              <td>{{ grn.quantityAsPerParty }}</td>
+              <td>{{ grn.receivedQuantity }}</td>
+              <td>{{ grn.passedQuantity }}</td>
+              <td>{{ grn.passedstatus || '—' }}</td>
+              <td>{{ grn.rejectedQuantity }}</td>
+              <td>{{ grn.rejectedstatus || '—' }}</td>
+              <td>{{ grn.status || '—' }}</td>
+              <td>{{ grn.demandedbyparty || '—' }}</td>
+              <td>{{ grn.mrp }}</td>
+              <td>{{ grn.batchNumber || '—' }}</td>
+              <td>{{ grn.expiryDate || '—' }}</td>
+              <td>{{ grn.quantity ?? 0 }}</td>
+              <td class="text-start">{{ grn.remarks1 || '—' }}</td>
+              <td class="text-start">{{ grn.remarks2 || '—' }}</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="16" class="text-start"><strong>Total Product Added: {{ grnListRptold.length }}</strong></td>
+            </tr>
+          </tfoot>
+        </table>
+
+        <!-- Stock Repair only on GRN popup; Dispatch Details print on Challan download -->
+        <div class="grn-print-footer-blocks grn-print-footer-blocks--grn-only">
+          <table class="grn-print-dispatch">
+            <thead>
+              <tr>
+                <th colspan="2" class="section-repair">STOCK REPAIR DETAILS</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="lbl-repair">STOCK RECEIVED PARTY</td>
+                <td class="val-edit"><input type="text" [attr.value]="stockRepair.stockReceivedParty || ''" /></td>
+              </tr>
+              <tr>
+                <td class="lbl-repair">DOCKET NO / DATE</td>
+                <td class="val-edit"><input type="text" [attr.value]="stockRepair.docketNoDate || ''" /></td>
+              </tr>
+              <tr>
+                <td class="lbl-repair">TRANSPORT</td>
+                <td class="val-edit"><input type="text" [attr.value]="stockRepair.transport || ''" /></td>
+              </tr>
+              <tr>
+                <td class="lbl-repair">DEBIT NOTE NO / INVOICE NO / DATE</td>
+                <td class="val-edit"><input type="text" [attr.value]="stockRepair.debitNoteInvoice || ''" /></td>
+              </tr>
+              <tr>
+                <td class="lbl-repair">DATE &amp; TIME</td>
+                <td class="val-edit"><input type="datetime-local" [attr.value]="stockRepair.dateTime || ''" /></td>
+              </tr>
+            </tbody>
+          </table>
+          <table class="grn-print-sign-table">
+            <tr>
+              <td>Inspection Done By: ____________________</td>
+              <td class="text-center">Authorized Signature: ____________________</td>
+              <td class="text-end">Received By: ____________________</td>
+            </tr>
+          </table>
         </div>
       </div>
-      <table class="table table-bordered table-hover table-sm text-center align-middle">
-        <thead class="table-dark">
-          <tr>
-            <th scope="col" style="width: 50px;">S.No</th>
-            <th scope="col" style="width: 370px;">Product Name</th>
-            <th scope="col" colspan="2" class="text-center" style="width: 140px;">Quantity</th>
-            <th scope="col" colspan="2" class="text-center" style="width: 300px;">Quantity</th>
-            <th scope="col" style="width: 150px;">Status</th>
-            <th scope="col" style="width: 150px;">Demanded</th>
-            <th scope="col" style="width: 80px;">MRP</th>
-            <th scope="col" style="width: 120px;">Batch No</th>
-            <th scope="col" style="width: 120px;">Date of Expiry</th>
-            <th scope="col" style="width: 120px;">Return Quantity</th>
-            <th scope="col" style="width: 120px;">Remarks 1</th>
-            <th scope="col" style="width: 120px;">Remarks 2</th>
-          </tr>
-          <tr>
-            <th></th>
-            <th></th>
-            <th style="width: 60px;">As per party</th>
-            <th style="width: 60px;">Received</th>
-            <th style="width: 150px;">Passed</th>
-            <th style="width: 150px;">Rejected</th>
-            <th></th>
-            <th>By Party</th>
-            <th></th>
-            <th></th>
-            <th></th>
-            <th></th>
-            <th></th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let grn of grnListRptold; let i = index">
-            <td>{{ i + 1 }}</td>
-            <td style="width: 370px;">{{ getProductName(grn.productId) }}</td>
-            <td style="width: 60px;">{{ grn.quantityAsPerParty }}</td>
-            <td style="width: 60px;">{{ grn.receivedQuantity }}</td>
-            <td style="width: 150px;">{{ grn.passedQuantity }} <br />{{ grn.passedstatus }}</td>
-            <td style="width: 150px;">{{ grn.rejectedQuantity }} <br />{{ grn.rejectedstatus }}</td>
-            <td style="width: 150px;">{{ grn.status }}</td>
-            <td style="width: 150px;">{{ grn.demandedbyparty }}</td>
-            <td style="width: 80px;">{{ grn.mrp }}</td>
-            <td style="width: 120px;">{{ grn.batchNumber }}</td>
-            <td style="width: 120px;">{{ grn.expiryDate }}</td>
-            <td style="width: 120px;">{{ grn.quantity }}</td>
-            <td style="width: 120px;">{{ grn.remarks1 }}</td>
-            <td style="width: 120px;">{{ grn.remarks2 }}</td>
-          </tr>
-        </tbody>
-        <tfoot>
-          <tr class="table-footer">
-            <td colspan="14" class="text-start fw-bold">
-              <br /><i>Total Product Added: {{ grnListRptold.length }}</i>
-            </td>
-          </tr>
-          <tr class="table-footer">
-            <td colspan="6" class="text-start fw-bold">
-              <br /><i>Inspection Done By: ___________________</i>
-            </td>
-            <td colspan="6" class="text-center fw-bold">
-              <br /><i>Authorized Signature ____________</i>
-            </td>
-            <td colspan="6" class="text-end fw-bold">
-              <br /><i>Received By ____________</i>
-            </td>
-          </tr>
-        </tfoot>
-      </table>
-
-
     </div>
     <!-- 
 printPOPUPSectionChallan -->
@@ -1093,8 +1452,6 @@ printPOPUPSectionChallan -->
           </tr>
         </tbody>
         <tfoot>
-          <!-- First Row with 2 Columns -->
-
           <tr class="table-footer">
             <td colspan="2" class="text-start fw-bold">
               <br /> <i>Order Booked By: ___________________</i>
@@ -1103,7 +1460,6 @@ printPOPUPSectionChallan -->
               <br /> <i>For Odin Healthcare Pvt. Ltd.</i>
             </td>
           </tr>
-          <!-- Second Row with 2 Columns -->
           <tr class="table-footer">
             <td colspan="2" class="text-start fw-bold">
               <br /> <i>Receiver's Signature ____________
@@ -1117,5 +1473,73 @@ printPOPUPSectionChallan -->
         </tfoot>
       </table>
 
+      <div class="grn-print-footer-blocks">
+        <table class="grn-print-dispatch">
+          <thead>
+            <tr>
+              <th colspan="2" class="section-repair">STOCK REPAIR &amp; SENT TO PARTY AS PER DETAILS</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="lbl-repair">STOCK RECEIVED PARTY</td>
+              <td class="val-edit"><input type="text" [attr.value]="stockRepair.stockReceivedParty || ''" /></td>
+            </tr>
+            <tr>
+              <td class="lbl-repair">DOCKET NO / DATE</td>
+              <td class="val-edit"><input type="text" [attr.value]="stockRepair.docketNoDate || ''" /></td>
+            </tr>
+            <tr>
+              <td class="lbl-repair">TRANSPORT</td>
+              <td class="val-edit"><input type="text" [attr.value]="stockRepair.transport || ''" /></td>
+            </tr>
+            <tr>
+              <td class="lbl-repair">DEBIT NOTE NO / INVOICE NO / DATE</td>
+              <td class="val-edit"><input type="text" [attr.value]="stockRepair.debitNoteInvoice || ''" /></td>
+            </tr>
+            <tr>
+              <td class="lbl-repair">DATE &amp; TIME</td>
+              <td class="val-edit"><input type="datetime-local" [attr.value]="stockRepair.dateTime || ''" /></td>
+            </tr>
+          </tbody>
+        </table>
+        <table class="grn-print-dispatch">
+          <thead>
+            <tr>
+              <th colspan="2" class="section-dispatch">DISPATCH DETAILS</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="lbl-dispatch">STOCK SENT TO</td>
+              <td class="val-edit"><input type="text" [attr.value]="dispatch.stockSentTo || ''" /></td>
+            </tr>
+            <tr>
+              <td class="lbl-dispatch">CHALLAN NO / INVOICE NO / CREDIT NOTE NO / DATED</td>
+              <td class="val-edit"><input type="text" [attr.value]="dispatch.challanInvoiceCreditNote || ''" /></td>
+            </tr>
+            <tr>
+              <td class="lbl-dispatch">DOCKET NO / DATE</td>
+              <td class="val-edit"><input type="text" [attr.value]="dispatch.docketNoDate || ''" /></td>
+            </tr>
+            <tr>
+              <td class="lbl-dispatch">TRANSPORT</td>
+              <td class="val-edit"><input type="text" [attr.value]="dispatch.transport || ''" /></td>
+            </tr>
+            <tr>
+              <td class="lbl-dispatch">GRN NO</td>
+              <td class="val-edit"><input type="text" [attr.value]="dispatch.grnNo || ''" /></td>
+            </tr>
+            <tr>
+              <td class="lbl-dispatch">NO CREDIT NOTE WILL BE ISSUED FOR THESE PRODUCTS</td>
+              <td class="val-edit"><input type="text" [attr.value]="dispatch.noCreditNoteRemark || ''" /></td>
+            </tr>
+            <tr>
+              <td class="lbl-dispatch">NEED DEBIT NOTE FROM THE PARTY FOR THESE PRODUCTS TO ISSUE CREDIT NOTE</td>
+              <td class="val-edit"><input type="text" [attr.value]="dispatch.needDebitNoteRemark || ''" /></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
     </div>

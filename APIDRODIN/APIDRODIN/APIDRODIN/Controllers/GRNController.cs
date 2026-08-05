@@ -128,13 +128,13 @@ namespace APIDRODIN.Controllers
 
                         using (SqlCommand cmd = new SqlCommand(insertGRNQuery, connection, transaction))
                         {
-                            cmd.Parameters.AddWithValue("@GrnNumber", grnDto.GrnNumber);
+                            cmd.Parameters.AddWithValue("@GrnNumber", grnDto.GrnNumber ?? (object)DBNull.Value);
                             cmd.Parameters.AddWithValue("@SupplierId", grnDto.SupplierId);
                             cmd.Parameters.AddWithValue("@CreatedAt", DateTime.UtcNow);
                             cmd.Parameters.AddWithValue("@UpdatedDate", DateTime.UtcNow);
-                            cmd.Parameters.AddWithValue("@ResponsiblePersonId", grnDto.ResponsiblePerson);
-                            cmd.Parameters.AddWithValue("@DockerNumber", grnDto.DockerNo);
-                            cmd.Parameters.AddWithValue("@GrnStatus", grnDto.Grnstatus);
+                            cmd.Parameters.AddWithValue("@ResponsiblePersonId", grnDto.ResponsiblePerson > 0 ? (object)grnDto.ResponsiblePerson : DBNull.Value);
+                            cmd.Parameters.AddWithValue("@DockerNumber", string.IsNullOrWhiteSpace(grnDto.DockerNo) ? (object)DBNull.Value : grnDto.DockerNo);
+                            cmd.Parameters.AddWithValue("@GrnStatus", string.IsNullOrWhiteSpace(grnDto.Grnstatus) ? (object)DBNull.Value : grnDto.Grnstatus);
                             grnId = (int)await cmd.ExecuteScalarAsync(); // Get inserted GRN ID
                         }
 
@@ -157,18 +157,17 @@ namespace APIDRODIN.Controllers
                                 cmd.Parameters.AddWithValue("@ReceivedQuantity", detail.ReceivedQuantity);
                                 cmd.Parameters.AddWithValue("@RejectedQuantity", detail.RejectedQuantity);
                                 cmd.Parameters.AddWithValue("@PassedQuantity", detail.PassedQuantity);
-                                cmd.Parameters.AddWithValue("@Status", detail.Status);
-                                cmd.Parameters.AddWithValue("@Mrp", detail.Mrp);
-                                cmd.Parameters.AddWithValue("@BatchNumber", (object)detail.BatchNumber ?? DBNull.Value);
-                                //cmd.Parameters.AddWithValue("@ExpiryDate", (object)detail.ExpiryDate ?? DBNull.Value);
+                                cmd.Parameters.AddWithValue("@Status", (object)detail.Status ?? DBNull.Value);
+                                cmd.Parameters.AddWithValue("@Mrp", (object)detail.Mrp ?? DBNull.Value);
+                                cmd.Parameters.AddWithValue("@BatchNumber", string.IsNullOrWhiteSpace(detail.BatchNumber) ? (object)DBNull.Value : detail.BatchNumber);
                                 cmd.Parameters.AddWithValue("@ExpiryDate", SqlDateOrNull(detail.ExpiryDate));
-                                cmd.Parameters.AddWithValue("@Remarks1", (object)detail.Remarks1 ?? DBNull.Value);
-                                cmd.Parameters.AddWithValue("@Remarks2", (object)detail.Remarks2 ?? DBNull.Value);
-                                cmd.Parameters.AddWithValue("@Demandedbyparty", detail.Demandedbyparty);
-                                cmd.Parameters.AddWithValue("@Rejectedstatus", detail.Rejectedstatus);
-                                cmd.Parameters.AddWithValue("@Passedstatus", detail.Passedstatus);
+                                cmd.Parameters.AddWithValue("@Remarks1", string.IsNullOrWhiteSpace(detail.Remarks1) ? (object)DBNull.Value : detail.Remarks1);
+                                cmd.Parameters.AddWithValue("@Remarks2", string.IsNullOrWhiteSpace(detail.Remarks2) ? (object)DBNull.Value : detail.Remarks2);
+                                cmd.Parameters.AddWithValue("@Demandedbyparty", string.IsNullOrWhiteSpace(detail.Demandedbyparty) ? (object)DBNull.Value : detail.Demandedbyparty);
+                                cmd.Parameters.AddWithValue("@Rejectedstatus", string.IsNullOrWhiteSpace(detail.Rejectedstatus) ? (object)DBNull.Value : detail.Rejectedstatus);
+                                cmd.Parameters.AddWithValue("@Passedstatus", string.IsNullOrWhiteSpace(detail.Passedstatus) ? (object)DBNull.Value : detail.Passedstatus);
                                 cmd.Parameters.AddWithValue("@ReturnToParty", detail.ReturnToParty);
-                                cmd.Parameters.AddWithValue("@Quantity", detail.Quantity);
+                                cmd.Parameters.AddWithValue("@Quantity", (object)detail.Quantity ?? 0);
                                 cmd.Parameters.AddWithValue("@Approvedbycompany", "YES");
 
                                 await cmd.ExecuteNonQueryAsync();
@@ -303,12 +302,16 @@ namespace APIDRODIN.Controllers
             LEFT join ResponsiblePerson p on g.ResponsiblePersonId=p.id
             LEFT join Challan c ON g.GrnNumber=c.GRNnumber
             WHERE (@SupplierId IS NULL OR g.SupplierId = @SupplierId)
-            AND (@Date IS NULL OR CAST(g.CreatedAt AS DATE) = CAST(@Date AS DATE))";
+            AND (@Date IS NULL OR CAST(g.CreatedAt AS DATE) = CAST(@Date AS DATE))
+            AND (@DateFrom IS NULL OR CAST(g.CreatedAt AS DATE) >= CAST(@DateFrom AS DATE))
+            AND (@DateTo IS NULL OR CAST(g.CreatedAt AS DATE) <= CAST(@DateTo AS DATE))";
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
                     cmd.Parameters.AddWithValue("@SupplierId", (filter.SupplierId.HasValue && filter.SupplierId.Value > 0) ? (object)filter.SupplierId.Value : DBNull.Value);
                     cmd.Parameters.AddWithValue("@Date", (object?)filter.date ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@DateFrom", (object?)filter.dateFrom ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@DateTo", (object?)filter.dateTo ?? DBNull.Value);
 
                     using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
                     {
@@ -1087,6 +1090,8 @@ QuantityAsPerParty, ExpiryDate,Demandedbyparty,Approvedbycompany,Passedstatus,Re
         {
             public int? SupplierId { get; set; }
             public DateTime? date { get; set; }
+            public DateTime? dateFrom { get; set; }
+            public DateTime? dateTo { get; set; }
         }
 
         public class GrnDtos
@@ -1161,7 +1166,7 @@ QuantityAsPerParty, ExpiryDate,Demandedbyparty,Approvedbycompany,Passedstatus,Re
 
             public string? BatchNumber { get; set; }
 
-            public DateTime ExpiryDate { get; set; }
+            public DateTime? ExpiryDate { get; set; }
 
             public string? Remarks1 { get; set; }
 

@@ -13,7 +13,7 @@
       left: 0;
       width: 0;
       height: 2px;
-      background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(90deg, #2196f3 0%, #1c76da 100%);
       transition: width 0.3s ease;
       border-radius: 1px;
     }
@@ -24,7 +24,7 @@
     
     &.active::after {
       width: 100%;
-      background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(90deg, #2196f3 0%, #1c76da 100%);
       box-shadow: 0 0 8px rgba(102, 126, 234, 0.4);
     }
   }
@@ -44,14 +44,14 @@
     transition: all 0.3s ease;
     
     &:hover {
-      border-bottom-color: #667eea;
+      border-bottom-color: #2196f3;
       background-color: rgba(102, 126, 234, 0.05);
     }
     
     &.active {
-      border-bottom-color: #667eea;
+      border-bottom-color: #2196f3;
       background-color: rgba(102, 126, 234, 0.1);
-      color: #667eea;
+      color: #2196f3;
       font-weight: 600;
     }
   }

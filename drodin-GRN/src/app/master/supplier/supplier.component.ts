@@ -127,15 +127,40 @@ export class SupplierComponent implements OnInit {
     var SupplierIds=SupplierId.toString();
     this.SupplierService.deleteSupplier(SupplierIds).subscribe(() => this.loadSuppliers());
   }
-  filteredSuppliers() {
-    return this.Suppliers.filter(Supplier =>
-      (!this.filters.name || Supplier.name.toLowerCase().includes(this.filters.name.toLowerCase())) &&
-      (!this.filters.address || Supplier.address.toLowerCase().includes(this.filters.address.toLowerCase())) &&
-      (!this.filters.email || Supplier.email.toLowerCase().includes(this.filters.email.toLowerCase())) &&
-      (!this.filters.otherInformation || Supplier.otherInformation.toLowerCase().includes(this.filters.otherInformation.toLowerCase())) &&
-      (!this.filters.phoneNumber || Supplier.phoneNumber.includes(this.filters.phoneNumber))
-    );
+  activeCardFilter: string = 'all';
+
+  setCardFilter(filterType: string) {
+    if (this.activeCardFilter === filterType) {
+      this.activeCardFilter = 'all';
+    } else {
+      this.activeCardFilter = filterType;
+    }
   }
+
+  filteredSuppliers() {
+    return this.Suppliers.filter(Supplier => {
+      const matchesName = !this.filters.name || (Supplier.name && Supplier.name.toLowerCase().includes(this.filters.name.toLowerCase()));
+      const matchesAddress = !this.filters.address || (Supplier.address && Supplier.address.toLowerCase().includes(this.filters.address.toLowerCase()));
+      const matchesEmail = !this.filters.email || (Supplier.email && Supplier.email.toLowerCase().includes(this.filters.email.toLowerCase()));
+      const matchesOther = !this.filters.otherInformation || (Supplier.otherInformation && Supplier.otherInformation.toLowerCase().includes(this.filters.otherInformation.toLowerCase()));
+      const matchesPhone = !this.filters.phoneNumber || (Supplier.phoneNumber && Supplier.phoneNumber.includes(this.filters.phoneNumber));
+
+      if (!matchesName || !matchesAddress || !matchesEmail || !matchesOther || !matchesPhone) {
+        return false;
+      }
+
+      if (this.activeCardFilter === 'states') {
+        return !!(Supplier.state && Supplier.state.trim() !== '');
+      } else if (this.activeCardFilter === 'email') {
+        return !!(Supplier.email && Supplier.email.trim() !== '' && Supplier.email.toLowerCase() !== 'null');
+      } else if (this.activeCardFilter === 'phone') {
+        return !!(Supplier.phoneNumber && Supplier.phoneNumber.trim() !== '' && Supplier.phoneNumber.toLowerCase() !== 'null');
+      }
+
+      return true;
+    });
+  }
+
   toggleFilter(filterName: string) {
     this.activeFilter = this.activeFilter === filterName ? '' : filterName;
   }
@@ -150,13 +175,13 @@ export class SupplierComponent implements OnInit {
 
   getSuppliersWithEmail(): Supplier[] {
     return this.Suppliers.filter(supplier => 
-      supplier.email && supplier.email.trim() !== ''
+      supplier.email && supplier.email.trim() !== '' && supplier.email.toLowerCase() !== 'null'
     );
   }
 
   getSuppliersWithPhone(): Supplier[] {
     return this.Suppliers.filter(supplier => 
-      supplier.phoneNumber && supplier.phoneNumber.trim() !== ''
+      supplier.phoneNumber && supplier.phoneNumber.trim() !== '' && supplier.phoneNumber.toLowerCase() !== 'null'
     );
   }
 

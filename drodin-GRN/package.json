@@ -26,6 +26,7 @@
     "angular-google-charts": "^16.0.2",
     "apexcharts": "^3.49.2",
     "bootstrap": "^5.3.3",
+    "html2pdf.js": "^0.14.0",
     "ng-apexcharts": "^1.11.0",
     "ngx-scrollbar": "^15.0.1",
     "rxjs": "~7.8.1",
