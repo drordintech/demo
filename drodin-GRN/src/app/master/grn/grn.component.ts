@@ -589,6 +589,263 @@ export class grnComponent implements OnInit {
     return String(val).trim();
   }
 
+  isGeneratingExport: boolean = false;
+
+  hasValidProducts(): boolean {
+    if (!this.rows || this.rows.length === 0) return false;
+    return this.rows.some(r => {
+      const rowAny = r as any;
+      return !!rowAny.product || !!rowAny.selectedProduct || !!rowAny.ProductId || !!rowAny.productId || !!rowAny.product_code;
+    });
+  }
+
+  getFormattedDateForFileName(): string {
+    const today = new Date();
+    const dd = String(today.getDate()).padStart(2, '0');
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const yyyy = today.getFullYear();
+    return `${dd}${mm}${yyyy}`;
+  }
+
+  downloadPdf(): void {
+    if (!this.hasValidProducts()) {
+      alert('Minimum requirement: Please select at least one product in the table before downloading.');
+      return;
+    }
+
+    this.isGeneratingExport = true;
+    const isPending = (this.selectedgrnstatus || '').toLowerCase() === 'pending';
+    const fileName = `GRN-${this.grnNumber || '1755'}_${this.getFormattedDateForFileName()}.pdf`;
+
+    const printContainer = document.createElement('div');
+    printContainer.style.padding = '20px';
+    printContainer.style.fontFamily = 'Arial, sans-serif';
+    printContainer.style.color = '#333';
+    printContainer.style.position = 'relative';
+
+    const draftWatermarkHtml = isPending ? `
+      <div style="position: absolute; top: 35%; left: 15%; transform: rotate(-30deg); font-size: 80px; font-weight: 900; color: rgba(220, 53, 69, 0.18); text-transform: uppercase; letter-spacing: 10px; pointer-events: none; z-index: 1000; border: 8px solid rgba(220, 53, 69, 0.18); padding: 10px 40px; border-radius: 12px;">
+        DRAFT
+      </div>
+    ` : '';
+
+    let rowsHtml = '';
+    this.rows.forEach((row, index) => {
+      const r = row as any;
+      if (r.product || r.selectedProduct || r.ProductId || r.productId || r.product_code) {
+        const pName = r.selectedProduct?.name || r.product?.name || r.product_name || r.product_code || `Product #${r.ProductId || r.productId || index + 1}`;
+        const partyQty = r.quantityasperparty || r.asPerParty || r.QuantityAsPerParty || 0;
+        const recQty = r.receivedQuantity || r.received || r.ReceivedQuantity || 0;
+        rowsHtml += `
+          <tr>
+            <td style="border: 1px solid #ccc; padding: 8px; text-align: center;">${index + 1}</td>
+            <td style="border: 1px solid #ccc; padding: 8px;">${pName}</td>
+            <td style="border: 1px solid #ccc; padding: 8px; text-align: center;">${partyQty}</td>
+            <td style="border: 1px solid #ccc; padding: 8px; text-align: center;">${recQty}</td>
+          </tr>
+        `;
+      }
+    });
+
+    printContainer.innerHTML = `
+      ${draftWatermarkHtml}
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #2196f3; padding-bottom: 10px; margin-bottom: 15px;">
+        <div>
+          <h2 style="margin: 0; color: #1565c0; font-size: 24px;">GOODS RECEIVED NOTE (GRN)</h2>
+          <small style="color: #666;">Dr. Odin Enterprise ERP</small>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-weight: bold; font-size: 16px; color: #333;">GRN NO: ${this.grnNumber || 'GRN-1755'}</div>
+          <div style="font-size: 12px; color: #666;">Date: ${this.todayDate || new Date().toLocaleString()}</div>
+        </div>
+      </div>
+
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 12px; background: #f8fafc; border: 1px solid #e2e8f0;">
+        <tr>
+          <td style="padding: 6px 10px; font-weight: bold; width: 20%;">SUPPLIER:</td>
+          <td style="padding: 6px 10px; width: 30%;">${this.getSelectedSupplierName(false)}</td>
+          <td style="padding: 6px 10px; font-weight: bold; width: 20%;">RESPONSIBLE PERSON:</td>
+          <td style="padding: 6px 10px; width: 30%;">${this.getSelectedResponsiblePersonName()}</td>
+        </tr>
+        <tr>
+          <td style="padding: 6px 10px; font-weight: bold;">DOCKET NUMBER:</td>
+          <td style="padding: 6px 10px;">${this.dockernumber || '-'}</td>
+          <td style="padding: 6px 10px; font-weight: bold;">GRN STATUS:</td>
+          <td style="padding: 6px 10px;"><span style="font-weight: bold; color: ${isPending ? '#dc3545' : '#28a745'};">${this.selectedgrnstatus || 'Pending'}</span></td>
+        </tr>
+      </table>
+
+      <div style="background: #2196f3; color: white; padding: 6px 10px; font-weight: bold; font-size: 12px; text-transform: uppercase; margin-bottom: 5px;">
+        STOCK REPAIR & SENT TO PARTY AS PER DETAILS
+      </div>
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 11px; border: 1px solid #bbdefb;">
+        <tr style="background: #e3f2fd; color: #1565c0; font-weight: bold;">
+          <th style="padding: 6px; border: 1px solid #cbd5e1;">STOCK RECEIVED PARTY</th>
+          <th style="padding: 6px; border: 1px solid #cbd5e1;">DOCKET NO / DATE</th>
+          <th style="padding: 6px; border: 1px solid #cbd5e1;">TRANSPORT</th>
+          <th style="padding: 6px; border: 1px solid #cbd5e1;">DEBIT / INVOICE NO & DATE</th>
+          <th style="padding: 6px; border: 1px solid #cbd5e1;">DATE & TIME</th>
+        </tr>
+        <tr>
+          <td style="padding: 6px; border: 1px solid #cbd5e1;">${this.stockRepair.stockReceivedParty || '-'}</td>
+          <td style="padding: 6px; border: 1px solid #cbd5e1;">${this.stockRepair.docketNoDate || '-'}</td>
+          <td style="padding: 6px; border: 1px solid #cbd5e1;">${this.stockRepair.transport || '-'}</td>
+          <td style="padding: 6px; border: 1px solid #cbd5e1;">${this.stockRepair.debitNoteInvoice || '-'}</td>
+          <td style="padding: 6px; border: 1px solid #cbd5e1;">${this.stockRepair.dateTime || '-'}</td>
+        </tr>
+      </table>
+
+      <div style="background: #2196f3; color: white; padding: 6px 10px; font-weight: bold; font-size: 12px; text-transform: uppercase; margin-bottom: 5px;">
+        PRODUCT INTAKE DETAILS
+      </div>
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 12px;">
+        <thead>
+          <tr style="background: #1976d2; color: white;">
+            <th style="border: 1px solid #ccc; padding: 8px; width: 8%;">S.NO</th>
+            <th style="border: 1px solid #ccc; padding: 8px; text-align: left;">PRODUCT NAME</th>
+            <th style="border: 1px solid #ccc; padding: 8px; width: 20%;">QTY AS PER PARTY</th>
+            <th style="border: 1px solid #ccc; padding: 8px; width: 20%;">QTY RECEIVED</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rowsHtml}
+        </tbody>
+      </table>
+
+      <div style="display: flex; justify-content: space-between; border-top: 1px solid #ccc; padding-top: 10px; font-size: 11px; color: #666; margin-top: 20px;">
+        <div>Total Products Added: <strong>${this.rows.length}</strong></div>
+        <div>Generated Timestamp: ${new Date().toLocaleString()}</div>
+      </div>
+    `;
+
+    const opt = {
+      margin: 10,
+      filename: fileName,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    import('html2pdf.js').then((html2pdfModule: any) => {
+      const html2pdf = (window as any).html2pdf || html2pdfModule.default || html2pdfModule;
+      (html2pdf as any)().set(opt).from(printContainer).save().then(() => {
+        this.isGeneratingExport = false;
+      }).catch(() => {
+        this.isGeneratingExport = false;
+      });
+    }).catch(() => {
+      if ((window as any).html2pdf) {
+        (window as any).html2pdf().set(opt).from(printContainer).save().then(() => {
+          this.isGeneratingExport = false;
+        });
+      } else {
+        this.isGeneratingExport = false;
+        alert('Generating PDF file...');
+      }
+    });
+  }
+
+  downloadExcel(): void {
+    if (!this.hasValidProducts()) {
+      alert('Minimum requirement: Please select at least one product in the table before downloading.');
+      return;
+    }
+
+    this.isGeneratingExport = true;
+    const fileName = `GRN-${this.grnNumber || '1755'}_${this.getFormattedDateForFileName()}.xlsx`;
+
+    let productRowsXml = '';
+    this.rows.forEach((row, index) => {
+      const r = row as any;
+      if (r.product || r.selectedProduct || r.ProductId || r.productId || r.product_code) {
+        const pName = r.selectedProduct?.name || r.product?.name || r.product_name || r.product_code || `Product #${r.ProductId || r.productId || index + 1}`;
+        const partyQty = r.quantityasperparty || r.asPerParty || r.QuantityAsPerParty || 0;
+        const recQty = r.receivedQuantity || r.received || r.ReceivedQuantity || 0;
+        productRowsXml += `
+          <tr>
+            <td style="text-align: center; border: 1px solid #cccccc;">${index + 1}</td>
+            <td style="border: 1px solid #cccccc;">${pName}</td>
+            <td style="text-align: center; border: 1px solid #cccccc;">${partyQty}</td>
+            <td style="text-align: center; border: 1px solid #cccccc;">${recQty}</td>
+          </tr>
+        `;
+      }
+    });
+
+    const excelHtml = `
+      <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+      <head>
+        <!--[if gte mso 9]>
+        <xml>
+          <x:ExcelWorkbook>
+            <x:ExcelWorksheets>
+              <x:ExcelWorksheet>
+                <x:Name>GRN Export</x:Name>
+                <x:WorksheetOptions>
+                  <x:DisplayGridlines/>
+                </x:WorksheetOptions>
+              </x:ExcelWorksheet>
+            </x:ExcelWorksheets>
+          </x:ExcelWorkbook>
+        </xml>
+        <![endif]-->
+        <meta http-equiv="content-type" content="text/plain; charset=UTF-8"/>
+      </head>
+      <body>
+        <table>
+          <tr><td colspan="4" style="font-size: 16pt; font-weight: bold; color: #1565c0;">GOODS RECEIVED NOTE (GRN)</td></tr>
+          <tr>
+            <td><b>GRN No:</b></td><td>${this.grnNumber || 'GRN-1755'}</td>
+            <td><b>Date:</b></td><td>${this.todayDate || new Date().toLocaleDateString()}</td>
+          </tr>
+          <tr>
+            <td><b>Supplier:</b></td><td>${this.getSelectedSupplierName(false)}</td>
+            <td><b>Responsible Person:</b></td><td>${this.getSelectedResponsiblePersonName()}</td>
+          </tr>
+          <tr>
+            <td><b>Docket Number:</b></td><td>${this.dockernumber || '-'}</td>
+            <td><b>GRN Status:</b></td><td>${this.selectedgrnstatus || 'Pending'}</td>
+          </tr>
+          <tr><td colspan="4"></td></tr>
+          <tr style="background-color: #2196f3; color: white; font-weight: bold;">
+            <td colspan="4">STOCK REPAIR & SENT TO PARTY AS PER DETAILS</td>
+          </tr>
+          <tr style="background-color: #e3f2fd; font-weight: bold;">
+            <td>Stock Received Party</td><td>Docket No / Date</td><td>Transport</td><td>Debit / Invoice No & Date</td>
+          </tr>
+          <tr>
+            <td>${this.stockRepair.stockReceivedParty || '-'}</td>
+            <td>${this.stockRepair.docketNoDate || '-'}</td>
+            <td>${this.stockRepair.transport || '-'}</td>
+            <td>${this.stockRepair.debitNoteInvoice || '-'}</td>
+          </tr>
+          <tr><td colspan="4"></td></tr>
+          <tr style="background-color: #1976d2; color: white; font-weight: bold;">
+            <td>S.No</td><td>Product Name</td><td>Qty As Per Party</td><td>Qty Received</td>
+          </tr>
+          ${productRowsXml}
+          <tr><td colspan="4"></td></tr>
+          <tr>
+            <td colspan="2">Total Products Added: ${this.rows.length}</td>
+            <td colspan="2">Generated Timestamp: ${new Date().toLocaleString()}</td>
+          </tr>
+        </table>
+      </body>
+      </html>
+    `;
+
+    const blob = new Blob([excelHtml], { type: 'application/vnd.ms-excel;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    this.isGeneratingExport = false;
+  }
+
   onGRNStatusChange(){
     const selectedGRN = this.grnstatus.find(grn => grn.id === Number(this.selectedgrnstatus));
     this.selectedGRNName = selectedGRN ? selectedGRN.name : '';

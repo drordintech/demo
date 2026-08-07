@@ -580,9 +580,37 @@
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
               <span class="text-muted small"><i class="bi bi-info-circle me-1"></i>Only product is required. Select a
                 product, then continue.</span>
-              <button class="btn btn-primary px-4 rounded-pill" type="button" (click)="goToRepairCenter()">
-                Save &amp; Continue <i class="bi bi-arrow-right ms-1"></i>
-              </button>
+              <div class="d-flex align-items-center gap-2 flex-wrap">
+                <!-- Download GRN Dropdown Button -->
+                <div class="btn-group" ngbDropdown container="body">
+                  <button type="button" class="btn btn-outline-primary px-3 rounded-pill dropdown-toggle d-inline-flex align-items-center gap-1 shadow-sm"
+                    ngbDropdownToggle [disabled]="!hasValidProducts() || isGeneratingExport" title="Export GRN Document">
+                    <span *ngIf="isGeneratingExport" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                    <i *ngIf="!isGeneratingExport" class="bi bi-download me-1"></i>
+                    {{ isGeneratingExport ? 'Generating...' : 'Download GRN' }}
+                  </button>
+                  <div ngbDropdownMenu class="dropdown-menu shadow border-0 rounded-3 p-1">
+                    <button class="dropdown-item d-flex align-items-center py-2 px-3 rounded-2" type="button" (click)="downloadPdf()">
+                      <i class="bi bi-file-pdf-fill text-danger me-2 fs-5"></i>
+                      <div>
+                        <div class="fw-semibold">Download PDF</div>
+                        <small class="text-muted" style="font-size: 11px;">Formatted document with watermark</small>
+                      </div>
+                    </button>
+                    <button class="dropdown-item d-flex align-items-center py-2 px-3 rounded-2" type="button" (click)="downloadExcel()">
+                      <i class="bi bi-file-earmark-excel-fill text-success me-2 fs-5"></i>
+                      <div>
+                        <div class="fw-semibold">Download Excel</div>
+                        <small class="text-muted" style="font-size: 11px;">Structured spreadsheet (.xlsx)</small>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+
+                <button class="btn btn-primary px-4 rounded-pill shadow-sm" type="button" (click)="goToRepairCenter()">
+                  Save &amp; Continue <i class="bi bi-arrow-right ms-1"></i>
+                </button>
+              </div>
             </div>
           </div>
           <div class="grn-step-actions d-flex justify-content-between align-items-center flex-wrap gap-2"
