@@ -111,6 +111,7 @@ export class grnComponent implements OnInit {
   @ViewChild('supplier2InfoModal') supplier2InfoModal!: ElementRef;
   @ViewChild('productInfoModal') productInfoModal!: ElementRef;
   @ViewChild('grnProductListpopup') grnProductListpopup!: ElementRef;
+  @ViewChild('addSupplierModal') addSupplierModal!: ElementRef;
   navCollapsedMob = true;
   products: product[] = [];
   selectedSupplierName: string = '';  selectedGRNName: string = ''; selectedResperson: string = ''; 
@@ -125,6 +126,29 @@ export class grnComponent implements OnInit {
   suppliers: Supplier[] = [];
   filteredSuppliers: Supplier[] = [];
   filteredSuppliers2: Supplier[] = [];
+
+  statesList: string[] = [
+    'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
+    'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand',
+    'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur',
+    'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab',
+    'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura',
+    'Uttar Pradesh', 'Uttarakhand', 'West Bengal',
+    'Andaman and Nicobar Islands', 'Chandigarh', 'Dadra and Nagar Haveli and Daman and Diu',
+    'Delhi', 'Jammu and Kashmir', 'Ladakh', 'Lakshadweep', 'Puducherry'
+  ];
+
+  tempNewSupplierName: string = '';
+  tempNewSupplierState: string = '';
+  tempNewSupplierAddress: string = '';
+  tempNewSupplierEmail: string = '';
+  tempNewSupplierPhone: string = '';
+  tempNewSupplierOtherInfo: string = '';
+
+  supplierFormSubmitted: boolean = false;
+  supplierModalError: string = '';
+  supplierModalSuccess: string = '';
+  isSavingSupplier: boolean = false;
   ResponsiblePersons: any[] = [];
   filteredResponsiblePersons: any[] = [];
   rows: GrnRow[] = [];
@@ -132,6 +156,66 @@ export class grnComponent implements OnInit {
   set grnList(val: GrnRow[]) { this.rows = val; }
   challanList: any[] = [];  challanOldList: any[] = [];
   grnListrpt: any[] = [];
+  // Pagination State for GRN Search Results
+  currentPage: number = 1;
+  pageSize: number = 10;
+  pageSizeOptions: number[] = [10, 20, 50, 100];
+
+  get paginatedGrnList(): any[] {
+    if (!this.grnListrpt || this.grnListrpt.length === 0) return [];
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.grnListrpt.slice(start, start + this.pageSize);
+  }
+
+  get totalPages(): number {
+    if (!this.grnListrpt || this.grnListrpt.length === 0) return 1;
+    return Math.ceil(this.grnListrpt.length / this.pageSize);
+  }
+
+  get startRecord(): number {
+    if (!this.grnListrpt || this.grnListrpt.length === 0) return 0;
+    return (this.currentPage - 1) * this.pageSize + 1;
+  }
+
+  get endRecord(): number {
+    if (!this.grnListrpt || this.grnListrpt.length === 0) return 0;
+    return Math.min(this.currentPage * this.pageSize, this.grnListrpt.length);
+  }
+
+  setPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+    }
+  }
+
+  onPageSizeChange(event: any): void {
+    this.pageSize = Number(event.target.value);
+    this.currentPage = 1;
+  }
+
+  getPageNumbers(): number[] {
+    const total = this.totalPages;
+    const current = this.currentPage;
+    const delta = 2;
+    const pages: number[] = [];
+
+    let start = Math.max(1, current - delta);
+    let end = Math.min(total, current + delta);
+
+    if (current <= delta) {
+      end = Math.min(total, 1 + delta * 2);
+    }
+    if (current + delta >= total) {
+      start = Math.max(1, total - delta * 2);
+    }
+
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+
+    return pages;
+  }
+
   grnListRptold: any[] = [];
   grnListRptoldSupplierName: string = '';
   grnListRptoldSupplierID: string = '';
@@ -272,11 +356,83 @@ export class grnComponent implements OnInit {
    // return uniqueId;
   }
 
-  loadsuppliers() {
+  loadsuppliers(selectIdAfterLoad?: number) {
     this.supplierService.getSuppliers().subscribe((data) => {
       this.suppliers = data;
       this.filteredSuppliers = data;
       this.filteredSuppliers2 = data;
+      if (selectIdAfterLoad) {
+        this.selectSupplier(selectIdAfterLoad, false);
+        this.selectSupplier(selectIdAfterLoad, true);
+      }
+    });
+  }
+
+  openAddSupplierModal() {
+    this.resetNewSupplierForm();
+    if (this.addSupplierModal) {
+      const modal = new Modal(this.addSupplierModal.nativeElement);
+      modal.show();
+    }
+  }
+
+  closeAddSupplierModal() {
+    if (this.addSupplierModal) {
+      const modal = Modal.getInstance(this.addSupplierModal.nativeElement);
+      modal?.hide();
+    }
+  }
+
+  resetNewSupplierForm() {
+    this.tempNewSupplierName = '';
+    this.tempNewSupplierState = '';
+    this.tempNewSupplierAddress = '';
+    this.tempNewSupplierEmail = '';
+    this.tempNewSupplierPhone = '';
+    this.tempNewSupplierOtherInfo = '';
+    this.supplierFormSubmitted = false;
+    this.supplierModalError = '';
+    this.supplierModalSuccess = '';
+    this.isSavingSupplier = false;
+  }
+
+  saveNewSupplier() {
+    this.supplierFormSubmitted = true;
+    this.supplierModalError = '';
+    this.supplierModalSuccess = '';
+
+    if (!this.tempNewSupplierName || !this.tempNewSupplierName.trim()) {
+      this.supplierModalError = 'Supplier name is required.';
+      return;
+    }
+
+    const payload: Supplier = {
+      supplierID: 0,
+      name: this.tempNewSupplierName.trim(),
+      address: this.tempNewSupplierAddress ? this.tempNewSupplierAddress.trim() : '',
+      email: this.tempNewSupplierEmail ? this.tempNewSupplierEmail.trim() : '',
+      phoneNumber: this.tempNewSupplierPhone ? this.tempNewSupplierPhone.trim() : '',
+      otherInformation: this.tempNewSupplierOtherInfo ? this.tempNewSupplierOtherInfo.trim() : '',
+      state: this.tempNewSupplierState || ''
+    };
+
+    this.isSavingSupplier = true;
+    this.supplierService.createSupplier(payload).subscribe({
+      next: (response: any) => {
+        this.isSavingSupplier = false;
+        this.supplierModalSuccess = 'Supplier added successfully!';
+        
+        const newId = (response && (response.supplierID || response.supplierId || response.id)) ? Number(response.supplierID || response.supplierId || response.id) : undefined;
+
+        setTimeout(() => {
+          this.closeAddSupplierModal();
+          this.loadsuppliers(newId);
+        }, 800);
+      },
+      error: (err: any) => {
+        this.isSavingSupplier = false;
+        this.supplierModalError = err?.error?.message || 'Failed to add supplier. Please try again.';
+      }
     });
   }
 
@@ -1136,6 +1292,7 @@ export class grnComponent implements OnInit {
     this.GrnService.getGRN(params).subscribe({
       next: (response) => {
         this.grnListrpt = response;
+        this.currentPage = 1;
       },
       error: (err) => {
         console.error("Error fetching GRN:", err);
@@ -1150,6 +1307,7 @@ export class grnComponent implements OnInit {
     this.toDate = '';
     this.selectedPreset = '';
     this.grnListrpt = [];
+    this.currentPage = 1;
     this.filteredSuppliers2 = this.suppliers;
   }
 
