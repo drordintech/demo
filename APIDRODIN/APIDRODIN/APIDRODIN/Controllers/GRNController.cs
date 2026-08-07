@@ -1202,5 +1202,87 @@ QuantityAsPerParty, ExpiryDate,Demandedbyparty,Approvedbycompany,Passedstatus,Re
             public int Aproxvalue { get; set; }
 
         }
+
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<int, (StockRepairDefaultsResponseDto Data, DateTime Expiry)> _stockRepairCache = new();
+        private static readonly TimeSpan CacheTtl = TimeSpan.FromSeconds(60);
+
+        [HttpPost("stock-repair-defaults")]
+        public async Task<IActionResult> GetStockRepairDefaults([FromBody] StockRepairDefaultsRequestDto request)
+        {
+            if (request == null || request.SupplierId <= 0)
+            {
+                return Ok(new StockRepairDefaultsResponseDto());
+            }
+
+            // Check cache
+            if (_stockRepairCache.TryGetValue(request.SupplierId, out var cached) && cached.Expiry > DateTime.UtcNow)
+            {
+                return Ok(cached.Data);
+            }
+
+            var result = new StockRepairDefaultsResponseDto();
+            string connectionString = _connectionString;
+
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    await connection.OpenAsync();
+
+                    string query = @"
+                        SELECT TOP 1 
+                            StockReceivedParty,
+                            DocketNoDate,
+                            Transport,
+                            DebitNoteInvoice,
+                            DateTime
+                        FROM StockRepair
+                        WHERE SupplierId = @SupplierId
+                        ORDER BY Id DESC;";
+
+                    using (SqlCommand command = new SqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@SupplierId", request.SupplierId);
+                        using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                        {
+                            if (await reader.ReadAsync())
+                            {
+                                result.StockReceivedParty = reader.IsDBNull(0) ? null : reader.GetString(0);
+                                result.DocketNoDate = reader.IsDBNull(1) ? null : reader.GetString(1);
+                                result.Transport = reader.IsDBNull(2) ? null : reader.GetString(2);
+                                result.DebitNoteInvoice = reader.IsDBNull(3) ? null : reader.GetString(3);
+                                result.DateTime = reader.IsDBNull(4) ? null : reader.GetDateTime(4).ToString("yyyy-MM-ddTHH:mm");
+                            }
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // Fallback gracefully: if table/column does not exist yet, return predictable null-shaped object
+            }
+
+            // Cache result for short TTL
+            _stockRepairCache[request.SupplierId] = (result, DateTime.UtcNow.Add(CacheTtl));
+
+            return Ok(result);
+        }
+    }
+
+    public class StockRepairDefaultsRequestDto
+    {
+        public int SupplierId { get; set; }
+        public int? ResponsiblePerson { get; set; }
+        public string? DockerNumber { get; set; }
+        public string? GrnStatus { get; set; }
+    }
+
+    public class StockRepairDefaultsResponseDto
+    {
+        public string? StockReceivedParty { get; set; } = null;
+        public string? DocketNoDate { get; set; } = null;
+        public string? Transport { get; set; } = null;
+        public string? DebitNoteInvoice { get; set; } = null;
+        public string? DateTime { get; set; } = null;
     }
 }

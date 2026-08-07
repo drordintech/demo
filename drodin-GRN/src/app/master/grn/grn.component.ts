@@ -303,6 +303,26 @@ export class grnComponent implements OnInit {
     needDebitNoteRemark: ''
   };
 
+  getTotalRepairedItems(): number {
+    if (!this.rows || this.rows.length === 0) return 0;
+    const totalQty = this.rows.reduce((sum, row) => sum + (Number(row.receivedQuantity) || 0), 0);
+    return totalQty > 0 ? totalQty : this.rows.length;
+  }
+
+  getStockInventoryValue(): number {
+    if (!this.rows || this.rows.length === 0) return 0;
+    return this.rows.reduce((sum, row) => {
+      const price = Number(row.MRP) || Number((row as any).mrp) || Number((row.product as any)?.MRP) || Number((row.product as any)?.mrp) || 0;
+      const qty = Number(row.receivedQuantity) || 1;
+      return sum + (price * qty);
+    }, 0);
+  }
+
+  getNetPayable(): number {
+    const value = this.getStockInventoryValue();
+    return Math.round(value * 1.18);
+  }
+
   constructor(
       private GrnService: grnService,
       private supplierService:SupplierService,

@@ -80,11 +80,6 @@
                     </div>
 
                     <div style="max-height: 250px; overflow-y: auto; overflow-x: hidden; padding: 4px 0;">
-                      <button class="dropdown-item text-primary fw-semibold border-bottom" type="button"
-                        (click)="openAddSupplierModal()" data-bs-toggle="modal" data-bs-target="#addSupplierModalGRN"
-                        style="cursor: pointer; font-size: 12px; padding: 6px 10px; background-color: #f0f7ff;">
-                        <i class="bi bi-plus-circle me-1"></i>+ Add New Supplier
-                      </button>
                       <button class="dropdown-item" type="button" (click)="selectSupplier('', false)"
                         style="cursor: pointer; font-size: 12px; padding: 6px 10px;">
                         Select Supplier
@@ -152,7 +147,7 @@
               <!-- Docker Number Text Box -->
               <div class="form-group">
                 <label for="dockerNumber" class="form-label">
-                  <i class="bi bi-upc-scan me-1"></i>Docker Number
+                  <i class="bi bi-upc-scan me-1"></i>Docket Number
                 </label>
                 <input type="text" id="dockerNumber" [(ngModel)]="dockernumber" class="form-control custom-input"
                   placeholder="Enter Docker Number" />
@@ -202,6 +197,45 @@
               (click)="addGrnRow()">
               <i class="bi bi-plus-lg me-1"></i> Add Row
             </button>
+          </div>
+
+          <!-- Horizontal Blue Banner: STOCK REPAIR & SENT TO PARTY AS PER DETAILS -->
+          <div class="blue-banner-panel mb-3">
+            <div class="banner-header">
+              STOCK REPAIR &amp; SENT TO PARTY AS PER DETAILS
+            </div>
+            <div class="table-responsive">
+              <table class="table table-bordered horizontal-row-table mb-0">
+                <tbody>
+                  <tr>
+                    <th class="label-blue-bg">STOCK RECEIVED PARTY</th>
+                    <td>
+                      <input type="text" class="form-control form-control-sm"
+                        [(ngModel)]="stockRepair.stockReceivedParty" placeholder="Enter party name" />
+                    </td>
+                    <th class="label-blue-bg">DOCKET NO / DATE</th>
+                    <td>
+                      <input type="text" class="form-control form-control-sm" [(ngModel)]="stockRepair.docketNoDate"
+                        placeholder="Docket no / date" />
+                    </td>
+                    <th class="label-blue-bg">TRANSPORT</th>
+                    <td>
+                      <input type="text" class="form-control form-control-sm" [(ngModel)]="stockRepair.transport"
+                        placeholder="Transport name" />
+                    </td>
+                    <th class="label-blue-bg">DEBIT / INVOICE NO &amp; DATE</th>
+                    <td>
+                      <input type="text" class="form-control form-control-sm" [(ngModel)]="stockRepair.debitNoteInvoice"
+                        placeholder="Debit / invoice no &amp; date" />
+                    </td>
+                    <td style="width: 170px;">
+                      <input type="datetime-local" class="form-control form-control-sm"
+                        [(ngModel)]="stockRepair.dateTime" />
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
 
           <div class="table-container shadow-sm rounded-3 overflow-hidden border">
@@ -568,8 +602,10 @@
                   <span>Filter &amp; Search GRN Records</span>
                 </div>
                 <!-- Highlighted Prominent Add New Supplier Button -->
-                <button type="button" class="btn btn-primary btn-sm px-3 rounded-pill d-inline-flex align-items-center shadow-sm"
-                  (click)="openAddSupplierModal()" data-bs-toggle="modal" data-bs-target="#addSupplierModalGRN" title="Add New Supplier">
+                <button type="button"
+                  class="btn btn-primary btn-sm px-3 rounded-pill d-inline-flex align-items-center shadow-sm"
+                  (click)="openAddSupplierModal()" data-bs-toggle="modal" data-bs-target="#addSupplierModalGRN"
+                  title="Add New Supplier">
                   <i class="bi bi-plus-circle-fill me-1"></i> Add New Supplier
                 </button>
               </div>
@@ -605,8 +641,8 @@
                     <label for="supplier2Dropdown" class="form-label mb-0 me-1 fw-bold text-slate">
                       <i class="bi bi-building me-1 text-primary"></i>Supplier
                     </label>
-                    <button type="button" class="btn btn-link p-0 m-0 align-baseline info-btn"
-                      style="font-size: 12px;" (click)="openSupplierInfoModal()" title="View Selected Supplier Info">
+                    <button type="button" class="btn btn-link p-0 m-0 align-baseline info-btn" style="font-size: 12px;"
+                      (click)="openSupplierInfoModal()" title="View Selected Supplier Info">
                       <i class="bi bi-info-circle text-primary"></i>
                     </button>
                   </div>
@@ -634,11 +670,6 @@
                       </div>
 
                       <div style="max-height: 250px; overflow-y: auto; overflow-x: hidden; padding: 4px 0;">
-                        <button class="dropdown-item text-primary fw-semibold border-bottom" type="button"
-                          (click)="openAddSupplierModal()" data-bs-toggle="modal" data-bs-target="#addSupplierModalGRN"
-                          style="cursor: pointer; font-size: 12px; padding: 6px 10px; background-color: #f0f7ff;">
-                          <i class="bi bi-plus-circle me-1"></i>+ Add New Supplier
-                        </button>
                         <button class="dropdown-item" type="button" (click)="selectSupplier('', true)"
                           style="cursor: pointer; font-size: 12px; padding: 6px 10px;">
                           Select Supplier
@@ -696,7 +727,7 @@
                 </button>
               </div>
             </div>
-          </div>          <!-- Results Summary & Table Container -->
+          </div> <!-- Results Summary & Table Container -->
           <div class="mt-4">
             <div class="enterprise-results-bar d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
               <div class="d-flex align-items-center flex-wrap gap-2">
@@ -714,8 +745,11 @@
               <!-- Top Pagination Controls & Items per page -->
               <div class="d-flex align-items-center gap-2" *ngIf="grnListrpt.length > 0">
                 <div class="d-flex align-items-center gap-1 text-muted small me-2">
-                  <label for="pageSizeSelectTop" class="mb-0 me-1 fw-semibold" style="font-size: 12px;">Per Page:</label>
-                  <select id="pageSizeSelectTop" class="form-select form-select-sm py-1 px-2 border-slate" style="width: 70px; font-size: 12px; border-radius: 6px;" [ngModel]="pageSize" (change)="onPageSizeChange($event)">
+                  <label for="pageSizeSelectTop" class="mb-0 me-1 fw-semibold" style="font-size: 12px;">Per
+                    Page:</label>
+                  <select id="pageSizeSelectTop" class="form-select form-select-sm py-1 px-2 border-slate"
+                    style="width: 70px; font-size: 12px; border-radius: 6px;" [ngModel]="pageSize"
+                    (change)="onPageSizeChange($event)">
                     <option *ngFor="let opt of pageSizeOptions" [value]="opt">{{ opt }}</option>
                   </select>
                 </div>
@@ -723,19 +757,23 @@
                 <nav aria-label="GRN Top Pagination">
                   <ul class="pagination pagination-sm mb-0">
                     <li class="page-item" [class.disabled]="currentPage === 1">
-                      <button class="page-link" (click)="setPage(1)" title="First Page"><i class="bi bi-chevron-double-left"></i></button>
+                      <button class="page-link" (click)="setPage(1)" title="First Page"><i
+                          class="bi bi-chevron-double-left"></i></button>
                     </li>
                     <li class="page-item" [class.disabled]="currentPage === 1">
-                      <button class="page-link" (click)="setPage(currentPage - 1)" title="Previous Page"><i class="bi bi-chevron-left"></i></button>
+                      <button class="page-link" (click)="setPage(currentPage - 1)" title="Previous Page"><i
+                          class="bi bi-chevron-left"></i></button>
                     </li>
                     <li class="page-item" *ngFor="let p of getPageNumbers()" [class.active]="p === currentPage">
                       <button class="page-link" (click)="setPage(p)">{{ p }}</button>
                     </li>
                     <li class="page-item" [class.disabled]="currentPage === totalPages">
-                      <button class="page-link" (click)="setPage(currentPage + 1)" title="Next Page"><i class="bi bi-chevron-right"></i></button>
+                      <button class="page-link" (click)="setPage(currentPage + 1)" title="Next Page"><i
+                          class="bi bi-chevron-right"></i></button>
                     </li>
                     <li class="page-item" [class.disabled]="currentPage === totalPages">
-                      <button class="page-link" (click)="setPage(totalPages)" title="Last Page"><i class="bi bi-chevron-double-right"></i></button>
+                      <button class="page-link" (click)="setPage(totalPages)" title="Last Page"><i
+                          class="bi bi-chevron-double-right"></i></button>
                     </li>
                   </ul>
                 </nav>
@@ -813,15 +851,22 @@
             </div>
 
             <!-- Bottom Pagination Bar -->
-            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-3 p-2 bg-light rounded-3 border" *ngIf="grnListrpt.length > 0">
+            <div
+              class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-3 p-2 bg-light rounded-3 border"
+              *ngIf="grnListrpt.length > 0">
               <div class="text-muted small">
-                Showing <strong class="text-dark">{{ startRecord }}</strong> to <strong class="text-dark">{{ endRecord }}</strong> of <strong class="text-dark">{{ grnListrpt.length }}</strong> entries (Page {{ currentPage }} of {{ totalPages }})
+                Showing <strong class="text-dark">{{ startRecord }}</strong> to <strong class="text-dark">{{ endRecord
+                  }}</strong> of <strong class="text-dark">{{ grnListrpt.length }}</strong> entries (Page {{ currentPage
+                }} of {{ totalPages }})
               </div>
 
               <div class="d-flex align-items-center gap-2">
                 <div class="d-flex align-items-center gap-1 text-muted small me-2">
-                  <label for="pageSizeSelectBottom" class="mb-0 me-1 fw-semibold" style="font-size: 12px;">Items per page:</label>
-                  <select id="pageSizeSelectBottom" class="form-select form-select-sm py-1 px-2 border-slate" style="width: 75px; font-size: 12px; border-radius: 6px;" [ngModel]="pageSize" (change)="onPageSizeChange($event)">
+                  <label for="pageSizeSelectBottom" class="mb-0 me-1 fw-semibold" style="font-size: 12px;">Items per
+                    page:</label>
+                  <select id="pageSizeSelectBottom" class="form-select form-select-sm py-1 px-2 border-slate"
+                    style="width: 75px; font-size: 12px; border-radius: 6px;" [ngModel]="pageSize"
+                    (change)="onPageSizeChange($event)">
                     <option *ngFor="let opt of pageSizeOptions" [value]="opt">{{ opt }}</option>
                   </select>
                 </div>
@@ -829,19 +874,23 @@
                 <nav aria-label="GRN Bottom Pagination">
                   <ul class="pagination pagination-sm mb-0">
                     <li class="page-item" [class.disabled]="currentPage === 1">
-                      <button class="page-link" (click)="setPage(1)" title="First Page"><i class="bi bi-chevron-double-left"></i></button>
+                      <button class="page-link" (click)="setPage(1)" title="First Page"><i
+                          class="bi bi-chevron-double-left"></i></button>
                     </li>
                     <li class="page-item" [class.disabled]="currentPage === 1">
-                      <button class="page-link" (click)="setPage(currentPage - 1)" title="Previous Page"><i class="bi bi-chevron-left"></i></button>
+                      <button class="page-link" (click)="setPage(currentPage - 1)" title="Previous Page"><i
+                          class="bi bi-chevron-left"></i></button>
                     </li>
                     <li class="page-item" *ngFor="let p of getPageNumbers()" [class.active]="p === currentPage">
                       <button class="page-link" (click)="setPage(p)">{{ p }}</button>
                     </li>
                     <li class="page-item" [class.disabled]="currentPage === totalPages">
-                      <button class="page-link" (click)="setPage(currentPage + 1)" title="Next Page"><i class="bi bi-chevron-right"></i></button>
+                      <button class="page-link" (click)="setPage(currentPage + 1)" title="Next Page"><i
+                          class="bi bi-chevron-right"></i></button>
                     </li>
                     <li class="page-item" [class.disabled]="currentPage === totalPages">
-                      <button class="page-link" (click)="setPage(totalPages)" title="Last Page"><i class="bi bi-chevron-double-right"></i></button>
+                      <button class="page-link" (click)="setPage(totalPages)" title="Last Page"><i
+                          class="bi bi-chevron-double-right"></i></button>
                     </li>
                   </ul>
                 </nav>

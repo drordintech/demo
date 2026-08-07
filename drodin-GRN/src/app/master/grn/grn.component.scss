@@ -1170,3 +1170,126 @@ table.table-sm td {
     margin: 0 auto;
   }
 }
+
+/* ===== Reference Design Blue Panels & Tables ===== */
+.blue-banner-panel {
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #90caf9;
+  overflow: hidden;
+  margin-bottom: 16px;
+
+  .banner-header {
+    background: #2196f3;
+    color: #ffffff;
+    padding: 8px 16px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .horizontal-row-table {
+    width: 100%;
+    margin: 0;
+
+    td, th {
+      vertical-align: middle;
+      padding: 6px 12px;
+      font-size: 0.8rem;
+    }
+
+    th.label-blue-bg {
+      background: #e3f2fd;
+      color: #1565c0;
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      border-right: 1px solid #bbdefb;
+      white-space: nowrap;
+    }
+
+    td {
+      background: #ffffff;
+      border-right: 1px solid #e0e0e0;
+
+      &:last-child {
+        border-right: none;
+      }
+
+      .form-control-sm {
+        border-radius: 4px;
+        border: 1px solid #cbd5e1;
+        font-size: 0.8rem;
+        padding: 4px 8px;
+      }
+    }
+  }
+}
+
+.reference-blue-table {
+  thead {
+    tr.main-row {
+      background: #2196f3;
+      color: #ffffff;
+
+      th {
+        background: #2196f3 !important;
+        color: #ffffff !important;
+        font-weight: 700;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        border-right: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 10px;
+
+        &:last-child {
+          border-right: none;
+        }
+      }
+    }
+
+    tr.sub-row {
+      background: #1976d2;
+      color: #ffffff;
+
+      th {
+        background: #1976d2 !important;
+        color: #ffffff !important;
+        font-weight: 700;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        border-right: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 6px;
+
+        &:last-child {
+          border-right: none;
+        }
+      }
+    }
+  }
+}
+
+.grand-total-table {
+  width: 100%;
+  margin: 0;
+
+  td {
+    padding: 8px 16px;
+    font-size: 0.825rem;
+    border-bottom: 1px solid #e2e8f0;
+
+    &:nth-child(odd) {
+      font-weight: 700;
+      color: #334155;
+      background: #f8fafc;
+      width: 25%;
+    }
+
+    &:nth-child(even) {
+      font-weight: 600;
+      color: #0f172a;
+      background: #ffffff;
+      width: 25%;
+    }
+  }
+}
