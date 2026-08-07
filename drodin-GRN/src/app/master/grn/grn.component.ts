@@ -36,10 +36,10 @@ export const FIELD_CONFIG: Record<string, FieldConfig> = {
 };
 
 export const TAB_COLUMNS: Record<string, string[]> = {
-  intake: ['sno', 'product', 'asPerParty', 'received'],
+  intake: ['sno', 'product', 'asPerParty', 'received', 'shortageQty'],
   center: [
     'sno', 'product', 'passed', 'rejected', 'miscellaneous', 'status', 'demandedByParty',
-    'MRP', 'batchno', 'expiryDate', 'returnToParty', 'retQty', 'remarks', 'remarks2'
+    'returnToParty', 'retQty', 'remarks', 'remarks2'
   ]
 };
 
@@ -74,6 +74,7 @@ export interface GrnRow {
   retQty?: number;
   filteredProducts?: any[];
   qtyWarning?: string;
+  shortageQty?: number;
 }
 
 @Component({
@@ -594,8 +595,8 @@ export class grnComponent implements OnInit {
   hasValidProducts(): boolean {
     if (!this.rows || this.rows.length === 0) return false;
     return this.rows.some(r => {
-      const rowAny = r as any;
-      return !!rowAny.product || !!rowAny.selectedProduct || !!rowAny.ProductId || !!rowAny.productId || !!rowAny.product_code;
+      const rAny = r as any;
+      return !!rAny.selectedProduct || !!rAny.product || !!rAny.product_name || !!rAny.productName;
     });
   }
 
@@ -629,19 +630,35 @@ export class grnComponent implements OnInit {
       </div>
     ` : '';
 
+    const seenProductIdsPdf = new Set<string>();
     let rowsHtml = '';
+    let validPdfRowCount = 0;
     this.rows.forEach((row, index) => {
       const r = row as any;
-      if (r.product || r.selectedProduct || r.ProductId || r.productId || r.product_code) {
-        const pName = r.selectedProduct?.name || r.product?.name || r.product_name || r.product_code || `Product #${r.ProductId || r.productId || index + 1}`;
+      const prodVal = r.selectedProduct || r.product;
+      const resolvedName = this.getProductName(prodVal) || r.product_name || r.productName || r.name || '';
+      if (resolvedName || prodVal) {
+        const pName = resolvedName || `Product #${index + 1}`;
+        const pKey = `${prodVal || pName}`;
+        if (seenProductIdsPdf.has(pKey)) {
+          return;
+        }
+        seenProductIdsPdf.add(pKey);
+        validPdfRowCount++;
+
         const partyQty = r.quantityasperparty || r.asPerParty || r.QuantityAsPerParty || 0;
         const recQty = r.receivedQuantity || r.received || r.ReceivedQuantity || 0;
+        const shortage = Math.max(0, Number(partyQty) - Number(recQty));
+        const isExcess = Number(recQty) > Number(partyQty) && Number(partyQty) > 0;
+        const shortageStyle = isExcess ? 'color: #0369a1;' : (shortage > 0 ? 'color: #b91c1c; background: #fef2f2;' : 'color: #15803d;');
+        const shortageDisplay = isExcess ? '0 <span style="background:#0ea5e9;color:#fff;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:700;margin-left:3px;">EXCESS</span>' : `${shortage}`;
         rowsHtml += `
           <tr>
-            <td style="border: 1px solid #ccc; padding: 8px; text-align: center;">${index + 1}</td>
+            <td style="border: 1px solid #ccc; padding: 8px; text-align: center;">${validPdfRowCount}</td>
             <td style="border: 1px solid #ccc; padding: 8px;">${pName}</td>
             <td style="border: 1px solid #ccc; padding: 8px; text-align: center;">${partyQty}</td>
             <td style="border: 1px solid #ccc; padding: 8px; text-align: center;">${recQty}</td>
+            <td style="border: 1px solid #ccc; padding: 8px; text-align: center; font-weight: 700; ${shortageStyle}">${shortageDisplay}</td>
           </tr>
         `;
       }
@@ -662,15 +679,9 @@ export class grnComponent implements OnInit {
 
       <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 12px; background: #f8fafc; border: 1px solid #e2e8f0;">
         <tr>
-          <td style="padding: 6px 10px; font-weight: bold; width: 20%;">SUPPLIER:</td>
-          <td style="padding: 6px 10px; width: 30%;">${this.getSelectedSupplierName(false)}</td>
-          <td style="padding: 6px 10px; font-weight: bold; width: 20%;">RESPONSIBLE PERSON:</td>
-          <td style="padding: 6px 10px; width: 30%;">${this.getSelectedResponsiblePersonName()}</td>
-        </tr>
-        <tr>
-          <td style="padding: 6px 10px; font-weight: bold;">DOCKET NUMBER:</td>
-          <td style="padding: 6px 10px;">${this.dockernumber || '-'}</td>
-          <td style="padding: 6px 10px; font-weight: bold;">GRN STATUS:</td>
+          <td style="padding: 6px 10px; font-weight: bold; width: 20%;">STOCK RECEIVED PARTY:</td>
+          <td style="padding: 6px 10px; width: 30%;">${this.stockRepair.stockReceivedParty || this.getSelectedSupplierName(false) || '-'}</td>
+          <td style="padding: 6px 10px; font-weight: bold; width: 20%;">GRN STATUS:</td>
           <td style="padding: 6px 10px;"><span style="font-weight: bold; color: ${isPending ? '#dc3545' : '#28a745'};">${this.selectedgrnstatus || 'Pending'}</span></td>
         </tr>
       </table>
@@ -680,15 +691,15 @@ export class grnComponent implements OnInit {
       </div>
       <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 11px; border: 1px solid #bbdefb;">
         <tr style="background: #e3f2fd; color: #1565c0; font-weight: bold;">
-          <th style="padding: 6px; border: 1px solid #cbd5e1;">STOCK RECEIVED PARTY</th>
+          <th style="padding: 6px; border: 1px solid #cbd5e1;">RESPONSIBLE PERSON</th>
           <th style="padding: 6px; border: 1px solid #cbd5e1;">DOCKET NO / DATE</th>
           <th style="padding: 6px; border: 1px solid #cbd5e1;">TRANSPORT</th>
           <th style="padding: 6px; border: 1px solid #cbd5e1;">DEBIT / INVOICE NO & DATE</th>
           <th style="padding: 6px; border: 1px solid #cbd5e1;">DATE & TIME</th>
         </tr>
         <tr>
-          <td style="padding: 6px; border: 1px solid #cbd5e1;">${this.stockRepair.stockReceivedParty || '-'}</td>
-          <td style="padding: 6px; border: 1px solid #cbd5e1;">${this.stockRepair.docketNoDate || '-'}</td>
+          <td style="padding: 6px; border: 1px solid #cbd5e1;">${this.getSelectedResponsiblePersonName() || '-'}</td>
+          <td style="padding: 6px; border: 1px solid #cbd5e1;">${this.stockRepair.docketNoDate || this.dockernumber || '-'}</td>
           <td style="padding: 6px; border: 1px solid #cbd5e1;">${this.stockRepair.transport || '-'}</td>
           <td style="padding: 6px; border: 1px solid #cbd5e1;">${this.stockRepair.debitNoteInvoice || '-'}</td>
           <td style="padding: 6px; border: 1px solid #cbd5e1;">${this.stockRepair.dateTime || '-'}</td>
@@ -703,8 +714,9 @@ export class grnComponent implements OnInit {
           <tr style="background: #1976d2; color: white;">
             <th style="border: 1px solid #ccc; padding: 8px; width: 8%;">S.NO</th>
             <th style="border: 1px solid #ccc; padding: 8px; text-align: left;">PRODUCT NAME</th>
-            <th style="border: 1px solid #ccc; padding: 8px; width: 20%;">QTY AS PER PARTY</th>
-            <th style="border: 1px solid #ccc; padding: 8px; width: 20%;">QTY RECEIVED</th>
+            <th style="border: 1px solid #ccc; padding: 8px; width: 17%;">QTY AS PER PARTY</th>
+            <th style="border: 1px solid #ccc; padding: 8px; width: 17%;">QTY RECEIVED</th>
+            <th style="border: 1px solid #ccc; padding: 8px; width: 15%;">SHORTAGE QTY</th>
           </tr>
         </thead>
         <tbody>
@@ -712,8 +724,14 @@ export class grnComponent implements OnInit {
         </tbody>
       </table>
 
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 35px; padding-top: 15px; font-size: 11px; font-weight: 500; color: #333;">
+        <div>Inspection Done By: ___________________</div>
+        <div style="text-align: center;">Authorized Signature: ___________________</div>
+        <div style="text-align: right;">Received By: ___________________</div>
+      </div>
+
       <div style="display: flex; justify-content: space-between; border-top: 1px solid #ccc; padding-top: 10px; font-size: 11px; color: #666; margin-top: 20px;">
-        <div>Total Products Added: <strong>${this.rows.length}</strong></div>
+        <div>Total Products Added: <strong>${validPdfRowCount}</strong></div>
         <div>Generated Timestamp: ${new Date().toLocaleString()}</div>
       </div>
     `;
@@ -754,19 +772,34 @@ export class grnComponent implements OnInit {
     this.isGeneratingExport = true;
     const fileName = `GRN-${this.grnNumber || '1755'}_${this.getFormattedDateForFileName()}.xlsx`;
 
+    const seenProductIdsExcel = new Set<string>();
     let productRowsXml = '';
+    let validExcelRowCount = 0;
     this.rows.forEach((row, index) => {
       const r = row as any;
-      if (r.product || r.selectedProduct || r.ProductId || r.productId || r.product_code) {
-        const pName = r.selectedProduct?.name || r.product?.name || r.product_name || r.product_code || `Product #${r.ProductId || r.productId || index + 1}`;
+      const prodVal = r.selectedProduct || r.product;
+      const resolvedName = this.getProductName(prodVal) || r.product_name || r.productName || r.name || '';
+      if (resolvedName || prodVal) {
+        const pName = resolvedName || `Product #${index + 1}`;
+        const pKey = `${prodVal || pName}`;
+        if (seenProductIdsExcel.has(pKey)) {
+          return;
+        }
+        seenProductIdsExcel.add(pKey);
+        validExcelRowCount++;
+
         const partyQty = r.quantityasperparty || r.asPerParty || r.QuantityAsPerParty || 0;
         const recQty = r.receivedQuantity || r.received || r.ReceivedQuantity || 0;
+        const shortage = Math.max(0, Number(partyQty) - Number(recQty));
+        const isExcess = Number(recQty) > Number(partyQty) && Number(partyQty) > 0;
+        const shortageText = isExcess ? '0 (Excess)' : `${shortage}`;
         productRowsXml += `
           <tr>
-            <td style="text-align: center; border: 1px solid #cccccc;">${index + 1}</td>
+            <td style="text-align: center; border: 1px solid #cccccc;">${validExcelRowCount}</td>
             <td style="border: 1px solid #cccccc;">${pName}</td>
             <td style="text-align: center; border: 1px solid #cccccc;">${partyQty}</td>
             <td style="text-align: center; border: 1px solid #cccccc;">${recQty}</td>
+            <td style="text-align: center; border: 1px solid #cccccc; font-weight: bold; color: ${isExcess ? '#0369a1' : (shortage > 0 ? '#b91c1c' : '#15803d')};">${shortageText}</td>
           </tr>
         `;
       }
@@ -793,41 +826,43 @@ export class grnComponent implements OnInit {
       </head>
       <body>
         <table>
-          <tr><td colspan="4" style="font-size: 16pt; font-weight: bold; color: #1565c0;">GOODS RECEIVED NOTE (GRN)</td></tr>
+          <tr><td colspan="5" style="font-size: 16pt; font-weight: bold; color: #1565c0;">GOODS RECEIVED NOTE (GRN)</td></tr>
           <tr>
             <td><b>GRN No:</b></td><td>${this.grnNumber || 'GRN-1755'}</td>
-            <td><b>Date:</b></td><td>${this.todayDate || new Date().toLocaleDateString()}</td>
+            <td><b>Date:</b></td><td colspan="2">${this.todayDate || new Date().toLocaleDateString()}</td>
           </tr>
           <tr>
-            <td><b>Supplier:</b></td><td>${this.getSelectedSupplierName(false)}</td>
-            <td><b>Responsible Person:</b></td><td>${this.getSelectedResponsiblePersonName()}</td>
+            <td><b>Stock Received Party:</b></td><td>${this.stockRepair.stockReceivedParty || this.getSelectedSupplierName(false) || '-'}</td>
+            <td><b>GRN Status:</b></td><td colspan="2">${this.selectedgrnstatus || 'Pending'}</td>
           </tr>
-          <tr>
-            <td><b>Docket Number:</b></td><td>${this.dockernumber || '-'}</td>
-            <td><b>GRN Status:</b></td><td>${this.selectedgrnstatus || 'Pending'}</td>
-          </tr>
-          <tr><td colspan="4"></td></tr>
+          <tr><td colspan="5"></td></tr>
           <tr style="background-color: #2196f3; color: white; font-weight: bold;">
-            <td colspan="4">STOCK REPAIR & SENT TO PARTY AS PER DETAILS</td>
+            <td colspan="5">STOCK REPAIR & SENT TO PARTY AS PER DETAILS</td>
           </tr>
           <tr style="background-color: #e3f2fd; font-weight: bold;">
-            <td>Stock Received Party</td><td>Docket No / Date</td><td>Transport</td><td>Debit / Invoice No & Date</td>
+            <td>Responsible Person</td><td>Docket No / Date</td><td>Transport</td><td colspan="2">Debit / Invoice No & Date</td>
           </tr>
           <tr>
-            <td>${this.stockRepair.stockReceivedParty || '-'}</td>
-            <td>${this.stockRepair.docketNoDate || '-'}</td>
+            <td>${this.getSelectedResponsiblePersonName() || '-'}</td>
+            <td>${this.stockRepair.docketNoDate || this.dockernumber || '-'}</td>
             <td>${this.stockRepair.transport || '-'}</td>
-            <td>${this.stockRepair.debitNoteInvoice || '-'}</td>
+            <td colspan="2">${this.stockRepair.debitNoteInvoice || '-'}</td>
           </tr>
-          <tr><td colspan="4"></td></tr>
+          <tr><td colspan="5"></td></tr>
           <tr style="background-color: #1976d2; color: white; font-weight: bold;">
-            <td>S.No</td><td>Product Name</td><td>Qty As Per Party</td><td>Qty Received</td>
+            <td>S.No</td><td>Product Name</td><td>Qty As Per Party</td><td>Qty Received</td><td>Shortage Qty</td>
           </tr>
           ${productRowsXml}
-          <tr><td colspan="4"></td></tr>
+          <tr><td colspan="5"></td></tr>
           <tr>
-            <td colspan="2">Total Products Added: ${this.rows.length}</td>
-            <td colspan="2">Generated Timestamp: ${new Date().toLocaleString()}</td>
+            <td>Inspection Done By: ___________________</td>
+            <td colspan="2" style="text-align: center;">Authorized Signature: ___________________</td>
+            <td colspan="2" style="text-align: right;">Received By: ___________________</td>
+          </tr>
+          <tr><td colspan="5"></td></tr>
+          <tr>
+            <td colspan="2">Total Products Added: ${validExcelRowCount}</td>
+            <td colspan="3">Generated Timestamp: ${new Date().toLocaleString()}</td>
           </tr>
         </table>
       </body>
@@ -972,6 +1007,26 @@ export class grnComponent implements OnInit {
 
     grn.qtyWarning = warning;
     this.stepError = warning;
+  }
+
+  /** Calculate shortage qty for a single row: max(0, asPerParty - received) */
+  getShortageQty(grn: any): number {
+    const asPerParty = Number(grn.quantityasperparty || grn.asPerParty || 0);
+    const received = Number(grn.receivedQuantity || grn.received || 0);
+    const diff = asPerParty - received;
+    return diff > 0 ? diff : 0;
+  }
+
+  /** Check if received > asPerParty (excess delivery) */
+  isExcessDelivery(grn: any): boolean {
+    const asPerParty = Number(grn.quantityasperparty || grn.asPerParty || 0);
+    const received = Number(grn.receivedQuantity || grn.received || 0);
+    return received > asPerParty && asPerParty > 0;
+  }
+
+  /** Sum shortage across all rows */
+  getTotalShortageQty(): number {
+    return this.rows.reduce((sum, row) => sum + this.getShortageQty(row), 0);
   }
 
   navMobClick() {
@@ -1170,9 +1225,13 @@ export class grnComponent implements OnInit {
     }
   }
 
-  getProductName(productId: string): string {
-    const product = this.products.find(p => p.productId === Number(productId));
-    return product ? product.name : 'Unknown';
+  getProductName(productId: any): string {
+    if (productId === null || productId === undefined || productId === '') return '';
+    if (typeof productId === 'object') {
+      return productId.name || productId.productName || productId.product_name || '';
+    }
+    const product = this.products.find(p => (p as any).productId === Number(productId) || (p as any).id === Number(productId) || String((p as any).productId) === String(productId) || String((p as any).id) === String(productId));
+    return product ? product.name : '';
   }
  
   printGRN(): Promise<void> {
