@@ -515,6 +515,78 @@ export class grnComponent implements OnInit {
     const selectedSupplier = this.suppliers.find(supplier => supplier.supplierID === Number(this.selectedsupplier));
     this.selectedSupplierName = selectedSupplier ? selectedSupplier.name : '';
     this.selectedSupplierDetails = selectedSupplier;
+    this.fetchStockRepairDefaults();
+  }
+
+  isStockRepairManuallyEdited: boolean = false;
+  stockRepairAutoFillMessage: string = '';
+  private stockRepairSessionCache: Map<string, any> = new Map();
+
+  onStockRepairManualEdit(): void {
+    this.isStockRepairManuallyEdited = true;
+    this.stockRepairAutoFillMessage = '';
+  }
+
+  fetchStockRepairDefaults(): void {
+    this.stockRepairAutoFillMessage = '';
+    const payload = {
+      supplierId: Number(this.selectedsupplier) || 0,
+      responsiblePerson: Number(this.selectedResponsiblePerson) || null,
+      dockerNumber: this.dockernumber || null,
+      grnStatus: this.selectedgrnstatus || null
+    };
+
+    if (payload.supplierId <= 0) return;
+
+    const cacheKey = `${payload.supplierId}_${payload.responsiblePerson || ''}_${payload.dockerNumber || ''}_${payload.grnStatus || ''}`;
+
+    if (this.stockRepairSessionCache.has(cacheKey)) {
+      const cachedRes = this.stockRepairSessionCache.get(cacheKey);
+      this.applyStockRepairDefaults(cachedRes);
+      return;
+    }
+
+    this.GrnService.getStockRepairDefaults(payload).subscribe({
+      next: (res: any) => {
+        console.log('Stock Repair Defaults Response:', res);
+        if (res) {
+          this.stockRepairSessionCache.set(cacheKey, res);
+          this.applyStockRepairDefaults(res);
+        }
+      },
+      error: (err: any) => {
+        console.error('Error fetching stock repair defaults:', err);
+        this.stockRepairAutoFillMessage = 'Auto-fill unavailable, enter manually';
+      }
+    });
+  }
+
+  private applyStockRepairDefaults(res: any): void {
+    if (!res) return;
+
+    if (this.isStockRepairManuallyEdited) {
+      const confirmOverwrite = window.confirm(
+        'New supplier default values are available. Overwrite your manually entered Stock Repair details?'
+      );
+      if (!confirmOverwrite) {
+        return;
+      }
+    }
+
+    this.stockRepair.stockReceivedParty = this.cleanValue(res.stockReceivedParty) || this.selectedSupplierName || '';
+    this.stockRepair.docketNoDate = this.cleanValue(res.docketNoDate);
+    this.stockRepair.transport = this.cleanValue(res.transport);
+    this.stockRepair.debitNoteInvoice = this.cleanValue(res.debitNoteInvoice);
+    this.stockRepair.dateTime = this.cleanValue(res.dateTime);
+
+    this.isStockRepairManuallyEdited = false;
+  }
+
+  private cleanValue(val: any): string {
+    if (val === null || val === undefined || val === 'null' || val === 'undefined') {
+      return '';
+    }
+    return String(val).trim();
   }
 
   onGRNStatusChange(){

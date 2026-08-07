@@ -201,8 +201,11 @@
 
           <!-- Horizontal Blue Banner: STOCK REPAIR & SENT TO PARTY AS PER DETAILS -->
           <div class="blue-banner-panel mb-3">
-            <div class="banner-header">
-              STOCK REPAIR &amp; SENT TO PARTY AS PER DETAILS
+            <div class="banner-header d-flex align-items-center justify-content-between">
+              <span>STOCK REPAIR &amp; SENT TO PARTY AS PER DETAILS</span>
+              <span *ngIf="stockRepairAutoFillMessage" class="badge bg-warning text-dark small fw-normal">
+                <i class="bi bi-exclamation-triangle me-1"></i>{{ stockRepairAutoFillMessage }}
+              </span>
             </div>
             <div class="table-responsive">
               <table class="table table-bordered horizontal-row-table mb-0">
@@ -211,26 +214,26 @@
                     <th class="label-blue-bg">STOCK RECEIVED PARTY</th>
                     <td>
                       <input type="text" class="form-control form-control-sm"
-                        [(ngModel)]="stockRepair.stockReceivedParty" placeholder="Enter party name" />
+                        [(ngModel)]="stockRepair.stockReceivedParty" (input)="onStockRepairManualEdit()" placeholder="Enter party name" />
                     </td>
                     <th class="label-blue-bg">DOCKET NO / DATE</th>
                     <td>
                       <input type="text" class="form-control form-control-sm" [(ngModel)]="stockRepair.docketNoDate"
-                        placeholder="Docket no / date" />
+                        (input)="onStockRepairManualEdit()" placeholder="Docket no / date" />
                     </td>
                     <th class="label-blue-bg">TRANSPORT</th>
                     <td>
                       <input type="text" class="form-control form-control-sm" [(ngModel)]="stockRepair.transport"
-                        placeholder="Transport name" />
+                        (input)="onStockRepairManualEdit()" placeholder="Transport name" />
                     </td>
                     <th class="label-blue-bg">DEBIT / INVOICE NO &amp; DATE</th>
                     <td>
                       <input type="text" class="form-control form-control-sm" [(ngModel)]="stockRepair.debitNoteInvoice"
-                        placeholder="Debit / invoice no &amp; date" />
+                        (input)="onStockRepairManualEdit()" placeholder="Debit / invoice no &amp; date" />
                     </td>
                     <td style="width: 170px;">
                       <input type="datetime-local" class="form-control form-control-sm"
-                        [(ngModel)]="stockRepair.dateTime" />
+                        [(ngModel)]="stockRepair.dateTime" (input)="onStockRepairManualEdit()" />
                     </td>
                   </tr>
                 </tbody>

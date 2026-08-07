@@ -17,6 +17,14 @@ export class grnService {
     return this.http.post(environment['apiUrl'] + "GRN/SaveGRN", payload, { headers });
   }
 
+  getStockRepairDefaults(payload: any): Observable<any> {
+    const token = localStorage.getItem('logintoken');
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`
+    });
+    return this.http.post(environment['apiUrl'] + "GRN/stock-repair-defaults", payload, { headers });
+  }
+
   SaveChallan(payload: any): Observable<any> {
     const token = localStorage.getItem('logintoken');
     const headers = new HttpHeaders({
