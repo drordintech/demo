@@ -38,7 +38,7 @@ export const FIELD_CONFIG: Record<string, FieldConfig> = {
 export const TAB_COLUMNS: Record<string, string[]> = {
   intake: ['sno', 'product', 'asPerParty', 'received', 'shortageQty'],
   center: [
-    'sno', 'product', 'passed', 'rejected', 'miscellaneous', 'status', 'demandedByParty',
+    'sno', 'product', 'passed', 'rejected', 'miscellaneous', 'status',
     'returnToParty', 'retQty', 'remarks', 'remarks2'
   ]
 };
@@ -124,6 +124,8 @@ export class grnComponent implements OnInit {
   selectedResponsiblePersondetail:any = null;
   selectedgrnstatus: string = '';  selectedgrnOldstatus: string = '';
   dockernumber:string='';
+  invoiceReceiptImage: string | null = null;
+  grnListRptoldInvoiceReceiptImage: string = '';
   suppliers: Supplier[] = [];
   filteredSuppliers: Supplier[] = [];
   filteredSuppliers2: Supplier[] = [];
@@ -933,13 +935,11 @@ export class grnComponent implements OnInit {
   filterProducts(grn: any) {
     if (!grn.searchText) {
       grn.filteredProducts = [...this.products];
-      grn.selectedProduct = grn.filteredProducts.length ? grn.filteredProducts[0].productId : null;
     } else {
       const search = grn.searchText.toLowerCase();
       grn.filteredProducts = this.products.filter(
         product => product.name.toLowerCase().includes(search)
       );
-      grn.selectedProduct = grn.filteredProducts.length ? grn.filteredProducts[0].productId : null;
     }
   }
   
@@ -1088,6 +1088,7 @@ export class grnComponent implements OnInit {
       dockerNo: this.dockernumber || '',
       Grnstatus: this.selectedgrnstatus || '',
       supplierId: Number(this.selectedsupplier) || 0,
+      invoiceReceiptImage: this.invoiceReceiptImage || '',
       grnDetails: this.rows.map(grn => ({
         productId: grn.selectedProduct || (typeof grn.product === 'number' ? grn.product : grn.product?.productId || null),
         quantityAsPerParty: Number(grn.quantityasperparty ?? grn.asPerParty ?? 0),
@@ -1752,6 +1753,7 @@ export class grnComponent implements OnInit {
       this.grnListRptoldchallanno=grn.challanNumber;
       this.grnListRptoldResponsiblePerson=grn.responsiblePerson;
       this.grnListRptoldgrnStatus=grn.grnStatus;
+      this.grnListRptoldInvoiceReceiptImage = grn.invoiceReceiptImage || '';
       debugger
       this.selectedgrnOldstatus=grn.grnStatus;
       this.grnListRptolddokerno=grn.dockerNumber;
@@ -1837,6 +1839,7 @@ export class grnComponent implements OnInit {
       Grnstatus:this.selectedgrnOldstatus,
       dockerNo:this.grnListRptolddokerno,
       supplierId: this.grnListRptoldSupplierID,
+      invoiceReceiptImage: this.grnListRptoldInvoiceReceiptImage || '',
       grnDetails: this.grnListRptold.map(grn => ({
       productId: grn.productId,
         quantityAsPerParty: grn.quantityAsPerParty,
@@ -1967,14 +1970,12 @@ export class grnComponent implements OnInit {
     }
   }
 
-  /** Format for input[type=datetime-local]: YYYY-MM-DDTHH:mm */
+  /** Format for input[type=date]: YYYY-MM-DD */
   getLocalDateTimeValue(date: Date = new Date()): string {
     const y = date.getFullYear();
     const m = String(date.getMonth() + 1).padStart(2, '0');
     const d = String(date.getDate()).padStart(2, '0');
-    const hh = String(date.getHours()).padStart(2, '0');
-    const mm = String(date.getMinutes()).padStart(2, '0');
-    return `${y}-${m}-${d}T${hh}:${mm}`;
+    return `${y}-${m}-${d}`;
   }
 
   backToIntake(): void {
@@ -2005,7 +2006,52 @@ export class grnComponent implements OnInit {
     return true;
   }
 
-  
+  onInvoiceImageSelected(event: any): void {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        this.invoiceReceiptImage = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  clearInvoiceImage(): void {
+    this.invoiceReceiptImage = null;
+    const fileInput = document.getElementById('invoiceImage') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  }
+
+  onEditInvoiceImageSelected(event: any): void {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        this.grnListRptoldInvoiceReceiptImage = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  clearEditInvoiceImage(): void {
+    this.grnListRptoldInvoiceReceiptImage = '';
+    const fileInput = document.getElementById('editInvoiceImage') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  }
+
+  viewReceiptImage(imageUrl: string): void {
+    if (imageUrl) {
+      const newTab = window.open();
+      if (newTab) {
+        newTab.document.write(`<img src="${imageUrl}" style="max-width:100%; height:auto;" />`);
+      }
+    }
+  }
 }
 
 

@@ -17,6 +17,35 @@ namespace APIDRODIN.Controllers
         public GRNController(IConfiguration configuration)
         {
             _connectionString = configuration.GetConnectionString("DefaultConnection")!;
+            EnsureInvoiceReceiptImageColumnExists();
+        }
+
+        private void EnsureInvoiceReceiptImageColumnExists()
+        {
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(_connectionString))
+                {
+                    connection.Open();
+                    string query = @"
+                        IF NOT EXISTS (
+                            SELECT * FROM sys.columns 
+                            WHERE object_id = OBJECT_ID('GRN') 
+                            AND name = 'InvoiceReceiptImage'
+                        )
+                        BEGIN
+                            ALTER TABLE GRN ADD InvoiceReceiptImage NVARCHAR(MAX) NULL;
+                        END";
+                    using (SqlCommand command = new SqlCommand(query, connection))
+                    {
+                        command.ExecuteNonQuery();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error ensuring InvoiceReceiptImage column exists: " + ex.Message);
+            }
         }
 
         [HttpGet("top-rejected-products")]
@@ -122,9 +151,9 @@ namespace APIDRODIN.Controllers
                     {
                         // 1. Insert into GRNs table
                         string insertGRNQuery = @"
-                    INSERT INTO GRN (GrnNumber, SupplierId, CreatedAt,ResponsiblePersonId,DockerNumber,GrnStatus,UpdatedDate) 
+                    INSERT INTO GRN (GrnNumber, SupplierId, CreatedAt,ResponsiblePersonId,DockerNumber,GrnStatus,UpdatedDate,InvoiceReceiptImage) 
                     OUTPUT INSERTED.Id
-                    VALUES (@GrnNumber, @SupplierId, @CreatedAt,@ResponsiblePersonId,@DockerNumber,@GrnStatus,@UpdatedDate);";
+                    VALUES (@GrnNumber, @SupplierId, @CreatedAt,@ResponsiblePersonId,@DockerNumber,@GrnStatus,@UpdatedDate,@InvoiceReceiptImage);";
 
                         using (SqlCommand cmd = new SqlCommand(insertGRNQuery, connection, transaction))
                         {
@@ -135,6 +164,7 @@ namespace APIDRODIN.Controllers
                             cmd.Parameters.AddWithValue("@ResponsiblePersonId", grnDto.ResponsiblePerson > 0 ? (object)grnDto.ResponsiblePerson : DBNull.Value);
                             cmd.Parameters.AddWithValue("@DockerNumber", string.IsNullOrWhiteSpace(grnDto.DockerNo) ? (object)DBNull.Value : grnDto.DockerNo);
                             cmd.Parameters.AddWithValue("@GrnStatus", string.IsNullOrWhiteSpace(grnDto.Grnstatus) ? (object)DBNull.Value : grnDto.Grnstatus);
+                            cmd.Parameters.AddWithValue("@InvoiceReceiptImage", string.IsNullOrWhiteSpace(grnDto.InvoiceReceiptImage) ? (object)DBNull.Value : grnDto.InvoiceReceiptImage);
                             grnId = (int)await cmd.ExecuteScalarAsync(); // Get inserted GRN ID
                         }
 
@@ -296,7 +326,7 @@ namespace APIDRODIN.Controllers
             {
                 await conn.OpenAsync();
                 var query = @"
-            SELECT g.Id, g.GrnNumber, g.SupplierId, g.CreatedAt, s.Name AS SupplierName,p.Name as ResponsiblePerson,g.DockerNumber,g.GrnStatus,c.ChallanNumber
+            SELECT g.Id, g.GrnNumber, g.SupplierId, g.CreatedAt, s.Name AS SupplierName,p.Name as ResponsiblePerson,g.DockerNumber,g.GrnStatus,c.ChallanNumber,g.InvoiceReceiptImage
             FROM GRN g
             INNER JOIN Supplier s ON g.SupplierId = s.SupplierID
             LEFT join ResponsiblePerson p on g.ResponsiblePersonId=p.id
@@ -328,6 +358,7 @@ namespace APIDRODIN.Controllers
                                 DockerNumber = reader.IsDBNull(6) ? string.Empty : reader.GetString(6),
                                 GrnStatus = reader.IsDBNull(7) ? string.Empty : reader.GetString(7),
                                 ChallanNumber = reader.IsDBNull(8) ? string.Empty : reader.GetString(8),
+                                InvoiceReceiptImage = reader.IsDBNull(9) ? string.Empty : reader.GetString(9),
                                 Grndetails = new List<GRNDetailDto>()
                             };
 
@@ -508,7 +539,7 @@ namespace APIDRODIN.Controllers
                         // Update GRN
 
                         string updateGrnQuery = @"UPDATE GRN SET GrnNumber = @GrnNumber, SupplierId = @SupplierId, UpdatedDate = @UpdatedDate,
-                                                    ResponsiblePersonId=@ResponsiblePersonId,DockerNumber=@DockerNumber,GrnStatus=@GrnStatus
+                                                    ResponsiblePersonId=@ResponsiblePersonId,DockerNumber=@DockerNumber,GrnStatus=@GrnStatus, InvoiceReceiptImage=@InvoiceReceiptImage
                                                     WHERE Id = @GrnId";
                         using (SqlCommand updateCmd = new SqlCommand(updateGrnQuery, conn, transaction))
                         {
@@ -517,6 +548,7 @@ namespace APIDRODIN.Controllers
                             updateCmd.Parameters.AddWithValue("@ResponsiblePersonId", grnDto.ResponsiblePerson);
                             updateCmd.Parameters.AddWithValue("@DockerNumber", grnDto.DockerNo);
                             updateCmd.Parameters.AddWithValue("@GrnStatus", grnDto.Grnstatus);
+                            updateCmd.Parameters.AddWithValue("@InvoiceReceiptImage", string.IsNullOrWhiteSpace(grnDto.InvoiceReceiptImage) ? (object)DBNull.Value : grnDto.InvoiceReceiptImage);
                             updateCmd.Parameters.AddWithValue("@UpdatedDate", DateTime.UtcNow);
                             updateCmd.Parameters.AddWithValue("@GrnId", grnId);
                             await updateCmd.ExecuteNonQueryAsync();
@@ -1104,6 +1136,7 @@ QuantityAsPerParty, ExpiryDate,Demandedbyparty,Approvedbycompany,Passedstatus,Re
             public string DockerNumber { get; set; } = null!;
             public string GrnStatus { get; set; } = null!;
             public string ChallanNumber { get; set; } = null!;
+            public string? InvoiceReceiptImage { get; set; }
             public DateTime? CreatedAt { get; set; }
             public List<GRNDetailDto> Grndetails { get; set; } = new List<GRNDetailDto>();
         }
@@ -1136,6 +1169,8 @@ QuantityAsPerParty, ExpiryDate,Demandedbyparty,Approvedbycompany,Passedstatus,Re
 
             [Required]
             public int SupplierId { get; set; }
+            
+            public string? InvoiceReceiptImage { get; set; }
            
             public List<GRNDetailDto> GrnDetails { get; set; }
         }
