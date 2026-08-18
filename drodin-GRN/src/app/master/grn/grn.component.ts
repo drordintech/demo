@@ -1,4 +1,5 @@
 import { Component, ElementRef, OnInit, ViewChild, HostListener } from '@angular/core';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NgbNavModule, NgbModal, NgbDatepickerModule, NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
@@ -39,7 +40,7 @@ export const TAB_COLUMNS: Record<string, string[]> = {
   intake: ['sno', 'product', 'asPerParty', 'received', 'shortageQty'],
   center: [
     'sno', 'product', 'passed', 'rejected', 'miscellaneous', 'status',
-    'returnToParty', 'retQty', 'remarks', 'remarks2'
+    'returnToParty', 'retQty', 'remarks'
   ]
 };
 
@@ -113,6 +114,7 @@ export class grnComponent implements OnInit {
   @ViewChild('productInfoModal') productInfoModal!: ElementRef;
   @ViewChild('grnProductListpopup') grnProductListpopup!: ElementRef;
   @ViewChild('addSupplierModal') addSupplierModal!: ElementRef;
+  @ViewChild('submitSuccessModal') submitSuccessModal!: ElementRef;
   navCollapsedMob = true;
   products: product[] = [];
   selectedSupplierName: string = '';  selectedGRNName: string = ''; selectedResperson: string = ''; 
@@ -156,7 +158,10 @@ export class grnComponent implements OnInit {
   filteredResponsiblePersons: any[] = [];
   rows: GrnRow[] = [];
   get grnList(): GrnRow[] { return this.rows; }
-  set grnList(val: GrnRow[]) { this.rows = val; }
+  set grnList(val: GrnRow[]) {
+    this.rows = val;
+    this.refreshRowProducts();
+  }
   challanList: any[] = [];  challanOldList: any[] = [];
   grnListrpt: any[] = [];
   // Pagination State for GRN Search Results
@@ -329,7 +334,8 @@ export class grnComponent implements OnInit {
   constructor(
       private GrnService: grnService,
       private supplierService:SupplierService,
-      private productService: productService
+      private productService: productService,
+      private sanitizer: DomSanitizer
   ) { }
  
   ngOnInit() {
@@ -942,6 +948,16 @@ export class grnComponent implements OnInit {
       );
     }
   }
+
+  highlightMatch(text: string, search: string): SafeHtml {
+    if (!search || !text) {
+      return this.sanitizer.bypassSecurityTrustHtml(text || '');
+    }
+    const escapedSearch = search.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const regex = new RegExp(`(${escapedSearch})`, 'gi');
+    const highlighted = text.replace(regex, '<span style="background-color: #fff3cd; color: #856404; font-weight: bold; padding: 0 2px; border-radius: 2px;">$1</span>');
+    return this.sanitizer.bypassSecurityTrustHtml(highlighted);
+  }
   
   addGrnRow() {
     const newRow: GrnRow = {
@@ -1115,37 +1131,33 @@ export class grnComponent implements OnInit {
       }))
     };
     this.GrnService.saveGrn(payload).subscribe({
-      next: async (response) => {
-        alert("GRN submitted successfully! GRN print/download window will open.");
+      next: (response) => {
         this.syncDispatchDefaults();
         this.buildChallanList();
-        try {
-          await this.printGRN();
-          
-          if (!this.challanList.length) {
-            this.challanList = this.rows
-              .filter(r => {
-                const prodId = r.selectedProduct || (typeof r.product === 'number' ? r.product : r.product?.productId);
-                return !!prodId;
-              })
-              .map(r => ({
-                ...r,
-                retQty: Number(r.retQty) > 0 ? r.retQty : (Number(r.rejected) > 0 ? r.rejected : (r.receivedQuantity ?? r.received ?? 0))
-              }));
-          }
-          if (this.challanList.length > 0) {
-            const downloadChallan = confirm("GRN print complete. Do you want to download/print the Challan as well?");
-            if (downloadChallan) {
-              this.savechallan();
-              await this.printChallan();
-            }
-          }
-        } catch (e) {
-          console.error('Print failed:', e);
-          alert('GRN saved, but print/PDF failed. You can reprint from Search Old GRN.');
+        
+        if (!this.challanList.length) {
+          this.challanList = this.rows
+            .filter(r => {
+              const prodId = r.selectedProduct || (typeof r.product === 'number' ? r.product : r.product?.productId);
+              return !!prodId;
+            })
+            .map(r => ({
+              ...r,
+              retQty: Number(r.retQty) > 0 ? r.retQty : (Number(r.rejected) > 0 ? r.rejected : (r.receivedQuantity ?? r.received ?? 0))
+            }));
         }
-        this.grnList = [];
-        window.location.reload();
+
+        if (this.challanList.length > 0) {
+          this.savechallan();
+        }
+
+        if (this.submitSuccessModal) {
+          const modal = new Modal(this.submitSuccessModal.nativeElement);
+          modal.show();
+        } else {
+          alert("GRN submitted successfully!");
+          window.location.reload();
+        }
       },
       error: (error) => {
         console.error("Error submitting GRN:", error);
@@ -1153,6 +1165,10 @@ export class grnComponent implements OnInit {
         alert("Failed to submit GRN: " + apiMsg);
       }
     });
+  }
+
+  closeSuccessAndReload(): void {
+    window.location.reload();
   }
   savechallan(){
     const payload = {

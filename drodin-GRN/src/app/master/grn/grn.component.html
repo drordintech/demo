@@ -257,8 +257,7 @@
                       <th rowspan="2" scope="col" class="align-middle main-th text-center sticky-th">Status</th>
                       <th rowspan="2" scope="col" class="align-middle main-th text-center sticky-th">Return</th>
                       <th rowspan="2" scope="col" class="align-middle main-th text-center sticky-th">Ret Qty</th>
-                      <th rowspan="2" scope="col" class="align-middle main-th text-center sticky-th">Remarks 1</th>
-                      <th rowspan="2" scope="col" class="align-middle main-th text-center sticky-th">Remarks 2</th>
+                      <th rowspan="2" scope="col" class="align-middle main-th text-center sticky-th">Remarks</th>
                     </tr>
                     <tr class="header-sub-row">
                       <th scope="col" class="sub-th sticky-sub-th">Passed</th>
@@ -312,9 +311,9 @@
                                   Select product
                                 </button>
                                 <button class="dropdown-item text-wrap" type="button"
-                                  *ngFor="let product of grn.filteredProducts" (click)="grn.selectedProduct = product.productId; grn.searchText = '';"
-                                  [title]="product.name" style="cursor: pointer; font-size: 12px; padding: 6px 10px; text-align: left;">
-                                  {{ product.name }}
+                                  *ngFor="let product of grn.filteredProducts" (click)="grn.selectedProduct = product.productId; grn.searchText = ''; filterProducts(grn);"
+                                  [title]="product.name" style="cursor: pointer; font-size: 12px; padding: 6px 10px; text-align: left;"
+                                  [innerHTML]="highlightMatch(product.name, grn.searchText)">
                                 </button>
                                 <div class="text-center text-muted py-3" *ngIf="!grn.filteredProducts || grn.filteredProducts.length === 0">
                                   <small>No products found</small>
@@ -472,12 +471,6 @@
                         <input type="text" [(ngModel)]="grn.remarks" class="form-control form-control-sm"
                           placeholder="Remarks" />
                       </ng-container>
-
-                      <!-- Remarks 2 -->
-                      <ng-container *ngIf="col === 'remarks2'">
-                        <input type="text" [(ngModel)]="grn.remarks2" class="form-control form-control-sm"
-                          placeholder="Remarks 2" />
-                      </ng-container>
                     </td>
 
                     <!-- Actions only on Product Intake -->
@@ -489,21 +482,7 @@
                     </td>
                   </tr>
                 </tbody>
-                <tfoot>
-                  <tr class="bg-light">
-                    <td [attr.colspan]="getActiveColumns().length + (activeTab === 'intake' ? 1 : 0)"
-                      class="text-start fw-semibold py-2 px-3 text-muted">
-                      <span class="me-4"><i class="bi bi-info-circle me-1"></i> Total Product Added: {{ rows.length
-                        }}</span>
-                      <span *ngIf="activeTab === 'intake'" class="shortage-total-summary"
-                        [class.has-shortage]="getTotalShortageQty() > 0">
-                        <i class="bi bi-exclamation-triangle me-1" *ngIf="getTotalShortageQty() > 0"></i>
-                        <i class="bi bi-check-circle me-1" *ngIf="getTotalShortageQty() === 0"></i>
-                        Total Shortage Qty: <strong>{{ getTotalShortageQty() }}</strong>
-                      </span>
-                    </td>
-                  </tr>
-                </tfoot>
+
               </table>
             </div>
           </div>
@@ -589,36 +568,6 @@
             <span class="text-muted small"><i class="bi bi-info-circle me-1"></i>Only product is required. Select a
               product, then continue.</span>
             <div class="d-flex align-items-center gap-2 flex-wrap">
-              <!-- Download GRN Dropdown Button -->
-              <div class="btn-group" ngbDropdown container="body">
-                <button type="button"
-                  class="btn btn-outline-primary px-3 rounded-pill dropdown-toggle d-inline-flex align-items-center gap-1 shadow-sm"
-                  ngbDropdownToggle [disabled]="!hasValidProducts() || isGeneratingExport" title="Export GRN Document">
-                  <span *ngIf="isGeneratingExport" class="spinner-border spinner-border-sm me-1" role="status"
-                    aria-hidden="true"></span>
-                  <i *ngIf="!isGeneratingExport" class="bi bi-download me-1"></i>
-                  {{ isGeneratingExport ? 'Generating...' : 'Download GRN' }}
-                </button>
-                <div ngbDropdownMenu class="dropdown-menu shadow border-0 rounded-3 p-1">
-                  <button class="dropdown-item d-flex align-items-center py-2 px-3 rounded-2" type="button"
-                    (click)="downloadPdf()">
-                    <i class="bi bi-file-pdf-fill text-danger me-2 fs-5"></i>
-                    <div>
-                      <div class="fw-semibold">Download PDF</div>
-                      <small class="text-muted" style="font-size: 11px;">Formatted document with watermark</small>
-                    </div>
-                  </button>
-                  <button class="dropdown-item d-flex align-items-center py-2 px-3 rounded-2" type="button"
-                    (click)="downloadExcel()">
-                    <i class="bi bi-file-earmark-excel-fill text-success me-2 fs-5"></i>
-                    <div>
-                      <div class="fw-semibold">Download Excel</div>
-                      <small class="text-muted" style="font-size: 11px;">Structured spreadsheet (.xlsx)</small>
-                    </div>
-                  </button>
-                </div>
-              </div>
-
               <button class="btn btn-primary px-4 rounded-pill shadow-sm" type="button" (click)="goToRepairCenter()">
                 Save &amp; Continue <i class="bi bi-arrow-right ms-1"></i>
               </button>
@@ -1277,14 +1226,24 @@
       </div>
 
       <!-- Modal Footer -->
-      <div class="modal-footer">
-        <button class="btn btn-success btn-sm" style="background-color: #2196f3;border: #2196f3;"
-          (click)="UpdateoldGRN()">
-          <i class="bi bi-check-circle"></i> Submit
-        </button>
-        <button type="button" class="btn btn-danger btn-sm" data-bs-dismiss="modal">
-          <i class="bi bi-x-circle"></i> Close
-        </button>
+      <div class="modal-footer d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-primary btn-sm" (click)="printGRNPopup()" title="Download GRN PDF">
+            <i class="bi bi-download me-1"></i> Download GRN
+          </button>
+          <button class="btn btn-outline-info btn-sm" (click)="printChallanOldPopup()" title="Download Challan PDF">
+            <i class="bi bi-download me-1"></i> Download Challan
+          </button>
+        </div>
+        <div class="d-flex gap-2">
+          <button class="btn btn-success btn-sm" style="background-color: #2196f3;border: #2196f3;"
+            (click)="UpdateoldGRN()">
+            <i class="bi bi-check-circle"></i> Submit
+          </button>
+          <button type="button" class="btn btn-danger btn-sm" data-bs-dismiss="modal">
+            <i class="bi bi-x-circle"></i> Close
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -1323,8 +1282,7 @@
           <th rowspan="2">Batch No</th>
           <th rowspan="2">Expiry</th>
           <th rowspan="2">Return Qty</th>
-          <th rowspan="2">Remarks 1</th>
-          <th rowspan="2">Remarks 2</th>
+          <th rowspan="2">Remarks</th>
         </tr>
         <tr>
           <th>As Per Party</th>
@@ -1352,7 +1310,6 @@
           <td>{{ grn.expiryDate || '—' }}</td>
           <td>{{ grn.quantity ?? 0 }}</td>
           <td class="text-start">{{ grn.remarks1 || '—' }}</td>
-          <td class="text-start">{{ grn.remarks2 || '—' }}</td>
         </tr>
       </tbody>
       <tfoot>
@@ -1473,32 +1430,219 @@ printPOPUPSectionChallan -->
     <table class="grn-print-dispatch">
       <thead>
         <tr>
-          <th colspan="2" class="section-repair">STOCK REPAIR &amp; SENT TO PARTY AS PER DETAILS</th>
+          <th colspan="2" class="section-dispatch">DISPATCH DETAILS</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td class="lbl-repair">STOCK RECEIVED PARTY</td>
-          <td class="val-edit"><input type="text" [attr.value]="stockRepair.stockReceivedParty || ''" /></td>
+          <td class="lbl-dispatch">STOCK SENT TO</td>
+          <td class="val-edit"><input type="text" [attr.value]="dispatch.stockSentTo || ''" /></td>
         </tr>
         <tr>
-          <td class="lbl-repair">DOCKET NO / DATE</td>
-          <td class="val-edit"><input type="text" [attr.value]="stockRepair.docketNoDate || ''" /></td>
+          <td class="lbl-dispatch">CHALLAN NO / INVOICE NO / CREDIT NOTE NO / DATED</td>
+          <td class="val-edit"><input type="text" [attr.value]="dispatch.challanInvoiceCreditNote || ''" /></td>
         </tr>
         <tr>
-          <td class="lbl-repair">TRANSPORT</td>
-          <td class="val-edit"><input type="text" [attr.value]="stockRepair.transport || ''" /></td>
+          <td class="lbl-dispatch">DOCKET NO / DATE</td>
+          <td class="val-edit"><input type="text" [attr.value]="dispatch.docketNoDate || ''" /></td>
         </tr>
         <tr>
-          <td class="lbl-repair">DEBIT NOTE NO / INVOICE NO / DATE</td>
-          <td class="val-edit"><input type="text" [attr.value]="stockRepair.debitNoteInvoice || ''" /></td>
+          <td class="lbl-dispatch">TRANSPORT</td>
+          <td class="val-edit"><input type="text" [attr.value]="dispatch.transport || ''" /></td>
         </tr>
         <tr>
-          <td class="lbl-repair">DATE &amp; TIME</td>
-          <td class="val-edit"><input type="datetime-local" [attr.value]="stockRepair.dateTime || ''" /></td>
+          <td class="lbl-dispatch">GRN NO</td>
+          <td class="val-edit"><input type="text" [attr.value]="dispatch.grnNo || ''" /></td>
+        </tr>
+        <tr>
+          <td class="lbl-dispatch">NO CREDIT NOTE WILL BE ISSUED FOR THESE PRODUCTS</td>
+          <td class="val-edit"><input type="text" [attr.value]="dispatch.noCreditNoteRemark || ''" /></td>
+        </tr>
+        <tr>
+          <td class="lbl-dispatch">NEED DEBIT NOTE FROM THE PARTY FOR THESE PRODUCTS TO ISSUE CREDIT NOTE</td>
+          <td class="val-edit"><input type="text" [attr.value]="dispatch.needDebitNoteRemark || ''" /></td>
         </tr>
       </tbody>
     </table>
+  </div>
+
+</div>
+
+<!-- PRINT NEW GRN -->
+<div id="printSection" style="display: none;">
+  <div class="grn-print-doc">
+    <div class="grn-print-date">Date: {{ todayDate }}</div>
+    <div class="grn-print-header">
+      <h2>Odin Healthcare Pvt. Ltd.</h2>
+      <p>Plot No. 45, Industrial Area, Phase-2, Panchkula (Haryana)</p>
+      <p>Call Us: +91 9878785333 &nbsp;|&nbsp; E-mail: customercare&#64;drodin.in</p>
+      <h3>Goods Received Note / Inspection Report</h3>
+    </div>
+
+    <table class="grn-print-meta">
+      <tr>
+        <td><span>Supplier</span><strong>{{ getSelectedSupplierName(false) || '—' }}</strong></td>
+        <td><span>Responsible Person</span><strong>{{ getSelectedResponsiblePersonName() || '—' }}</strong></td>
+        <td><span>Docker No.</span><strong>{{ dockernumber || '—' }}</strong></td>
+        <td><span>GRN Status</span><strong>{{ selectedgrnstatus || '—' }}</strong></td>
+        <td><span>GRN Number</span><strong>{{ grnNumber || '—' }}</strong></td>
+      </tr>
+    </table>
+
+    <table class="grn-print-table">
+      <thead>
+        <tr>
+          <th rowspan="2" class="col-sno">S.No</th>
+          <th rowspan="2" class="col-product">Product Name</th>
+          <th colspan="2" class="group-intake">Product Intake</th>
+          <th colspan="4" class="group-repair">Repair Center</th>
+          <th rowspan="2">Status</th>
+          <th rowspan="2">MRP</th>
+          <th rowspan="2">Batch No</th>
+          <th rowspan="2">Expiry</th>
+          <th rowspan="2">Return Qty</th>
+          <th rowspan="2">Remarks</th>
+        </tr>
+        <tr>
+          <th>As Per Party</th>
+          <th>Received</th>
+          <th>Passed</th>
+          <th>Pass Reason</th>
+          <th>Rejected</th>
+          <th>Reject Reason</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let grn of rows; let i = index">
+          <td class="col-sno">{{ i + 1 }}</td>
+          <td class="col-product text-start">{{ getProductName(grn.selectedProduct) }}</td>
+          <td>{{ grn.quantityasperparty || 0 }}</td>
+          <td>{{ grn.receivedQuantity || 0 }}</td>
+          <td>{{ grn.passed || 0 }}</td>
+          <td>{{ grn.statusofpassed || '—' }}</td>
+          <td>{{ grn.rejected || 0 }}</td>
+          <td>{{ grn.statusofrejected || '—' }}</td>
+          <td>{{ grn.status || '—' }}</td>
+          <td>{{ grn.MRP || 0 }}</td>
+          <td>{{ grn.batchno || '—' }}</td>
+          <td>{{ grn.expiryDate || '—' }}</td>
+          <td>{{ grn.retQty || 0 }}</td>
+          <td class="text-start">{{ grn.remarks || '—' }}</td>
+        </tr>
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="15" class="text-start"><strong>Total Product Added: {{ rows.length }}</strong></td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <div class="grn-print-footer-blocks grn-print-footer-blocks--grn-only">
+      <table class="grn-print-dispatch">
+        <thead>
+          <tr>
+            <th colspan="2" class="section-repair">STOCK REPAIR DETAILS</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="lbl-repair">STOCK RECEIVED PARTY</td>
+            <td class="val-edit"><input type="text" [attr.value]="stockRepair.stockReceivedParty || ''" /></td>
+          </tr>
+          <tr>
+            <td class="lbl-repair">DOCKET NO / DATE</td>
+            <td class="val-edit"><input type="text" [attr.value]="stockRepair.docketNoDate || ''" /></td>
+          </tr>
+          <tr>
+            <td class="lbl-repair">TRANSPORT</td>
+            <td class="val-edit"><input type="text" [attr.value]="stockRepair.transport || ''" /></td>
+          </tr>
+          <tr>
+            <td class="lbl-repair">DEBIT NOTE NO / INVOICE NO / DATE</td>
+            <td class="val-edit"><input type="text" [attr.value]="stockRepair.debitNoteInvoice || ''" /></td>
+          </tr>
+          <tr>
+            <td class="lbl-repair">DATE &amp; TIME</td>
+            <td class="val-edit"><input type="text" [attr.value]="stockRepair.dateTime || ''" /></td>
+          </tr>
+        </tbody>
+      </table>
+      <table class="grn-print-sign-table">
+        <tr>
+          <td>Inspection Done By: ____________________</td>
+          <td class="text-center">Authorized Signature: ____________________</td>
+          <td class="text-end">Received By: ____________________</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- PRINT NEW CHALLAN -->
+<div id="printSectionChallan" style="display: none;">
+  <div class="col-md-12 mb-3 d-flex justify-content-between">
+    <div>GSTIN: 06AAACO7774J1Z2</div>
+    <div>Date: {{ todayDate }}</div>
+  </div>
+  <h3 class="text-center">Odin Healthcare Pvt. Ltd.</h3>
+  <h5 class="text-center">Plotno 45, Industrial Area, Phase-2, Panchkula(Haryana)</h5>
+  <h5 class="text-center">Call Us: 0172-4624664, E-mail: customercare&#64;drodin.in</h5>
+  <h5 class="text-center">CHALLAN</h5>
+  <hr />
+  <div class="d-flex justify-content-between">
+    <div>
+      <label class="form-label">Name of Supplier: &nbsp;&nbsp;</label>
+      <label class="form-label">{{ getSelectedSupplierName(false) }}</label>
+    </div>
+    <div>
+      <label class="form-label">Consignement Number: &nbsp;&nbsp;</label>
+      <label class="form-label">{{ dockernumber }}</label>
+    </div>
+    <div>
+      <label class="form-label">CHALLAN Number: &nbsp;&nbsp;</label>
+      <label class="form-label">{{ challanNumber }}</label>
+    </div>
+  </div>
+  <table class="table table-bordered table-hover table-sm text-center align-middle">
+    <thead class="table-dark">
+      <tr>
+        <th scope="col">S.No</th>
+        <th scope="col">Product Name</th>
+        <th scope="col">Quantity</th>
+        <th scope="col">Aprox. Value</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let grn of challanList; let i = index">
+        <td>{{ i + 1 }}</td>
+        <td>{{ getProductName(grn.selectedProduct) }}</td>
+        <td>{{ grn.retQty || grn.rejected || 0 }}</td>
+        <td>{{ grn.MRP || 0 }}</td>
+      </tr>
+    </tbody>
+    <tfoot>
+      <tr class="table-footer">
+        <td colspan="2" class="text-start fw-bold">
+          <br /> <i>Order Booked By: ___________________</i>
+        </td>
+        <td colspan="2" class="text-end fw-bold">
+          <br /> <i>For Odin Healthcare Pvt. Ltd.</i>
+        </td>
+      </tr>
+      <tr class="table-footer">
+        <td colspan="2" class="text-start fw-bold">
+          <br /> <i>Receiver's Signature ____________
+            <br /> <br /> Received the above goods in good conditions
+          </i>
+        </td>
+        <td colspan="2" class="text-end fw-bold">
+          <br /> <i>Authorized Signatory</i>
+        </td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <div class="grn-print-footer-blocks">
     <table class="grn-print-dispatch">
       <thead>
         <tr>
@@ -1537,7 +1681,6 @@ printPOPUPSectionChallan -->
       </tbody>
     </table>
   </div>
-
 </div>
 
 <!-- Add New Supplier Modal -->
@@ -1650,6 +1793,40 @@ printPOPUPSectionChallan -->
             </button>
           </div>
         </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Submit Success Modal with Download Buttons -->
+<div #submitSuccessModal class="modal fade" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false" style="z-index: 1055;">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content shadow-lg border-0">
+      <div class="modal-header bg-success text-white py-3">
+        <h5 class="modal-title d-flex align-items-center text-white">
+          <i class="bi bi-check-circle-fill me-2"></i>GRN Saved Successfully!
+        </h5>
+      </div>
+      <div class="modal-body p-4 text-center">
+        <div class="mb-4">
+          <i class="bi bi-cloud-arrow-up text-success" style="font-size: 3rem;"></i>
+        </div>
+        <p class="mb-4 text-secondary">
+          Your Goods Received Note <strong>{{ grnNumber }}</strong> has been saved. Select options below to download documents:
+        </p>
+        <div class="d-grid gap-2 mb-3">
+          <button type="button" class="btn btn-outline-primary py-2 d-flex align-items-center justify-content-center gap-2" (click)="printGRN()">
+            <i class="bi bi-file-pdf text-danger fs-5"></i> Download GRN PDF
+          </button>
+          <button type="button" class="btn btn-outline-info py-2 d-flex align-items-center justify-content-center gap-2" (click)="printChallan()">
+            <i class="bi bi-file-pdf text-info fs-5"></i> Download Challan PDF
+          </button>
+        </div>
+      </div>
+      <div class="modal-footer bg-light">
+        <button type="button" class="btn btn-primary px-4" (click)="closeSuccessAndReload()">
+          Go Back / New GRN
+        </button>
       </div>
     </div>
   </div>

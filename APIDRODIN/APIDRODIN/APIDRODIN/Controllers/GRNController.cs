@@ -368,46 +368,62 @@ namespace APIDRODIN.Controllers
                 }
 
                 // Fetch GRN Details
-                foreach (var grn in grnList)
+                if (grnList.Count > 0)
                 {
-                    var detailQuery = @"
-                                    SELECT ProductId,   ReceivedQuantity, RejectedQuantity, PassedQuantity, Status, Mrp, BatchNumber, Remarks1, Remarks2, QuantityAsPerParty, 
-                                    ExpiryDate,p.name AS ProductName ,Demandedbyparty,Approvedbycompany,Passedstatus       ,Rejectedstatus  ,ReturnToParty      ,Quantity
-                                    FROM GrnDetails gd
-                                    JOIN product p ON gd.ProductId = p.product_id
-                                    WHERE gd.GrnId = @GrnId;";
-
-                    using (SqlCommand detailCmd = new SqlCommand(detailQuery, conn))
+                    var grnMap = grnList.ToDictionary(g => g.Id);
+                    var grnIds = grnList.Select(g => g.Id).ToList();
+                    const int chunkSize = 1000;
+                    
+                    for (int i = 0; i < grnIds.Count; i += chunkSize)
                     {
-                        detailCmd.Parameters.AddWithValue("@GrnId", grn.Id);
+                        var chunk = grnIds.Skip(i).Take(chunkSize).ToList();
+                        var parameterNames = chunk.Select((id, index) => $"@GrnId{index}").ToList();
+                        var detailQuery = $@"
+                            SELECT gd.GrnId, gd.ProductId, gd.ReceivedQuantity, gd.RejectedQuantity, gd.PassedQuantity, gd.Status, gd.Mrp, gd.BatchNumber, gd.Remarks1, gd.Remarks2, gd.QuantityAsPerParty, 
+                            gd.ExpiryDate, p.name AS ProductName, gd.Demandedbyparty, gd.Approvedbycompany, gd.Passedstatus, gd.Rejectedstatus, gd.ReturnToParty, gd.Quantity
+                            FROM GrnDetails gd
+                            JOIN product p ON gd.ProductId = p.product_id
+                            WHERE gd.GrnId IN ({string.Join(",", parameterNames)});";
 
-                        using (SqlDataReader detailReader = await detailCmd.ExecuteReaderAsync())
+                        using (SqlCommand detailCmd = new SqlCommand(detailQuery, conn))
                         {
-                            while (await detailReader.ReadAsync())
+                            for (int j = 0; j < chunk.Count; j++)
                             {
-                                var detailDto = new GRNDetailDto
-                                {
-                                    ProductId = detailReader.GetInt32(0),
-                                    ReceivedQuantity = detailReader.IsDBNull(1) ? 0 : detailReader.GetInt32(1),
-                                    RejectedQuantity = detailReader.IsDBNull(2) ? 0 : detailReader.GetInt32(2),
-                                    PassedQuantity = detailReader.IsDBNull(3) ? 0 : detailReader.GetInt32(3),
-                                    Status = detailReader.IsDBNull(4) ? string.Empty : detailReader.GetString(4),
-                                    Mrp = detailReader.IsDBNull(5) ? 0 : detailReader.GetDecimal(5),
-                                    BatchNumber = detailReader.IsDBNull(6) ? string.Empty : detailReader.GetString(6),
-                                    Remarks1 = detailReader.IsDBNull(7) ? string.Empty : detailReader.GetString(7),
-                                    Remarks2 = detailReader.IsDBNull(8) ? string.Empty : detailReader.GetString(8),
-                                    QuantityAsPerParty = detailReader.IsDBNull(9) ? 0 : detailReader.GetInt32(9),
-                                    ExpiryDate = detailReader.IsDBNull(10) ? DateTime.MinValue : detailReader.GetDateTime(10),
-                                    ProductName = detailReader.GetString(11),
-                                    Demandedbyparty = detailReader.IsDBNull(12) ? string.Empty : detailReader.GetString(12),
-                                    Approvedbycompany = detailReader.IsDBNull(13) ? string.Empty : detailReader.GetString(13),
-                                    Passedstatus = detailReader.IsDBNull(14) ? string.Empty : detailReader.GetString(14),
-                                    Rejectedstatus = detailReader.IsDBNull(15) ? string.Empty : detailReader.GetString(15),
-                                    ReturnToParty = !detailReader.IsDBNull(16) && detailReader.GetBoolean(16),
-                                    Quantity = detailReader.GetInt32(17),
-                                };
+                                detailCmd.Parameters.AddWithValue($"@GrnId{j}", chunk[j]);
+                            }
 
-                                grn.Grndetails.Add(detailDto);
+                            using (SqlDataReader detailReader = await detailCmd.ExecuteReaderAsync())
+                            {
+                                while (await detailReader.ReadAsync())
+                                {
+                                    int grnId = detailReader.GetInt32(0);
+                                    var detailDto = new GRNDetailDto
+                                    {
+                                        ProductId = detailReader.GetInt32(1),
+                                        ReceivedQuantity = detailReader.IsDBNull(2) ? 0 : detailReader.GetInt32(2),
+                                        RejectedQuantity = detailReader.IsDBNull(3) ? 0 : detailReader.GetInt32(3),
+                                        PassedQuantity = detailReader.IsDBNull(4) ? 0 : detailReader.GetInt32(4),
+                                        Status = detailReader.IsDBNull(5) ? string.Empty : detailReader.GetString(5),
+                                        Mrp = detailReader.IsDBNull(6) ? 0 : detailReader.GetDecimal(6),
+                                        BatchNumber = detailReader.IsDBNull(7) ? string.Empty : detailReader.GetString(7),
+                                        Remarks1 = detailReader.IsDBNull(8) ? string.Empty : detailReader.GetString(8),
+                                        Remarks2 = detailReader.IsDBNull(9) ? string.Empty : detailReader.GetString(9),
+                                        QuantityAsPerParty = detailReader.IsDBNull(10) ? 0 : detailReader.GetInt32(10),
+                                        ExpiryDate = detailReader.IsDBNull(11) ? DateTime.MinValue : detailReader.GetDateTime(11),
+                                        ProductName = detailReader.GetString(12),
+                                        Demandedbyparty = detailReader.IsDBNull(13) ? string.Empty : detailReader.GetString(13),
+                                        Approvedbycompany = detailReader.IsDBNull(14) ? string.Empty : detailReader.GetString(14),
+                                        Passedstatus = detailReader.IsDBNull(15) ? string.Empty : detailReader.GetString(15),
+                                        Rejectedstatus = detailReader.IsDBNull(16) ? string.Empty : detailReader.GetString(16),
+                                        ReturnToParty = !detailReader.IsDBNull(17) && detailReader.GetBoolean(17),
+                                        Quantity = detailReader.GetInt32(18),
+                                    };
+
+                                    if (grnMap.TryGetValue(grnId, out var grn))
+                                    {
+                                        grn.Grndetails.Add(detailDto);
+                                    }
+                                }
                             }
                         }
                     }
@@ -672,42 +688,61 @@ namespace APIDRODIN.Controllers
                 }
 
                 // Fetch GRN details
-                foreach (var grn in grnList)
+                if (grnList.Count > 0)
                 {
-                    string detailQuery = @"
-                                    SELECT ProductId, p.name AS ProductName ,  ReceivedQuantity, RejectedQuantity, PassedQuantity, Status, Mrp, BatchNumber, Remarks1, Remarks2,
-                                        QuantityAsPerParty, ExpiryDate,Demandedbyparty,Approvedbycompany,Passedstatus,Rejectedstatus,ReturnToParty,Quantity
+                    var grnMap = grnList.ToDictionary(g => g.Id);
+                    var grnIds = grnList.Select(g => g.Id).ToList();
+                    const int chunkSize = 1000;
+
+                    for (int i = 0; i < grnIds.Count; i += chunkSize)
+                    {
+                        var chunk = grnIds.Skip(i).Take(chunkSize).ToList();
+                        var parameterNames = chunk.Select((id, index) => $"@GrnId{index}").ToList();
+                        string detailQuery = $@"
+                                    SELECT gd.GrnId, gd.ProductId, p.name AS ProductName ,  gd.ReceivedQuantity, gd.RejectedQuantity, gd.PassedQuantity, gd.Status, gd.Mrp, gd.BatchNumber, gd.Remarks1, gd.Remarks2,
+                                        gd.QuantityAsPerParty, gd.ExpiryDate, gd.Demandedbyparty, gd.Approvedbycompany, gd.Passedstatus, gd.Rejectedstatus, gd.ReturnToParty
                                     FROM GrnDetails gd
                                     JOIN product p ON gd.ProductId = p.product_id
-                                    WHERE gd.GrnId = @GrnId;";
-                    using (SqlCommand detailCmd = new SqlCommand(detailQuery, conn))
-                    {
-                        detailCmd.Parameters.AddWithValue("@GrnId", grn.Id);
-                        using (SqlDataReader detailReader = await detailCmd.ExecuteReaderAsync())
+                                    WHERE gd.GrnId IN ({string.Join(",", parameterNames)});";
+
+                        using (SqlCommand detailCmd = new SqlCommand(detailQuery, conn))
                         {
-                            while (await detailReader.ReadAsync())
+                            for (int j = 0; j < chunk.Count; j++)
                             {
-                                grn.Grndetails.Add(new GRNDetailDto
+                                detailCmd.Parameters.AddWithValue($"@GrnId{j}", chunk[j]);
+                            }
+
+                            using (SqlDataReader detailReader = await detailCmd.ExecuteReaderAsync())
+                            {
+                                while (await detailReader.ReadAsync())
                                 {
-                                    ProductId = detailReader.GetInt32(0),
-                                    ProductName = detailReader.GetString(1),
-                                    ReceivedQuantity = detailReader.GetInt32(2),
-                                    RejectedQuantity = detailReader.GetInt32(3),
-                                    PassedQuantity = detailReader.GetInt32(4),
-                                    Status = detailReader.GetString(5),
-                                    Mrp = detailReader.GetDecimal(6),
-                                    BatchNumber = detailReader.IsDBNull(7) ? null : detailReader.GetString(7),
-                                    Remarks1 = detailReader.IsDBNull(8) ? null : detailReader.GetString(8),
-                                    Remarks2 = detailReader.IsDBNull(9) ? null : detailReader.GetString(9),
-                                    QuantityAsPerParty = detailReader.GetInt32(10),
-                                    ExpiryDate = detailReader.IsDBNull(11) ? DateTime.MinValue : detailReader.GetDateTime(11),
-                                    Demandedbyparty = detailReader.IsDBNull(12) ? null : detailReader.GetString(12),
-                                    Approvedbycompany = detailReader.IsDBNull(13) ? null : detailReader.GetString(13),
-                                    Passedstatus = detailReader.IsDBNull(14) ? null : detailReader.GetString(14),
-                                    Rejectedstatus = detailReader.IsDBNull(15) ? null : detailReader.GetString(15),
-                                    ReturnToParty = !detailReader.IsDBNull(16) && detailReader.GetBoolean(16),
-                                  //  Quantity = detailReader.GetInt32(17),
-                                });
+                                    int grnId = detailReader.GetInt32(0);
+                                    var detailDto = new GRNDetailDto
+                                    {
+                                        ProductId = detailReader.GetInt32(1),
+                                        ProductName = detailReader.GetString(2),
+                                        ReceivedQuantity = detailReader.GetInt32(3),
+                                        RejectedQuantity = detailReader.GetInt32(4),
+                                        PassedQuantity = detailReader.GetInt32(5),
+                                        Status = detailReader.GetString(6),
+                                        Mrp = detailReader.GetDecimal(7),
+                                        BatchNumber = detailReader.IsDBNull(8) ? null : detailReader.GetString(8),
+                                        Remarks1 = detailReader.IsDBNull(9) ? null : detailReader.GetString(9),
+                                        Remarks2 = detailReader.IsDBNull(10) ? null : detailReader.GetString(10),
+                                        QuantityAsPerParty = detailReader.GetInt32(11),
+                                        ExpiryDate = detailReader.IsDBNull(12) ? DateTime.MinValue : detailReader.GetDateTime(12),
+                                        Demandedbyparty = detailReader.IsDBNull(13) ? null : detailReader.GetString(13),
+                                        Approvedbycompany = detailReader.IsDBNull(14) ? null : detailReader.GetString(14),
+                                        Passedstatus = detailReader.IsDBNull(15) ? null : detailReader.GetString(15),
+                                        Rejectedstatus = detailReader.IsDBNull(16) ? null : detailReader.GetString(16),
+                                        ReturnToParty = !detailReader.IsDBNull(17) && detailReader.GetBoolean(17),
+                                    };
+
+                                    if (grnMap.TryGetValue(grnId, out var grn))
+                                    {
+                                        grn.Grndetails.Add(detailDto);
+                                    }
+                                }
                             }
                         }
                     }
@@ -961,41 +996,61 @@ namespace APIDRODIN.Controllers
                 }
 
                 // Fetch GRN details
-                foreach (var grn in grnList)
+                if (grnList.Count > 0)
                 {
-                    string detailQuery = @"
-                                    SELECT ProductId, p.name AS ProductName ,  ReceivedQuantity, RejectedQuantity, PassedQuantity, Status, Mrp, BatchNumber, Remarks1, Remarks2, 
-QuantityAsPerParty, ExpiryDate,Demandedbyparty,Approvedbycompany,Passedstatus,Rejectedstatus,ReturnToParty,Quantity
+                    var grnMap = grnList.ToDictionary(g => g.Id);
+                    var grnIds = grnList.Select(g => g.Id).ToList();
+                    const int chunkSize = 1000;
+
+                    for (int i = 0; i < grnIds.Count; i += chunkSize)
+                    {
+                        var chunk = grnIds.Skip(i).Take(chunkSize).ToList();
+                        var parameterNames = chunk.Select((id, index) => $"@GrnId{index}").ToList();
+                        string detailQuery = $@"
+                                    SELECT gd.GrnId, gd.ProductId, p.name AS ProductName ,  gd.ReceivedQuantity, gd.RejectedQuantity, gd.PassedQuantity, gd.Status, gd.Mrp, gd.BatchNumber, gd.Remarks1, gd.Remarks2, 
+                                        gd.QuantityAsPerParty, gd.ExpiryDate, gd.Demandedbyparty, gd.Approvedbycompany, gd.Passedstatus, gd.Rejectedstatus, gd.ReturnToParty
                                     FROM GrnDetails gd
                                     JOIN product p ON gd.ProductId = p.product_id
-                                    WHERE gd.GrnId = @GrnId;";
-                    using (SqlCommand detailCmd = new SqlCommand(detailQuery, conn))
-                    {
-                        detailCmd.Parameters.AddWithValue("@GrnId", grn.Id);
-                        using (SqlDataReader detailReader = await detailCmd.ExecuteReaderAsync())
+                                    WHERE gd.GrnId IN ({string.Join(",", parameterNames)});";
+
+                        using (SqlCommand detailCmd = new SqlCommand(detailQuery, conn))
                         {
-                            while (await detailReader.ReadAsync())
+                            for (int j = 0; j < chunk.Count; j++)
                             {
-                                grn.Grndetails.Add(new GRNDetailDto
+                                detailCmd.Parameters.AddWithValue($"@GrnId{j}", chunk[j]);
+                            }
+
+                            using (SqlDataReader detailReader = await detailCmd.ExecuteReaderAsync())
+                            {
+                                while (await detailReader.ReadAsync())
                                 {
-                                    ProductId = detailReader.GetInt32(0),
-                                    ProductName = detailReader.GetString(1),
-                                    ReceivedQuantity = detailReader.GetInt32(2),
-                                    RejectedQuantity = detailReader.GetInt32(3),
-                                    PassedQuantity = detailReader.GetInt32(4),
-                                    Status = detailReader.GetString(5),
-                                    Mrp = detailReader.GetDecimal(6),
-                                    BatchNumber = detailReader.IsDBNull(7) ? null : detailReader.GetString(7),
-                                    Remarks1 = detailReader.IsDBNull(8) ? null : detailReader.GetString(8),
-                                    Remarks2 = detailReader.IsDBNull(9) ? null : detailReader.GetString(9),
-                                    QuantityAsPerParty = detailReader.GetInt32(10),
-                                    ExpiryDate = detailReader.IsDBNull(11) ? DateTime.MinValue : detailReader.GetDateTime(11),
-                                    Demandedbyparty = detailReader.IsDBNull(12) ? null : detailReader.GetString(12),
-                                    Approvedbycompany = detailReader.IsDBNull(13) ? null : detailReader.GetString(13),
-                                    Passedstatus = detailReader.IsDBNull(14) ? null : detailReader.GetString(14),
-                                    Rejectedstatus = detailReader.IsDBNull(15) ? null : detailReader.GetString(15),
-                                    ReturnToParty = !detailReader.IsDBNull(16) && detailReader.GetBoolean(16),
-                                });
+                                    int grnId = detailReader.GetInt32(0);
+                                    var detailDto = new GRNDetailDto
+                                    {
+                                        ProductId = detailReader.GetInt32(1),
+                                        ProductName = detailReader.GetString(2),
+                                        ReceivedQuantity = detailReader.GetInt32(3),
+                                        RejectedQuantity = detailReader.GetInt32(4),
+                                        PassedQuantity = detailReader.GetInt32(5),
+                                        Status = detailReader.GetString(6),
+                                        Mrp = detailReader.GetDecimal(7),
+                                        BatchNumber = detailReader.IsDBNull(8) ? null : detailReader.GetString(8),
+                                        Remarks1 = detailReader.IsDBNull(9) ? null : detailReader.GetString(9),
+                                        Remarks2 = detailReader.IsDBNull(10) ? null : detailReader.GetString(10),
+                                        QuantityAsPerParty = detailReader.GetInt32(11),
+                                        ExpiryDate = detailReader.IsDBNull(12) ? DateTime.MinValue : detailReader.GetDateTime(12),
+                                        Demandedbyparty = detailReader.IsDBNull(13) ? null : detailReader.GetString(13),
+                                        Approvedbycompany = detailReader.IsDBNull(14) ? null : detailReader.GetString(14),
+                                        Passedstatus = detailReader.IsDBNull(15) ? null : detailReader.GetString(15),
+                                        Rejectedstatus = detailReader.IsDBNull(16) ? null : detailReader.GetString(16),
+                                        ReturnToParty = !detailReader.IsDBNull(17) && detailReader.GetBoolean(17),
+                                    };
+
+                                    if (grnMap.TryGetValue(grnId, out var grn))
+                                    {
+                                        grn.Grndetails.Add(detailDto);
+                                    }
+                                }
                             }
                         }
                     }
@@ -1064,41 +1119,61 @@ QuantityAsPerParty, ExpiryDate,Demandedbyparty,Approvedbycompany,Passedstatus,Re
                 }
 
                 // Fetch GRN details
-                foreach (var grn in grnList)
+                if (grnList.Count > 0)
                 {
-                    string detailQuery = @"
-                                    SELECT ProductId, p.name AS ProductName ,  ReceivedQuantity, RejectedQuantity, PassedQuantity, Status, Mrp,
-                                            BatchNumber, Remarks1, Remarks2, QuantityAsPerParty, ExpiryDate,Demandedbyparty,Approvedbycompany,Passedstatus,Rejectedstatus,ReturnToParty,Quantity
+                    var grnMap = grnList.ToDictionary(g => g.Id);
+                    var grnIds = grnList.Select(g => g.Id).ToList();
+                    const int chunkSize = 1000;
+
+                    for (int i = 0; i < grnIds.Count; i += chunkSize)
+                    {
+                        var chunk = grnIds.Skip(i).Take(chunkSize).ToList();
+                        var parameterNames = chunk.Select((id, index) => $"@GrnId{index}").ToList();
+                        string detailQuery = $@"
+                                    SELECT gd.GrnId, gd.ProductId, p.name AS ProductName ,  gd.ReceivedQuantity, gd.RejectedQuantity, gd.PassedQuantity, gd.Status, gd.Mrp,
+                                            gd.BatchNumber, gd.Remarks1, gd.Remarks2, gd.QuantityAsPerParty, gd.ExpiryDate, gd.Demandedbyparty, gd.Approvedbycompany, gd.Passedstatus, gd.Rejectedstatus, gd.ReturnToParty
                                     FROM GrnDetails gd
                                     JOIN product p ON gd.ProductId = p.product_id
-                                    WHERE gd.GrnId = @GrnId;";
-                    using (SqlCommand detailCmd = new SqlCommand(detailQuery, conn))
-                    {
-                        detailCmd.Parameters.AddWithValue("@GrnId", grn.Id);
-                        using (SqlDataReader detailReader = await detailCmd.ExecuteReaderAsync())
+                                    WHERE gd.GrnId IN ({string.Join(",", parameterNames)});";
+
+                        using (SqlCommand detailCmd = new SqlCommand(detailQuery, conn))
                         {
-                            while (await detailReader.ReadAsync())
+                            for (int j = 0; j < chunk.Count; j++)
                             {
-                                grn.Grndetails.Add(new GRNDetailDto
+                                detailCmd.Parameters.AddWithValue($"@GrnId{j}", chunk[j]);
+                            }
+
+                            using (SqlDataReader detailReader = await detailCmd.ExecuteReaderAsync())
+                            {
+                                while (await detailReader.ReadAsync())
                                 {
-                                    ProductId = detailReader.GetInt32(0),
-                                    ProductName = detailReader.GetString(1),
-                                    ReceivedQuantity = detailReader.GetInt32(2),
-                                    RejectedQuantity = detailReader.GetInt32(3),
-                                    PassedQuantity = detailReader.GetInt32(4),
-                                    Status = detailReader.GetString(5),
-                                    Mrp = detailReader.GetDecimal(6),
-                                    BatchNumber = detailReader.IsDBNull(7) ? null : detailReader.GetString(7),
-                                    Remarks1 = detailReader.IsDBNull(8) ? null : detailReader.GetString(8),
-                                    Remarks2 = detailReader.IsDBNull(9) ? null : detailReader.GetString(9),
-                                    QuantityAsPerParty = detailReader.GetInt32(10),
-                                    ExpiryDate = detailReader.IsDBNull(11) ? DateTime.MinValue : detailReader.GetDateTime(11),
-                                    Demandedbyparty = detailReader.IsDBNull(12) ? null : detailReader.GetString(12),
-                                    Approvedbycompany = detailReader.IsDBNull(13) ? null : detailReader.GetString(13),
-                                    Passedstatus = detailReader.IsDBNull(14) ? null : detailReader.GetString(14),
-                                    Rejectedstatus = detailReader.IsDBNull(15) ? null : detailReader.GetString(15),
-                                    ReturnToParty = !detailReader.IsDBNull(16) && detailReader.GetBoolean(16),
-                                });
+                                    int grnId = detailReader.GetInt32(0);
+                                    var detailDto = new GRNDetailDto
+                                    {
+                                        ProductId = detailReader.GetInt32(1),
+                                        ProductName = detailReader.GetString(2),
+                                        ReceivedQuantity = detailReader.GetInt32(3),
+                                        RejectedQuantity = detailReader.GetInt32(4),
+                                        PassedQuantity = detailReader.GetInt32(5),
+                                        Status = detailReader.GetString(6),
+                                        Mrp = detailReader.GetDecimal(7),
+                                        BatchNumber = detailReader.IsDBNull(8) ? null : detailReader.GetString(8),
+                                        Remarks1 = detailReader.IsDBNull(9) ? null : detailReader.GetString(9),
+                                        Remarks2 = detailReader.IsDBNull(10) ? null : detailReader.GetString(10),
+                                        QuantityAsPerParty = detailReader.GetInt32(11),
+                                        ExpiryDate = detailReader.IsDBNull(12) ? DateTime.MinValue : detailReader.GetDateTime(12),
+                                        Demandedbyparty = detailReader.IsDBNull(13) ? null : detailReader.GetString(13),
+                                        Approvedbycompany = detailReader.IsDBNull(14) ? null : detailReader.GetString(14),
+                                        Passedstatus = detailReader.IsDBNull(15) ? null : detailReader.GetString(15),
+                                        Rejectedstatus = detailReader.IsDBNull(16) ? null : detailReader.GetString(16),
+                                        ReturnToParty = !detailReader.IsDBNull(17) && detailReader.GetBoolean(17),
+                                    };
+
+                                    if (grnMap.TryGetValue(grnId, out var grn))
+                                    {
+                                        grn.Grndetails.Add(detailDto);
+                                    }
+                                }
                             }
                         }
                     }
