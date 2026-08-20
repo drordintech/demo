@@ -39,7 +39,7 @@ export const FIELD_CONFIG: Record<string, FieldConfig> = {
 export const TAB_COLUMNS: Record<string, string[]> = {
   intake: ['sno', 'product', 'asPerParty', 'received', 'shortageQty'],
   center: [
-    'sno', 'product', 'passed', 'rejected', 'miscellaneous', 'status',
+    'sno', 'product', 'received', 'shortageQty', 'passed', 'rejected', 'miscellaneous', 'status',
     'returnToParty', 'retQty', 'remarks'
   ]
 };
@@ -127,7 +127,9 @@ export class grnComponent implements OnInit {
   selectedgrnstatus: string = '';  selectedgrnOldstatus: string = '';
   dockernumber:string='';
   invoiceReceiptImage: string | null = null;
+  invoiceDocuments: any[] = [];
   grnListRptoldInvoiceReceiptImage: string = '';
+  grnListRptoldDocuments: any[] = [];
   suppliers: Supplier[] = [];
   filteredSuppliers: Supplier[] = [];
   filteredSuppliers2: Supplier[] = [];
@@ -1105,6 +1107,7 @@ export class grnComponent implements OnInit {
       Grnstatus: this.selectedgrnstatus || '',
       supplierId: Number(this.selectedsupplier) || 0,
       invoiceReceiptImage: this.invoiceReceiptImage || '',
+      documents: this.invoiceDocuments,
       grnDetails: this.rows.map(grn => ({
         productId: grn.selectedProduct || (typeof grn.product === 'number' ? grn.product : grn.product?.productId || null),
         quantityAsPerParty: Number(grn.quantityasperparty ?? grn.asPerParty ?? 0),
@@ -1134,18 +1137,6 @@ export class grnComponent implements OnInit {
       next: (response) => {
         this.syncDispatchDefaults();
         this.buildChallanList();
-        
-        if (!this.challanList.length) {
-          this.challanList = this.rows
-            .filter(r => {
-              const prodId = r.selectedProduct || (typeof r.product === 'number' ? r.product : r.product?.productId);
-              return !!prodId;
-            })
-            .map(r => ({
-              ...r,
-              retQty: Number(r.retQty) > 0 ? r.retQty : (Number(r.rejected) > 0 ? r.rejected : (r.receivedQuantity ?? r.received ?? 0))
-            }));
-        }
 
         if (this.challanList.length > 0) {
           this.savechallan();
@@ -1770,6 +1761,7 @@ export class grnComponent implements OnInit {
       this.grnListRptoldResponsiblePerson=grn.responsiblePerson;
       this.grnListRptoldgrnStatus=grn.grnStatus;
       this.grnListRptoldInvoiceReceiptImage = grn.invoiceReceiptImage || '';
+      this.grnListRptoldDocuments = [...(grn.documents || [])];
       debugger
       this.selectedgrnOldstatus=grn.grnStatus;
       this.grnListRptolddokerno=grn.dockerNumber;
@@ -1856,6 +1848,7 @@ export class grnComponent implements OnInit {
       dockerNo:this.grnListRptolddokerno,
       supplierId: this.grnListRptoldSupplierID,
       invoiceReceiptImage: this.grnListRptoldInvoiceReceiptImage || '',
+      documents: this.grnListRptoldDocuments,
       grnDetails: this.grnListRptold.map(grn => ({
       productId: grn.productId,
         quantityAsPerParty: grn.quantityAsPerParty,
@@ -2023,18 +2016,18 @@ export class grnComponent implements OnInit {
   }
 
   onInvoiceImageSelected(event: any): void {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e: any) => {
-        this.invoiceReceiptImage = e.target.result;
-      };
-      reader.readAsDataURL(file);
-    }
+    const files = Array.from(event.target.files || []) as File[];
+    this.readDocuments(files).then(documents => {
+      this.invoiceDocuments = [...this.invoiceDocuments, ...documents];
+      if (!this.invoiceReceiptImage && this.invoiceDocuments.length) {
+        this.invoiceReceiptImage = this.invoiceDocuments[0].fileContent;
+      }
+    });
   }
 
   clearInvoiceImage(): void {
     this.invoiceReceiptImage = null;
+    this.invoiceDocuments = [];
     const fileInput = document.getElementById('invoiceImage') as HTMLInputElement;
     if (fileInput) {
       fileInput.value = '';
@@ -2042,18 +2035,18 @@ export class grnComponent implements OnInit {
   }
 
   onEditInvoiceImageSelected(event: any): void {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e: any) => {
-        this.grnListRptoldInvoiceReceiptImage = e.target.result;
-      };
-      reader.readAsDataURL(file);
-    }
+    const files = Array.from(event.target.files || []) as File[];
+    this.readDocuments(files).then(documents => {
+      this.grnListRptoldDocuments = [...this.grnListRptoldDocuments, ...documents];
+      if (!this.grnListRptoldInvoiceReceiptImage && this.grnListRptoldDocuments.length) {
+        this.grnListRptoldInvoiceReceiptImage = this.grnListRptoldDocuments[0].fileContent;
+      }
+    });
   }
 
   clearEditInvoiceImage(): void {
     this.grnListRptoldInvoiceReceiptImage = '';
+    this.grnListRptoldDocuments = [];
     const fileInput = document.getElementById('editInvoiceImage') as HTMLInputElement;
     if (fileInput) {
       fileInput.value = '';
@@ -2068,6 +2061,42 @@ export class grnComponent implements OnInit {
       }
     }
   }
+
+  private readDocuments(files: File[]): Promise<any[]> {
+    return Promise.all(files.map(file => new Promise<any>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve({ fileName: file.name, contentType: file.type || 'application/octet-stream', fileContent: reader.result as string });
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    })));
+  }
+
+  removeInvoiceDocument(index: number, isEdit = false): void {
+    const documents = isEdit ? this.grnListRptoldDocuments : this.invoiceDocuments;
+    documents.splice(index, 1);
+    if (isEdit) {
+      this.grnListRptoldInvoiceReceiptImage = documents[0]?.fileContent || '';
+    } else {
+      this.invoiceReceiptImage = documents[0]?.fileContent || null;
+    }
+  }
+
+  downloadDocument(document: any): void {
+    if (!document?.fileContent) return;
+    const link = window.document.createElement('a');
+    link.href = document.fileContent;
+    link.download = document.fileName || 'grn-document';
+    link.click();
+  }
+
+  openDocument(document: any): void {
+    if (!document?.fileContent) return;
+    const newTab = window.open(document.fileContent, '_blank', 'noopener,noreferrer');
+    if (!newTab) {
+      this.downloadDocument(document);
+    }
+  }
+
 }
 
 

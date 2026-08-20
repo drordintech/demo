@@ -18,6 +18,39 @@ namespace APIDRODIN.Controllers
         {
             _connectionString = configuration.GetConnectionString("DefaultConnection")!;
             EnsureInvoiceReceiptImageColumnExists();
+            EnsureGrnDocumentsTableExists();
+        }
+
+        private void EnsureGrnDocumentsTableExists()
+        {
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(_connectionString))
+                {
+                    connection.Open();
+                    string query = @"
+                        IF OBJECT_ID('GRNDocuments', 'U') IS NULL
+                        BEGIN
+                            CREATE TABLE GRNDocuments (
+                                Id INT IDENTITY(1,1) PRIMARY KEY,
+                                GrnId INT NOT NULL,
+                                FileName NVARCHAR(255) NOT NULL,
+                                ContentType NVARCHAR(150) NOT NULL,
+                                FileContent NVARCHAR(MAX) NOT NULL,
+                                CreatedAt DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+                                CONSTRAINT FK_GRNDocuments_GRN FOREIGN KEY (GrnId) REFERENCES GRN(Id) ON DELETE CASCADE
+                            );
+                        END";
+                    using (SqlCommand command = new SqlCommand(query, connection))
+                    {
+                        command.ExecuteNonQuery();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error ensuring GRNDocuments table exists: " + ex.Message);
+            }
         }
 
         private void EnsureInvoiceReceiptImageColumnExists()
@@ -203,6 +236,8 @@ namespace APIDRODIN.Controllers
                                 await cmd.ExecuteNonQueryAsync();
                             }
                         }
+
+                        await ReplaceGrnDocumentsAsync(connection, transaction, grnId, grnDto.Documents);
 
                         // Commit transaction if everything succeeds
                         transaction.Commit();
@@ -428,6 +463,28 @@ namespace APIDRODIN.Controllers
                         }
                     }
                 }
+
+                foreach (var grn in grnList)
+                {
+                    const string documentQuery = "SELECT Id, FileName, ContentType, FileContent FROM GRNDocuments WHERE GrnId = @GrnId ORDER BY Id";
+                    using (SqlCommand documentCmd = new SqlCommand(documentQuery, conn))
+                    {
+                        documentCmd.Parameters.AddWithValue("@GrnId", grn.Id);
+                        using (SqlDataReader documentReader = await documentCmd.ExecuteReaderAsync())
+                        {
+                            while (await documentReader.ReadAsync())
+                            {
+                                grn.Documents.Add(new GRNDocumentDto
+                                {
+                                    Id = documentReader.GetInt32(0),
+                                    FileName = documentReader.GetString(1),
+                                    ContentType = documentReader.GetString(2),
+                                    FileContent = documentReader.GetString(3)
+                                });
+                            }
+                        }
+                    }
+                }
             }
             return grnList;
         }
@@ -609,6 +666,8 @@ namespace APIDRODIN.Controllers
                             }
                         }
 
+                        await ReplaceGrnDocumentsAsync(conn, transaction, grnId, grnDto.Documents);
+
                         // Commit transaction
                         transaction.Commit();
                         return Ok(new { Message = "GRN updated successfully" });
@@ -618,6 +677,29 @@ namespace APIDRODIN.Controllers
                         transaction.Rollback();
                         return StatusCode(500, new { message = "An error occurred while processing the request.", error = ex.Message });
                     }
+                }
+            }
+        }
+
+        private static async Task ReplaceGrnDocumentsAsync(SqlConnection connection, SqlTransaction transaction, int grnId, List<GRNDocumentDto>? documents)
+        {
+            using (SqlCommand deleteCmd = new SqlCommand("DELETE FROM GRNDocuments WHERE GrnId = @GrnId", connection, transaction))
+            {
+                deleteCmd.Parameters.AddWithValue("@GrnId", grnId);
+                await deleteCmd.ExecuteNonQueryAsync();
+            }
+
+            if (documents == null) return;
+            const string insertQuery = "INSERT INTO GRNDocuments (GrnId, FileName, ContentType, FileContent) VALUES (@GrnId, @FileName, @ContentType, @FileContent)";
+            foreach (var document in documents.Where(d => !string.IsNullOrWhiteSpace(d.FileContent)))
+            {
+                using (SqlCommand insertCmd = new SqlCommand(insertQuery, connection, transaction))
+                {
+                    insertCmd.Parameters.AddWithValue("@GrnId", grnId);
+                    insertCmd.Parameters.AddWithValue("@FileName", document.FileName ?? "document");
+                    insertCmd.Parameters.AddWithValue("@ContentType", document.ContentType ?? "application/octet-stream");
+                    insertCmd.Parameters.AddWithValue("@FileContent", document.FileContent);
+                    await insertCmd.ExecuteNonQueryAsync();
                 }
             }
         }
@@ -1212,6 +1294,7 @@ namespace APIDRODIN.Controllers
             public string GrnStatus { get; set; } = null!;
             public string ChallanNumber { get; set; } = null!;
             public string? InvoiceReceiptImage { get; set; }
+            public List<GRNDocumentDto> Documents { get; set; } = new List<GRNDocumentDto>();
             public DateTime? CreatedAt { get; set; }
             public List<GRNDetailDto> Grndetails { get; set; } = new List<GRNDetailDto>();
         }
@@ -1246,6 +1329,7 @@ namespace APIDRODIN.Controllers
             public int SupplierId { get; set; }
             
             public string? InvoiceReceiptImage { get; set; }
+            public List<GRNDocumentDto>? Documents { get; set; }
            
             public List<GRNDetailDto> GrnDetails { get; set; }
         }
@@ -1287,6 +1371,14 @@ namespace APIDRODIN.Controllers
             public int? Quantity { get; set; }
 
             public DateTime UpdatedDate { get; set; }
+        }
+
+        public class GRNDocumentDto
+        {
+            public int Id { get; set; }
+            public string FileName { get; set; } = string.Empty;
+            public string ContentType { get; set; } = "application/octet-stream";
+            public string FileContent { get; set; } = string.Empty;
         }
 
         public class ChallanDto
