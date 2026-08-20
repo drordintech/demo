@@ -5,7 +5,7 @@ import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { Router } from '@angular/router';
 
 // project import
-import { SharedModule } from 'src/app/theme/shared/shared.module';
+import { SharedModule } from '../../theme/shared/shared.module';
 import { BajajChartComponent } from './bajaj-chart/bajaj-chart.component';
 import { GoogleChartsModule } from 'angular-google-charts';
 import { ChartType } from 'angular-google-charts';

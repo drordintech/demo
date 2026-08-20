@@ -3,7 +3,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NgbNavModule, NgbModal, NgbDatepickerModule, NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
-import { SharedModule } from 'src/app/theme/shared/shared.module';
+import { SharedModule } from '../../theme/shared/shared.module';
 import { Modal } from 'bootstrap';
 import { product, productService } from '../product/product.service';
 import { Supplier, SupplierService } from '../supplier/supplier.service';

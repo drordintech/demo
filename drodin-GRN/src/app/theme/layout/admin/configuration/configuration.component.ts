@@ -1,5 +1,5 @@
 import { Component, OnInit, Renderer2 } from '@angular/core';
-import { BerryConfig } from 'src/app/app-config';
+import { BerryConfig } from '../../../../app-config';
 
 @Component({
   selector: 'app-configuration',

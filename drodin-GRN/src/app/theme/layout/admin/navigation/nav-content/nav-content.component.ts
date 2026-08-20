@@ -4,7 +4,7 @@ import { Location, LocationStrategy } from '@angular/common';
 
 // project import
 import { NavigationItem } from '../navigation';
-import { environment } from 'src/environments/environment';
+import { environment } from '../../../../../../environments/environment';
 
 @Component({
   selector: 'app-nav-content',
