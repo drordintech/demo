@@ -144,6 +144,7 @@ namespace APIDRODIN.Controllers
         }
 
         [HttpPost("SaveGRN")]
+        [RequestSizeLimit(100 * 1024 * 1024)]
         public async Task<IActionResult> SaveGRN([FromBody] GRNDto grnDto)
         {
             if (grnDto == null) return BadRequest(new { message = "Invalid request: GRN data is missing." });
