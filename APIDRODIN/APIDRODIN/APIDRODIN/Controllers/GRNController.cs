@@ -168,9 +168,9 @@ namespace APIDRODIN.Controllers
             {
                 return BadRequest(new { message = "Supplier ID is required and should be a valid number." });
             }
-            if (grnDto.GrnDetails == null || !grnDto.GrnDetails.Any())
+            if (grnDto.GrnDetails == null || !grnDto.GrnDetails.Any(d => d.ProductId > 0))
             {
-                return BadRequest(new { message = "At least one GRN detail entry is required." });
+                return BadRequest(new { message = "At least one GRN detail entry with a valid product is required." });
             }
 
             int grnId = 0; // This will store the inserted GRN ID
@@ -210,7 +210,7 @@ namespace APIDRODIN.Controllers
                                                         (@GrnId, @ProductId,  @QuantityAsPerParty, @ReceivedQuantity, @RejectedQuantity, @PassedQuantity, @Status, @Mrp, @BatchNumber, @ExpiryDate, @Remarks1,
                                                         @Remarks2,@Demandedbyparty,@Approvedbycompany,@Rejectedstatus,@Passedstatus,@ReturnToParty,@Quantity);";
 
-                        foreach (var detail in grnDto.GrnDetails)
+                        foreach (var detail in grnDto.GrnDetails.Where(d => d.ProductId > 0))
                         {
                             using (SqlCommand cmd = new SqlCommand(insertDetailsQuery, connection, transaction))
                             {
@@ -257,6 +257,32 @@ namespace APIDRODIN.Controllers
             if (date == null || date.Value == DateTime.MinValue)
                 return DBNull.Value;
             return date.Value;
+        }
+
+        public object SqlDateOrNull(string? date)
+        {
+            if (string.IsNullOrWhiteSpace(date) || date.StartsWith("0001-01-01", StringComparison.Ordinal))
+            {
+                return DBNull.Value;
+            }
+
+            if (DateTime.TryParse(date, out var parsed) && parsed != DateTime.MinValue)
+            {
+                return parsed;
+            }
+
+            return DBNull.Value;
+        }
+
+        private static string? ReadExpiryDate(SqlDataReader reader, int index)
+        {
+            if (reader.IsDBNull(index))
+            {
+                return null;
+            }
+
+            var dt = reader.GetDateTime(index);
+            return dt == DateTime.MinValue ? null : dt.ToString("yyyy-MM-dd");
         }
 
         [HttpPost("SaveChallan")]
@@ -444,7 +470,7 @@ namespace APIDRODIN.Controllers
                                         Remarks1 = detailReader.IsDBNull(8) ? string.Empty : detailReader.GetString(8),
                                         Remarks2 = detailReader.IsDBNull(9) ? string.Empty : detailReader.GetString(9),
                                         QuantityAsPerParty = detailReader.IsDBNull(10) ? 0 : detailReader.GetInt32(10),
-                                        ExpiryDate = detailReader.IsDBNull(11) ? DateTime.MinValue : detailReader.GetDateTime(11),
+                                        ExpiryDate = ReadExpiryDate(detailReader, 11),
                                         ProductName = detailReader.GetString(12),
                                         Demandedbyparty = detailReader.IsDBNull(13) ? string.Empty : detailReader.GetString(13),
                                         Approvedbycompany = detailReader.IsDBNull(14) ? string.Empty : detailReader.GetString(14),
@@ -639,7 +665,7 @@ namespace APIDRODIN.Controllers
                         string insertGrnDetailsQuery = @"INSERT INTO Grndetails (GrnId, ProductId,  QuantityAsPerParty, ReceivedQuantity, RejectedQuantity, PassedQuantity, Status, Mrp, BatchNumber, ExpiryDate, Remarks1, Remarks2,Demandedbyparty,Approvedbycompany,Rejectedstatus,Passedstatus,ReturnToParty,Quantity) 
                                                          VALUES (@GrnId, @ProductId,  @QuantityAsPerParty, @ReceivedQuantity, @RejectedQuantity, @PassedQuantity, @Status, @Mrp, @BatchNumber, @ExpiryDate, @Remarks1, @Remarks2,@Demandedbyparty,@Approvedbycompany,@Rejectedstatus,@Passedstatus,@ReturnToParty,@Quantity)";
 
-                        foreach (var detail in grnDto.GrnDetails)
+                        foreach (var detail in (grnDto.GrnDetails ?? new List<GRNDetailDto>()).Where(d => d.ProductId > 0))
                         {
                             using (SqlCommand insertCmd = new SqlCommand(insertGrnDetailsQuery, conn, transaction))
                             {
@@ -812,7 +838,7 @@ namespace APIDRODIN.Controllers
                                         Remarks1 = detailReader.IsDBNull(9) ? null : detailReader.GetString(9),
                                         Remarks2 = detailReader.IsDBNull(10) ? null : detailReader.GetString(10),
                                         QuantityAsPerParty = detailReader.GetInt32(11),
-                                        ExpiryDate = detailReader.IsDBNull(12) ? DateTime.MinValue : detailReader.GetDateTime(12),
+                                        ExpiryDate = ReadExpiryDate(detailReader, 12),
                                         Demandedbyparty = detailReader.IsDBNull(13) ? null : detailReader.GetString(13),
                                         Approvedbycompany = detailReader.IsDBNull(14) ? null : detailReader.GetString(14),
                                         Passedstatus = detailReader.IsDBNull(15) ? null : detailReader.GetString(15),
@@ -1120,7 +1146,7 @@ namespace APIDRODIN.Controllers
                                         Remarks1 = detailReader.IsDBNull(9) ? null : detailReader.GetString(9),
                                         Remarks2 = detailReader.IsDBNull(10) ? null : detailReader.GetString(10),
                                         QuantityAsPerParty = detailReader.GetInt32(11),
-                                        ExpiryDate = detailReader.IsDBNull(12) ? DateTime.MinValue : detailReader.GetDateTime(12),
+                                        ExpiryDate = ReadExpiryDate(detailReader, 12),
                                         Demandedbyparty = detailReader.IsDBNull(13) ? null : detailReader.GetString(13),
                                         Approvedbycompany = detailReader.IsDBNull(14) ? null : detailReader.GetString(14),
                                         Passedstatus = detailReader.IsDBNull(15) ? null : detailReader.GetString(15),
@@ -1243,7 +1269,7 @@ namespace APIDRODIN.Controllers
                                         Remarks1 = detailReader.IsDBNull(9) ? null : detailReader.GetString(9),
                                         Remarks2 = detailReader.IsDBNull(10) ? null : detailReader.GetString(10),
                                         QuantityAsPerParty = detailReader.GetInt32(11),
-                                        ExpiryDate = detailReader.IsDBNull(12) ? DateTime.MinValue : detailReader.GetDateTime(12),
+                                        ExpiryDate = ReadExpiryDate(detailReader, 12),
                                         Demandedbyparty = detailReader.IsDBNull(13) ? null : detailReader.GetString(13),
                                         Approvedbycompany = detailReader.IsDBNull(14) ? null : detailReader.GetString(14),
                                         Passedstatus = detailReader.IsDBNull(15) ? null : detailReader.GetString(15),
@@ -1319,11 +1345,11 @@ namespace APIDRODIN.Controllers
         public class GRNDto
         {
             [Required]
-            public string GrnNumber { get; set; }
+            public string GrnNumber { get; set; } = string.Empty;
 
             public int ResponsiblePerson { get; set; }
-            public string DockerNo { get; set; }
-            public string Grnstatus { get; set; }
+            public string? DockerNo { get; set; }
+            public string? Grnstatus { get; set; }
 
             [Required]
             public int SupplierId { get; set; }
@@ -1331,13 +1357,12 @@ namespace APIDRODIN.Controllers
             public string? InvoiceReceiptImage { get; set; }
             public List<GRNDocumentDto>? Documents { get; set; }
            
-            public List<GRNDetailDto> GrnDetails { get; set; }
+            public List<GRNDetailDto>? GrnDetails { get; set; }
         }
 
 
         public class GRNDetailDto
         {
-            [Required]
             public int ProductId { get; set; }
 
             public string? ProductName { get; set; }
@@ -1360,7 +1385,10 @@ namespace APIDRODIN.Controllers
 
             public string? BatchNumber { get; set; }
 
-            public DateTime? ExpiryDate { get; set; }
+            /// <summary>
+            /// Bound as string so "" / null / invalid values do not cause HTTP 400.
+            /// </summary>
+            public string? ExpiryDate { get; set; }
 
             public string? Remarks1 { get; set; }
 
@@ -1370,7 +1398,7 @@ namespace APIDRODIN.Controllers
             public bool ReturnToParty { get; set; }
             public int? Quantity { get; set; }
 
-            public DateTime UpdatedDate { get; set; }
+            public DateTime? UpdatedDate { get; set; }
         }
 
         public class GRNDocumentDto

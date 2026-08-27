@@ -418,6 +418,8 @@ table.table-sm td {
   overflow: hidden;
   border: 1px solid #e2e8f0;
   border-radius: 10px;
+  box-shadow: none;
+  outline: none;
 }
 
 .fixed-table {
@@ -855,6 +857,8 @@ table.table-sm td {
   border-collapse: collapse !important;
   border-spacing: 0 !important;
   border: 1px solid #2196f3;
+  box-shadow: none !important;
+  outline: none !important;
 
   thead {
     tr {
