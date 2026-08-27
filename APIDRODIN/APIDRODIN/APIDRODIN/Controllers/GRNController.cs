@@ -387,8 +387,7 @@ namespace APIDRODIN.Controllers
             }
         }
 
-        [HttpGet("getGrnReport")]
-        public async Task<IActionResult> GetGrnReport([FromQuery] GrnReportFilterDto filter)
+        private async Task<IActionResult> GetGrnReportLegacy([FromQuery] GrnReportFilterDto filter)
         {
             try
             {
@@ -723,20 +722,6 @@ namespace APIDRODIN.Controllers
             }
         }
 
-        [HttpGet("getGrnReport")]
-        public async Task<IActionResult> GetGrnReport([FromQuery] GrnReportFilterDto filter)
-        {
-            try
-            {
-                var reportData = await GetGrnReportAsync(filter);
-                return Ok(reportData);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "An error occurred while fetching GRN report.", error = ex.Message });
-            }
-        }
-
         public async Task<IEnumerable<GrnDtos>> GetGrnReportAsync(GrnReportFilterDto filter)
         {
             string connectionString = _connectionString;
@@ -981,9 +966,9 @@ namespace APIDRODIN.Controllers
         [HttpGet("getGrnReportByState")]
         public async Task<IActionResult> GetGrnReportByState([FromQuery] GrnStateWiseReportFilterDto filter)
         {
+            var grnList = new List<GrnDtos>();
             try
             {
-                var grnList = new List<GrnDtos>();
                 using (SqlConnection conn = new SqlConnection(_connectionString))
                 {
                     await conn.OpenAsync();
@@ -1018,8 +1003,6 @@ namespace APIDRODIN.Controllers
                             }
                         }
                     }
-                }
-
                 // Fetch GRN details
                 if (grnList.Count > 0)
                 {
@@ -1081,15 +1064,18 @@ namespace APIDRODIN.Controllers
                     }
                 }
             }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while fetching GRN report by state.", error = ex.Message });
+            }
 
-            return grnList;
+            return Ok(grnList);
         }
 
 
-        public async Task<IEnumerable<GrnDtos>> GetGrnReportAsync(GrnStateWiseReportFilterDto filter)
+        public async Task<IEnumerable<GrnDtos>> GetGrnReportAsync(GrnResponsiblePersonReportFilterDto filter)
         {
-            try
-            {
                 var grnList = new List<GrnDtos>();
                 using (SqlConnection conn = new SqlConnection(_connectionString))
                 {
@@ -1125,8 +1111,6 @@ namespace APIDRODIN.Controllers
                             }
                         }
                     }
-                }
-
                 // Fetch GRN details
                 if (grnList.Count > 0)
                 {
@@ -1187,9 +1171,9 @@ namespace APIDRODIN.Controllers
                         }
                     }
                 }
-            }
+                }
 
-            return grnList;
+                return grnList;
         }
 
     public class ResponsiblePerson
@@ -1209,6 +1193,13 @@ namespace APIDRODIN.Controllers
         public DateTime? date { get; set; }
         public DateTime? dateFrom { get; set; }
         public DateTime? dateTo { get; set; }
+    }
+
+    public class GrnPeriodFilterDto
+    {
+        public int? SupplierId { get; set; }
+        public int? Year { get; set; }
+        public int? Month { get; set; }
     }
 
         public class GrnDtos
@@ -1346,4 +1337,5 @@ namespace APIDRODIN.Controllers
         public string? DebitNoteInvoice { get; set; } = null;
         public string? DateTime { get; set; } = null;
     }
+}
 }
