@@ -988,7 +988,7 @@ export class grnComponent implements OnInit {
       statusofmiscellaneous: '',
       RetrunToParty: false,
       returnToParty: false,
-      retQty: 0,
+      retQty: null as any,
       filteredProducts: [...this.products]
     };
     this.rows.push(newRow);
@@ -1168,7 +1168,7 @@ export class grnComponent implements OnInit {
       supplierId: Number(this.selectedsupplier) || 0,
       challanDetails: this.challanList.map(grn => ({
         productId: grn.selectedProduct || (typeof grn.product === 'number' ? grn.product : grn.product?.productId),
-        quantity: Number(grn.retQty) > 0 ? Number(grn.retQty) : Number(grn.rejected || 0),
+        quantity: this.getChallanQuantity(grn),
         remarks: grn.remarks || '',
         aproxvalue: Number(grn.MRP ?? grn.mrp ?? 0),
       }))
@@ -1185,6 +1185,15 @@ export class grnComponent implements OnInit {
     
   }
 
+  getChallanQuantity(grn: any): number {
+    return Number(grn?.retQty ?? grn?.quantity ?? 0);
+  }
+
+  getReturnQtyDisplay(grn: any): string {
+    const quantity = this.getChallanQuantity(grn);
+    return quantity > 0 ? String(quantity) : '';
+  }
+
   /** Rows that belong on Challan: Return ticked, Ret Qty > 0, or reject reason is return-to-party. */
   buildChallanList(): any[] {
     this.challanList = this.rows.filter(grn => {
@@ -1196,10 +1205,9 @@ export class grnComponent implements OnInit {
       return isReturnFlag || retQty > 0 || (rejected > 0 && isReturnStatus);
     }).map(grn => {
       const retQty = Number(grn.retQty || 0);
-      const rejected = Number(grn.rejected || 0);
       return {
         ...grn,
-        retQty: retQty > 0 ? retQty : (rejected > 0 ? rejected : 0),
+        retQty: retQty > 0 ? retQty : null,
         RetrunToParty: true,
         returnToParty: true
       };
@@ -1227,9 +1235,6 @@ export class grnComponent implements OnInit {
     if (s.includes('retrun') || s.includes('return')) {
       grn.returnToParty = true;
       grn.RetrunToParty = true;
-      if (!Number(grn.retQty) && Number(grn.rejected) > 0) {
-        grn.retQty = grn.rejected;
-      }
     }
   }
 

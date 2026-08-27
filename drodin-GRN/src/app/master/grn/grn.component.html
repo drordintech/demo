@@ -209,7 +209,33 @@
                       </div>
                     </td>
                     <th class="label-blue-bg">INVOICE / DOCUMENTS</th>
-                    <td colspan="3"><span class="text-muted small">Upload from Repair Center Dispatch Details</span></td>
+                    <td colspan="3">
+                      <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <input type="file" id="intakeDocuments" multiple
+                          (change)="onInvoiceImageSelected($event)"
+                          accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
+                          class="form-control form-control-sm" style="max-width: 320px; font-size: 12px;" />
+                        <div class="d-flex align-items-center gap-1 flex-wrap" *ngIf="invoiceDocuments.length">
+                          <span class="badge bg-light text-dark border d-inline-flex align-items-center gap-1 px-2 py-1"
+                            *ngFor="let document of invoiceDocuments; let i = index"
+                            style="font-size: 11px; max-width: 180px;">
+                            <i class="bi bi-paperclip"></i>
+                            <button type="button" class="btn btn-link btn-sm p-0 text-truncate text-dark text-decoration-none"
+                              (click)="openDocument(document)" title="View document" style="font-size: 11px; max-width: 100px;">
+                              {{ document.fileName }}
+                            </button>
+                            <button type="button" class="btn btn-link btn-sm p-0 text-muted"
+                              (click)="downloadDocument(document)" title="Download">
+                              <i class="bi bi-download" style="font-size: 10px;"></i>
+                            </button>
+                            <button type="button" class="btn btn-link btn-sm p-0 text-danger"
+                              (click)="removeInvoiceDocument(i)" title="Remove">
+                              <i class="bi bi-x" style="font-size: 12px;"></i>
+                            </button>
+                          </span>
+                        </div>
+                      </div>
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -1324,7 +1350,7 @@
           <td>{{ grn.mrp }}</td>
           <td>{{ grn.batchNumber || '—' }}</td>
           <td>{{ grn.expiryDate || '—' }}</td>
-          <td>{{ grn.quantity ?? 0 }}</td>
+          <td>{{ getReturnQtyDisplay(grn) }}</td>
           <td class="text-start">{{ grn.remarks1 || '—' }}</td>
         </tr>
       </tbody>
@@ -1416,7 +1442,7 @@ printPOPUPSectionChallan -->
       <tr *ngFor="let grn of filteredGrnOldList(); let i = index">
         <td>{{ i + 1 }}</td>
         <td>{{ getProductName(grn.productId) }}</td>
-        <td>{{ grn.quantity }}</td>
+        <td>{{ getReturnQtyDisplay(grn) }}</td>
         <td>{{grn.mrp}}</td>
       </tr>
     </tbody>
@@ -1542,7 +1568,7 @@ printPOPUPSectionChallan -->
           <td>{{ grn.MRP || 0 }}</td>
           <td>{{ grn.batchno || '—' }}</td>
           <td>{{ grn.expiryDate || '—' }}</td>
-          <td>{{ grn.retQty || 0 }}</td>
+          <td>{{ getReturnQtyDisplay(grn) }}</td>
           <td class="text-start">{{ grn.remarks || '—' }}</td>
         </tr>
       </tbody>
@@ -1632,7 +1658,7 @@ printPOPUPSectionChallan -->
       <tr *ngFor="let grn of challanList; let i = index">
         <td>{{ i + 1 }}</td>
         <td>{{ getProductName(grn.selectedProduct) }}</td>
-        <td>{{ grn.retQty || grn.rejected || 0 }}</td>
+        <td>{{ getReturnQtyDisplay(grn) }}</td>
         <td>{{ grn.MRP || 0 }}</td>
       </tr>
     </tbody>
