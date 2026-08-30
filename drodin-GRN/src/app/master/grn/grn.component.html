@@ -318,18 +318,18 @@
                                   <span class="input-group-text bg-white border-end-0"><i
                                       class="bi bi-search text-muted"></i></span>
                                   <input type="text" class="form-control border-start-0 ps-0" placeholder="Search Product..."
-                                    [(ngModel)]="grn.searchText" (input)="filterProducts(grn)" (click)="$event.stopPropagation()"
-                                    style="box-shadow: none;">
+                                    [(ngModel)]="grn.searchText" (ngModelChange)="filterProducts(grn)"
+                                    (click)="$event.stopPropagation()" style="box-shadow: none;">
                                 </div>
                               </div>
 
                               <div style="max-height: 250px; overflow-y: auto; overflow-x: hidden; padding: 4px 0;">
-                                <button class="dropdown-item" type="button" (click)="grn.selectedProduct = null; grn.searchText = ''; filterProducts(grn);"
+                                <button class="dropdown-item" type="button" (click)="clearProductSelection(grn)"
                                   style="cursor: pointer; font-size: 12px; padding: 6px 10px;">
                                   Select product
                                 </button>
                                 <button class="dropdown-item text-wrap" type="button"
-                                  *ngFor="let product of grn.filteredProducts" (click)="grn.selectedProduct = product.productId; grn.searchText = ''; filterProducts(grn);"
+                                  *ngFor="let product of grn.filteredProducts" (click)="selectProduct(grn, product)"
                                   [title]="product.name" style="cursor: pointer; font-size: 12px; padding: 6px 10px; text-align: left;"
                                   [innerHTML]="highlightMatch(product.name, grn.searchText)">
                                 </button>
@@ -728,7 +728,8 @@
                 <label for="fromDate" class="form-label font-weight-bold">
                   <i class="bi bi-calendar-event me-1 text-primary"></i>From Date
                 </label>
-                <input type="date" id="fromDate" class="form-control custom-input" [(ngModel)]="fromDate">
+                <input type="date" id="fromDate" class="form-control custom-input" [(ngModel)]="fromDate"
+                  (ngModelChange)="searchGRNIfReady()">
               </div>
             </div>
 
@@ -738,7 +739,8 @@
                 <label for="toDate" class="form-label font-weight-bold">
                   <i class="bi bi-calendar-event me-1 text-primary"></i>To Date
                 </label>
-                <input type="date" id="toDate" class="form-control custom-input" [(ngModel)]="toDate">
+                <input type="date" id="toDate" class="form-control custom-input" [(ngModel)]="toDate"
+                  (ngModelChange)="searchGRNIfReady()">
               </div>
             </div>
 

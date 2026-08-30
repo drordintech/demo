@@ -49,7 +49,6 @@ export class DonutChartComponent {
         background: 'transparent',
         animations: {
           enabled: true,
-          easing: 'easeinout',
           speed: 800,
           animateGradually: {
             enabled: true,
@@ -59,8 +58,8 @@ export class DonutChartComponent {
             enabled: true,
             speed: 350
           }
-        }
-      },
+        } as any
+      } as any,
       colors: ['#667eea', '#764ba2', '#f093fb', '#f5576c'],
       dataLabels: {
         enabled: true,
@@ -132,12 +131,12 @@ export class DonutChartComponent {
         fontFamily: 'Inter, sans-serif',
         markers: {
           radius: 12
-        },
+        } as any,
         itemMargin: {
           horizontal: 10,
           vertical: 5
         }
-      },
+      } as any,
       tooltip: {
         theme: 'light',
         style: {

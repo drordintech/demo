@@ -378,12 +378,15 @@ namespace APIDRODIN.Controllers
             try
             {
                 int? parsedSupplierId = (filter.SupplierId.HasValue && filter.SupplierId.Value > 0) ? filter.SupplierId.Value : null;
-                var reportData = await ExecuteGrnQueryAsync(filter.dateFrom, filter.dateTo, parsedSupplierId);
+                DateTime? fromDate = filter.dateFrom ?? filter.date;
+                DateTime? toDate = filter.dateTo ?? filter.date;
+                DateTime? exclusiveToDate = toDate?.Date.AddDays(1);
+                var reportData = await ExecuteGrnQueryAsync(fromDate?.Date, exclusiveToDate, parsedSupplierId);
                 return Ok(reportData);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "An error occurred while fetching GRN report.", error = ex.Message });
+                return StatusCode(500, new { message = "An error occurred while fetching GRN report.", error = ex.ToString() });
             }
         }
 
@@ -432,9 +435,9 @@ namespace APIDRODIN.Controllers
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
-                    cmd.Parameters.AddWithValue("@SupplierId", (object?)supplierId ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@FromDate", (object?)fromDate ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@ToDate", (object?)toDate ?? DBNull.Value);
+                    cmd.Parameters.Add(new SqlParameter("@SupplierId", System.Data.SqlDbType.Int) { Value = (object?)supplierId ?? DBNull.Value });
+                    cmd.Parameters.Add(new SqlParameter("@FromDate", System.Data.SqlDbType.DateTime) { Value = (object?)fromDate ?? DBNull.Value });
+                    cmd.Parameters.Add(new SqlParameter("@ToDate", System.Data.SqlDbType.DateTime) { Value = (object?)toDate ?? DBNull.Value });
 
                     using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
                     {
@@ -473,7 +476,6 @@ namespace APIDRODIN.Controllers
                             SELECT 
                                 gd.GrnId, 
                                 gd.ProductId, 
-                                ISNULL(p.name, '') AS ProductName,
                                 ISNULL(gd.ReceivedQuantity, 0) AS ReceivedQuantity,
                                 ISNULL(gd.RejectedQuantity, 0) AS RejectedQuantity,
                                 ISNULL(gd.PassedQuantity, 0) AS PassedQuantity,
@@ -484,6 +486,7 @@ namespace APIDRODIN.Controllers
                                 gd.Remarks2,
                                 ISNULL(gd.QuantityAsPerParty, 0) AS QuantityAsPerParty,
                                 gd.ExpiryDate,
+                                ISNULL(p.name, '') AS ProductName,
                                 gd.Demandedbyparty,
                                 gd.Approvedbycompany,
                                 gd.Passedstatus,
@@ -750,9 +753,9 @@ namespace APIDRODIN.Controllers
                 }
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
-                    cmd.Parameters.AddWithValue("@SupplierId", (object)filter.SupplierId ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@DateFrom", (object)filter.dateFrom ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@DateTo", (object)filter.dateTo ?? DBNull.Value);
+                    cmd.Parameters.Add(new SqlParameter("@SupplierId", System.Data.SqlDbType.Int) { Value = (object)filter.SupplierId ?? DBNull.Value });
+                    cmd.Parameters.Add(new SqlParameter("@DateFrom", System.Data.SqlDbType.DateTime) { Value = (object)filter.dateFrom ?? DBNull.Value });
+                    cmd.Parameters.Add(new SqlParameter("@DateTo", System.Data.SqlDbType.DateTime) { Value = (object)filter.dateTo ?? DBNull.Value });
 
                     using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
                     {
@@ -982,9 +985,9 @@ namespace APIDRODIN.Controllers
 
                     using (SqlCommand cmd = new SqlCommand(query, conn))
                     {
-                        cmd.Parameters.AddWithValue("@State", (object?)filter.state ?? DBNull.Value);
-                        cmd.Parameters.AddWithValue("@DateFrom", (object?)filter.dateFrom ?? DBNull.Value);
-                        cmd.Parameters.AddWithValue("@DateTo", (object?)filter.dateTo ?? DBNull.Value);
+                        cmd.Parameters.Add(new SqlParameter("@State", System.Data.SqlDbType.NVarChar) { Value = (object?)filter.state ?? DBNull.Value });
+                        cmd.Parameters.Add(new SqlParameter("@DateFrom", System.Data.SqlDbType.DateTime) { Value = (object?)filter.dateFrom ?? DBNull.Value });
+                        cmd.Parameters.Add(new SqlParameter("@DateTo", System.Data.SqlDbType.DateTime) { Value = (object?)filter.dateTo ?? DBNull.Value });
 
                         using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
                         {
@@ -1090,9 +1093,9 @@ namespace APIDRODIN.Controllers
 
                     using (SqlCommand cmd = new SqlCommand(query, conn))
                     {
-                        cmd.Parameters.AddWithValue("@ResponsiblePersonId", (object?)filter.PersonId ?? DBNull.Value);
-                        cmd.Parameters.AddWithValue("@DateFrom", (object?)filter.dateFrom ?? DBNull.Value);
-                        cmd.Parameters.AddWithValue("@DateTo", (object?)filter.dateTo ?? DBNull.Value);
+                        cmd.Parameters.Add(new SqlParameter("@ResponsiblePersonId", System.Data.SqlDbType.NVarChar) { Value = (object?)filter.PersonId ?? DBNull.Value });
+                        cmd.Parameters.Add(new SqlParameter("@DateFrom", System.Data.SqlDbType.DateTime) { Value = (object?)filter.dateFrom ?? DBNull.Value });
+                        cmd.Parameters.Add(new SqlParameter("@DateTo", System.Data.SqlDbType.DateTime) { Value = (object?)filter.dateTo ?? DBNull.Value });
 
                         using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
                         {

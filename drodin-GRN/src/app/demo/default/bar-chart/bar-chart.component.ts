@@ -85,7 +85,6 @@ export class BarChartComponent {
         background: 'transparent',
         animations: {
           enabled: true,
-          easing: 'easeinout',
           speed: 800,
           animateGradually: {
             enabled: true,
@@ -95,8 +94,8 @@ export class BarChartComponent {
             enabled: true,
             speed: 350
           }
-        }
-      },
+        } as any
+      } as any,
       colors: ['#dc3545', '#28a745', '#ffc107'],
       responsive: [
         {
@@ -185,8 +184,8 @@ export class BarChartComponent {
         fontFamily: 'Inter, sans-serif',
         markers: {
           radius: 12
-        }
-      }
+        } as any
+      } as any
     };
   }
 }

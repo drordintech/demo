@@ -95,10 +95,37 @@ export class grnService {
   
   getGRN(payload: any): Observable<any> {
     const token = localStorage.getItem('logintoken');
-    const headers = new HttpHeaders({
-      'Authorization': `Bearer ${token}`
+    const params = new URLSearchParams();
+
+    Object.entries(payload || {}).forEach(([key, value]) => {
+      if (value !== null && value !== undefined && value !== '') {
+        params.append(key, String(value));
+      }
     });
-    return this.http.get(environment.apiUrl + "GRN/getGrnByDate", { headers, params: payload });
+
+    const url = `${environment.apiUrl}GRN/getGrnByDate?${params.toString()}`;
+
+    return new Observable((observer) => {
+      fetch(url, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+        .then(async (response) => {
+          const rawText = await response.text();
+          if (!response.ok) {
+            throw new Error(rawText || `Request failed: ${response.status}`);
+          }
+
+          const data = rawText ? JSON.parse(rawText) : [];
+          observer.next(data);
+          observer.complete();
+        })
+        .catch((error) => {
+          observer.error(error);
+        });
+    });
   }
 
   UpdateGrn(grnId: number, payload: any): Observable<any> {

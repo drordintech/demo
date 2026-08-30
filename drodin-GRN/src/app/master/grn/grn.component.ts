@@ -233,7 +233,7 @@ export class grnComponent implements OnInit {
   grnListRptoldResponsiblePerson: string = '';
   grnListRptoldgrnStatus: string = '';
   grnListRptolddokerno: string = '';
-  grnID:number;
+  grnID: number = 0;
   eway:string='';
   grnNumber: string = '';challanNumber: string = '';
   todayDate:string='';
@@ -483,10 +483,62 @@ export class grnComponent implements OnInit {
     if (isUpdateTab) {
       this.selectedsupplier2 = id;
       this.onSupplierChange2();
+      this.searchGRNIfReady();
     } else {
       this.selectedsupplier = id;
       this.onSupplierChange();
     }
+  }
+
+  clearGrnResults(): void {
+    this.grnListrpt = [];
+    this.currentPage = 1;
+  }
+
+  normalizeMonthSelection(): void {
+    if (!this.fromDate && !this.toDate && !this.date) {
+      return;
+    }
+
+    if (!this.fromDate && this.toDate) {
+      const selectedDate = new Date(`${this.toDate}T00:00:00`);
+      const firstDay = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
+      this.fromDate = this.toDateString(firstDay);
+      return;
+    }
+
+    if (this.fromDate && !this.toDate) {
+      const selectedDate = new Date(`${this.fromDate}T00:00:00`);
+      const lastDay = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0);
+      this.toDate = this.toDateString(lastDay);
+      return;
+    }
+  }
+
+  toDateString(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  searchGRNIfReady(): void {
+    this.normalizeMonthSelection();
+
+    const hasSupplier = this.selectedsupplier2 !== '' && this.selectedsupplier2 !== null && this.selectedsupplier2 !== undefined;
+    const hasDate = !!(this.fromDate || this.toDate || this.date);
+
+    if (!hasSupplier || !hasDate) {
+      this.clearGrnResults();
+      return;
+    }
+
+    if (this.fromDate && this.toDate && this.fromDate > this.toDate) {
+      this.clearGrnResults();
+      return;
+    }
+
+    this.searchGRN();
   }
 
   getSelectedSupplierName(isUpdateTab: boolean = false): string {
@@ -941,14 +993,27 @@ export class grnComponent implements OnInit {
   }
   
   filterProducts(grn: any) {
-    if (!grn.searchText) {
-      grn.filteredProducts = [...this.products];
-    } else {
-      const search = grn.searchText.toLowerCase();
-      grn.filteredProducts = this.products.filter(
-        product => product.name.toLowerCase().includes(search)
-      );
+    const search = (grn?.searchText ?? '').trim().toLowerCase();
+    if (!search) {
+      grn.filteredProducts = [...(this.products || [])];
+      return;
     }
+
+    grn.filteredProducts = (this.products || []).filter((product: any) =>
+      (product?.name || '').toLowerCase().includes(search)
+    );
+  }
+
+  selectProduct(grn: any, product: any): void {
+    grn.selectedProduct = product?.productId ?? null;
+    grn.searchText = '';
+    this.filterProducts(grn);
+  }
+
+  clearProductSelection(grn: any): void {
+    grn.selectedProduct = null;
+    grn.searchText = '';
+    this.filterProducts(grn);
   }
 
   highlightMatch(text: string, search: string): SafeHtml {
@@ -1679,26 +1744,39 @@ export class grnComponent implements OnInit {
       this.toDate = '';
       this.date = '';
     }
+
+    this.searchGRNIfReady();
   }
 
   searchGRN(): void {
-    if (this.selectedsupplier2 === '' || this.selectedsupplier2 === null || this.selectedsupplier2 === undefined) {
+    this.normalizeMonthSelection();
+
+    const hasSupplier = this.selectedsupplier2 !== '' && this.selectedsupplier2 !== null && this.selectedsupplier2 !== undefined;
+    const hasDate = !!(this.fromDate || this.toDate || this.date);
+
+    if (!hasSupplier) {
+      this.clearGrnResults();
       alert("Please select a Supplier before searching.");
       return;
     }
-  
-    if (!this.fromDate && !this.toDate && !this.date) {
+
+    if (!hasDate) {
+      this.clearGrnResults();
       alert("Please select a Date or Date Range before searching.");
       return;
     }
 
     if (this.fromDate && this.toDate && this.fromDate > this.toDate) {
+      this.clearGrnResults();
       alert("From Date cannot be after To Date.");
       return;
     }
-  
+
     const supplierIdNum = Number(this.selectedsupplier2);
-    const params: any = { supplierId: supplierIdNum };
+    const params: any = {};
+    if (supplierIdNum >= 0) {
+      params.supplierId = supplierIdNum;
+    }
 
     if (this.fromDate) {
       params.dateFrom = this.formatDate(this.fromDate);
@@ -1710,13 +1788,23 @@ export class grnComponent implements OnInit {
       params.date = this.formatDate(this.date);
     }
 
+    console.info('[GRN Search] Request:', params);
     this.GrnService.getGRN(params).subscribe({
       next: (response) => {
-        this.grnListrpt = response;
+        const resultArray = Array.isArray(response)
+          ? response
+          : Array.isArray((response as any)?.data)
+            ? (response as any).data
+            : [];
+
+        console.info('[GRN Search] Response:', resultArray);
+        this.grnListrpt = resultArray;
         this.currentPage = 1;
       },
       error: (err) => {
-        console.error("Error fetching GRN:", err);
+        console.error('[GRN Search] Error:', err);
+        this.grnListrpt = [];
+        this.currentPage = 1;
       }
     });
   }
@@ -1752,7 +1840,9 @@ export class grnComponent implements OnInit {
   
   // Utility function to format the date as 'YYYY-MM-DD' if needed
   private formatDate(date: string): string {
-    return new Date(date).toISOString().split('T')[0];
+    return /^\d{4}-\d{2}-\d{2}$/.test(date)
+      ? date
+      : new Date(date).toISOString().split('T')[0];
   }
 
   editGRN(grn: any) {

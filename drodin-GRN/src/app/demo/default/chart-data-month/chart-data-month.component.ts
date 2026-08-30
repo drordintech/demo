@@ -61,7 +61,6 @@ export class ChartDataMonthComponent implements OnInit {
         background: 'transparent',
         animations: {
           enabled: true,
-          easing: 'easeinout',
           speed: 800,
           animateGradually: {
             enabled: true,
@@ -71,8 +70,8 @@ export class ChartDataMonthComponent implements OnInit {
             enabled: true,
             speed: 350
           }
-        }
-      },
+        } as any
+      } as any,
       dataLabels: {
         enabled: false
       },
