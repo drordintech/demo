@@ -1774,7 +1774,8 @@ export class grnComponent implements OnInit {
 
     const supplierIdNum = Number(this.selectedsupplier2);
     const params: any = {};
-    if (supplierIdNum >= 0) {
+    // All Suppliers is 0 — omit supplierId so older APIs do not filter WHERE SupplierId = 0 (always empty).
+    if (supplierIdNum > 0) {
       params.supplierId = supplierIdNum;
     }
 
@@ -1798,7 +1799,7 @@ export class grnComponent implements OnInit {
             : [];
 
         console.info('[GRN Search] Response:', resultArray);
-        this.grnListrpt = resultArray;
+        this.grnListrpt = resultArray.map((row: any) => this.normalizeGrnSearchRow(row));
         this.currentPage = 1;
       },
       error: (err) => {
@@ -2022,16 +2023,41 @@ export class grnComponent implements OnInit {
   }
 
   getStatusClass(status: string): string {
-    switch (status.toLowerCase()) {
+    switch ((status || '').toLowerCase()) {
       case 'approved':
-        return 'badge bg-success'; // Green for approved
+        return 'badge bg-success';
       case 'pending':
-        return 'badge bg-warning'; // Yellow for pending
+        return 'badge bg-warning';
       case 'rejected':
-        return 'badge bg-danger'; // Red for rejected
+        return 'badge bg-danger';
       default:
-        return 'badge bg-secondary'; // Grey for unknown status
+        return 'badge bg-secondary';
     }
+  }
+
+  private normalizeGrnSearchRow(grn: any): any {
+    const details = grn?.grndetails ?? grn?.grnDetails ?? grn?.Grndetails ?? grn?.GrnDetails ?? [];
+    return {
+      ...grn,
+      id: grn.id ?? grn.Id,
+      grnNumber: grn.grnNumber ?? grn.GrnNumber,
+      challanNumber: grn.challanNumber ?? grn.ChallanNumber,
+      responsiblePerson: grn.responsiblePerson ?? grn.ResponsiblePerson,
+      grnStatus: grn.grnStatus ?? grn.GrnStatus ?? '',
+      dockerNumber: grn.dockerNumber ?? grn.DockerNumber,
+      supplierName: grn.supplierName ?? grn.SupplierName,
+      supplierId: grn.supplierId ?? grn.SupplierId,
+      invoiceReceiptImage: grn.invoiceReceiptImage ?? grn.InvoiceReceiptImage,
+      documents: grn.documents ?? grn.Documents ?? [],
+      grndetails: (Array.isArray(details) ? details : []).map((d: any) => ({
+        ...d,
+        productName: d.productName ?? d.ProductName,
+        receivedQuantity: d.receivedQuantity ?? d.ReceivedQuantity,
+        rejectedQuantity: d.rejectedQuantity ?? d.RejectedQuantity,
+        passedQuantity: d.passedQuantity ?? d.PassedQuantity,
+        status: d.status ?? d.Status ?? ''
+      }))
+    };
   }
 
   // Method to handle tab changes

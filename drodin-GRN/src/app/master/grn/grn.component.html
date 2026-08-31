@@ -845,8 +845,8 @@
                     <span *ngIf="!grn.responsiblePerson" class="text-muted">—</span>
                   </td>
                   <td text-align="center">
-                    <span class="badge" [ngClass]="getStatusClass(grn.grnStatus)">
-                      {{ grn.grnStatus || 'N/A' }}
+                    <span class="badge" [ngClass]="getStatusClass(grn.grnStatus || grn.GrnStatus)">
+                      {{ grn.grnStatus || grn.GrnStatus || 'N/A' }}
                     </span>
                   </td>
                   <td>
@@ -861,19 +861,19 @@
                         </tr>
                       </thead>
                       <tbody>
-                        <tr *ngFor="let detail of grn.grndetails">
-                          <td class="fw-semibold">{{ detail.productName }}</td>
+                        <tr *ngFor="let detail of (grn.grndetails || grn.grnDetails || [])">
+                          <td class="fw-semibold">{{ detail.productName || detail.ProductName }}</td>
                           <td style="text-align: center;"><span class="badge bg-light text-dark border">{{
-                              detail.receivedQuantity }}</span></td>
+                              detail.receivedQuantity ?? detail.ReceivedQuantity }}</span></td>
                           <td style="text-align: center;"><span
                               class="badge bg-danger-subtle text-danger border border-danger-subtle">{{
-                              detail.rejectedQuantity }}</span></td>
+                              detail.rejectedQuantity ?? detail.RejectedQuantity }}</span></td>
                           <td style="text-align: center;"><span
                               class="badge bg-success-subtle text-success border border-success-subtle">{{
-                              detail.passedQuantity }}</span></td>
+                              detail.passedQuantity ?? detail.PassedQuantity }}</span></td>
                           <td style="text-align: center;">
-                            <span class="badge" [ngClass]="getStatusClass(detail.status)">
-                              {{ detail.status }}
+                            <span class="badge" [ngClass]="getStatusClass(detail.status || detail.Status)">
+                              {{ detail.status || detail.Status || '—' }}
                             </span>
                           </td>
                         </tr>

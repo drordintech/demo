@@ -98,9 +98,14 @@ export class grnService {
     const params = new URLSearchParams();
 
     Object.entries(payload || {}).forEach(([key, value]) => {
-      if (value !== null && value !== undefined && value !== '') {
-        params.append(key, String(value));
+      if (value === null || value === undefined || value === '') {
+        return;
       }
+      // All Suppliers: never send supplierId=0 (older APIs treat 0 as a real ID and return no rows).
+      if (String(key).toLowerCase() === 'supplierid' && Number(value) <= 0) {
+        return;
+      }
+      params.append(key, String(value));
     });
 
     const url = `${environment.apiUrl}GRN/getGrnByDate?${params.toString()}`;

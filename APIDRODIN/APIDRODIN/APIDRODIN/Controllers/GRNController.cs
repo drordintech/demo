@@ -362,7 +362,7 @@ namespace APIDRODIN.Controllers
                     toDate = fromDate.AddYears(1);
                 }
 
-                int? parsedSupplierId = (filter.SupplierId.HasValue && filter.SupplierId.Value > 0) ? filter.SupplierId.Value : null;
+                int? parsedSupplierId = ResolveAllSuppliersId(filter.SupplierId);
                 var reportData = await ExecuteGrnQueryAsync(fromDate, toDate, parsedSupplierId);
                 return Ok(reportData);
             }
@@ -377,11 +377,10 @@ namespace APIDRODIN.Controllers
         {
             try
             {
-                int? parsedSupplierId = (filter.SupplierId.HasValue && filter.SupplierId.Value > 0) ? filter.SupplierId.Value : null;
+                int? parsedSupplierId = ResolveAllSuppliersId(filter.SupplierId);
                 DateTime? fromDate = filter.dateFrom ?? filter.date;
                 DateTime? toDate = filter.dateTo ?? filter.date;
-                DateTime? exclusiveToDate = toDate?.Date.AddDays(1);
-                var reportData = await ExecuteGrnQueryAsync(fromDate?.Date, exclusiveToDate, parsedSupplierId);
+                var reportData = await ExecuteGrnQueryAsync(fromDate?.Date, toDate?.Date, parsedSupplierId, toDateInclusive: true);
                 return Ok(reportData);
             }
             catch (Exception ex)
@@ -394,7 +393,7 @@ namespace APIDRODIN.Controllers
         {
             try
             {
-                int? parsedSupplierId = (filter.SupplierId.HasValue && filter.SupplierId.Value > 0) ? filter.SupplierId.Value : null;
+                int? parsedSupplierId = ResolveAllSuppliersId(filter.SupplierId);
                 var reportData = await ExecuteGrnQueryAsync(filter.dateFrom, filter.dateTo, parsedSupplierId);
                 return Ok(reportData);
             }
@@ -404,7 +403,18 @@ namespace APIDRODIN.Controllers
             }
         }
 
-        private async Task<IEnumerable<GrnDtos>> ExecuteGrnQueryAsync(DateTime? fromDate, DateTime? toDate, int? supplierId)
+        private static int? ResolveAllSuppliersId(int? supplierId)
+        {
+            // 0 / -2 / missing = All Suppliers. Never filter WHERE SupplierId = 0.
+            if (!supplierId.HasValue || supplierId.Value <= 0)
+            {
+                return null;
+            }
+
+            return supplierId.Value;
+        }
+
+        private async Task<IEnumerable<GrnDtos>> ExecuteGrnQueryAsync(DateTime? fromDate, DateTime? toDate, int? supplierId, bool toDateInclusive = false)
         {
             var grnList = new List<GrnDtos>();
 
@@ -412,7 +422,11 @@ namespace APIDRODIN.Controllers
             {
                 await conn.OpenAsync();
 
-                string query = @"
+                string toDateClause = toDateInclusive
+                    ? "AND (@ToDate IS NULL OR CAST(g.CreatedAt AS DATE) <= CAST(@ToDate AS DATE))"
+                    : "AND (@ToDate IS NULL OR g.CreatedAt < @ToDate)";
+
+                string query = $@"
                     SELECT 
                         g.Id, 
                         g.GrnNumber, 
@@ -429,8 +443,8 @@ namespace APIDRODIN.Controllers
                     LEFT JOIN ResponsiblePerson p ON g.ResponsiblePersonId = p.Id
                     LEFT JOIN Challan c ON g.GrnNumber = c.GRNnumber
                     WHERE (@SupplierId IS NULL OR g.SupplierId = @SupplierId)
-                      AND (@FromDate IS NULL OR g.CreatedAt >= @FromDate)
-                      AND (@ToDate IS NULL OR g.CreatedAt < @ToDate)
+                      AND (@FromDate IS NULL OR CAST(g.CreatedAt AS DATE) >= CAST(@FromDate AS DATE))
+                      {toDateClause}
                     ORDER BY g.CreatedAt DESC;";
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
