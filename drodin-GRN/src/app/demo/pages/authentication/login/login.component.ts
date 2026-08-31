@@ -33,8 +33,7 @@ export default class LoginComponent {
         }
       },
       error: err => {
-        
-         this.errorMessage = err.error.message;
+         this.errorMessage = err.error?.message || 'Could not connect to the server. Please check if the API is running.';
          this.isLoginFailed = true;
       }
     })
