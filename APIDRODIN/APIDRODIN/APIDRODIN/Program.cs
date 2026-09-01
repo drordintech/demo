@@ -4,7 +4,12 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 
+using System.Globalization;
+
 var builder = WebApplication.CreateBuilder(args);
+
+CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
+CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
 
 const long maxBodyBytes = 100L * 1024 * 1024;
 
@@ -39,6 +44,7 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.AllowTrailingCommas = true;
         options.JsonSerializerOptions.NumberHandling = JsonNumberHandling.AllowReadingFromString;
         options.JsonSerializerOptions.Converters.Add(new FlexibleNullableDateTimeConverter());
+        options.JsonSerializerOptions.Converters.Add(new FlexibleDateTimeConverter());
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     })
     .ConfigureApiBehaviorOptions(options =>

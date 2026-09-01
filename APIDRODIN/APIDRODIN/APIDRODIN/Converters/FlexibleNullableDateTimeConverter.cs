@@ -24,8 +24,13 @@ namespace APIDRODIN.Converters
                     return null;
                 }
 
-                if (DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out var parsed)
-                    || DateTime.TryParse(value, out parsed))
+                string[] formats = { "yyyy-MM-ddTHH:mm:ss.fffZ", "yyyy-MM-ddTHH:mm:ssZ", "yyyy-MM-ddTHH:mm:ss.fffffffzzz", "yyyy-MM-dd", "MM/dd/yyyy", "dd/MM/yyyy" };
+                if (DateTime.TryParseExact(value, formats, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal | DateTimeStyles.AdjustToUniversal, out var parsedExact))
+                {
+                    return parsedExact;
+                }
+
+                if (DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out var parsed))
                 {
                     return parsed;
                 }
@@ -58,6 +63,53 @@ namespace APIDRODIN.Converters
             {
                 writer.WriteStringValue(value.Value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
             }
+        }
+    }
+
+    public sealed class FlexibleDateTimeConverter : JsonConverter<DateTime>
+    {
+        public override DateTime Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            if (reader.TokenType == JsonTokenType.String)
+            {
+                var value = reader.GetString();
+                if (string.IsNullOrWhiteSpace(value) || value.StartsWith("0001-01-01", StringComparison.Ordinal))
+                {
+                    return DateTime.MinValue;
+                }
+
+                string[] formats = { "yyyy-MM-ddTHH:mm:ss.fffZ", "yyyy-MM-ddTHH:mm:ssZ", "yyyy-MM-ddTHH:mm:ss.fffffffzzz", "yyyy-MM-dd", "MM/dd/yyyy", "dd/MM/yyyy" };
+                if (DateTime.TryParseExact(value, formats, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal | DateTimeStyles.AdjustToUniversal, out var parsedExact))
+                {
+                    return parsedExact;
+                }
+
+                if (DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out var parsed))
+                {
+                    return parsed;
+                }
+
+                return DateTime.MinValue;
+            }
+
+            if (reader.TokenType == JsonTokenType.Number && reader.TryGetInt64(out var ticks))
+            {
+                try
+                {
+                    return DateTimeOffset.FromUnixTimeMilliseconds(ticks).LocalDateTime;
+                }
+                catch
+                {
+                    return DateTime.MinValue;
+                }
+            }
+
+            return DateTime.MinValue;
+        }
+
+        public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options)
+        {
+            writer.WriteStringValue(value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
         }
     }
 }

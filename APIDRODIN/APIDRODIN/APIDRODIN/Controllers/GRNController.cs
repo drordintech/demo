@@ -256,7 +256,7 @@ namespace APIDRODIN.Controllers
             return DBNull.Value;
         }
 
-        private static string? ReadExpiryDate(SqlDataReader reader, int index)
+        private static DateTime? ReadExpiryDate(SqlDataReader reader, int index)
         {
             if (reader.IsDBNull(index))
             {
@@ -264,7 +264,7 @@ namespace APIDRODIN.Controllers
             }
 
             var dt = reader.GetDateTime(index);
-            return dt == DateTime.MinValue ? null : dt.ToString("yyyy-MM-dd");
+            return dt == DateTime.MinValue ? null : dt;
         }
 
         [HttpPost("SaveChallan")]
@@ -1295,10 +1295,7 @@ namespace APIDRODIN.Controllers
 
             public string? BatchNumber { get; set; }
 
-            /// <summary>
-            /// Bound as string so "" / null / invalid values do not cause HTTP 400.
-            /// </summary>
-            public string? ExpiryDate { get; set; }
+            public DateTime? ExpiryDate { get; set; }
 
             public string? Remarks1 { get; set; }
 

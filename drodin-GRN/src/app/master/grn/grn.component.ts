@@ -1148,7 +1148,8 @@ export class grnComponent implements OnInit {
       return;
     }
   
-    for (const grn of this.rows) {
+    for (let i = 0; i < this.rows.length; i++) {
+      const grn = this.rows[i];
       const prodId = grn.selectedProduct || (typeof grn.product === 'number' ? grn.product : grn.product?.productId);
       if (!prodId) {
         alert("Please select a product for all rows.");
@@ -1158,6 +1159,15 @@ export class grnComponent implements OnInit {
       if ((grn.receivedQuantity ?? grn.received) < 0 || (grn.quantityasperparty ?? grn.asPerParty) < 0 || (grn.MRP ?? 0) < 0) {
         alert("Negative values are not allowed.");
         return;
+      }
+
+      if (grn.expiryDate) {
+        const d = new Date(grn.expiryDate);
+        if (isNaN(d.getTime())) {
+          console.warn(`Invalid Expiry Date at row index ${i}. Raw value:`, grn.expiryDate);
+          alert(`Invalid Expiry Date for product row ${i + 1}. Please correct it before saving.`);
+          return;
+        }
       }
     }
 
@@ -1185,7 +1195,7 @@ export class grnComponent implements OnInit {
         mrp: Number(grn.MRP ?? 0),
         batchNumber: grn.batchno || '',
         // Empty string breaks API DateTime binding — send null when not set
-        expiryDate: grn.expiryDate ? grn.expiryDate : null,
+        expiryDate: grn.expiryDate ? new Date(grn.expiryDate).toISOString() : null,
         remarks1: grn.remarks || '',
         remarks2: grn.remarks2 || '',
         statusofrejected: grn.statusofrejected || '',
@@ -1922,7 +1932,8 @@ export class grnComponent implements OnInit {
       return;
     }
   
-    for (const grn of this.grnListRptold) {
+    for (let i = 0; i < this.grnListRptold.length; i++) {
+      const grn = this.grnListRptold[i];
       if (!grn.productId) {
         alert("Please select a product for all rows.");
         return;
@@ -1934,6 +1945,15 @@ export class grnComponent implements OnInit {
       if (grn.receivedQuantity < 0 || grn.quantityAsPerParty < 0 || grn.mrp < 0) {
         alert("Negative values are not allowed.");
         return;
+      }
+
+      if (grn.expiryDate) {
+        const d = new Date(grn.expiryDate);
+        if (isNaN(d.getTime())) {
+          console.warn(`Invalid Expiry Date at row index ${i}. Raw value:`, grn.expiryDate);
+          alert(`Invalid Expiry Date for product row ${i + 1}. Please correct it before saving.`);
+          return;
+        }
       }
     }
     const responsiblePersonId = this.getResponsiblePersonIdByName(this.grnListRptoldResponsiblePerson);
@@ -1956,7 +1976,7 @@ export class grnComponent implements OnInit {
         demandedbyparty:grn.demandedbyparty,
         mrp: grn.mrp,
         batchNumber: grn.batchNumber,
-        expiryDate: grn.expiryDate ? grn.expiryDate : null,
+        expiryDate: grn.expiryDate ? new Date(grn.expiryDate).toISOString() : null,
         remarks1: grn.remarks1,
         remarks2: grn.remarks2,
         statusofrejected:grn.rejectedstatus,
