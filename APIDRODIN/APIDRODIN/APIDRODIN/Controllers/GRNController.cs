@@ -236,24 +236,24 @@ namespace APIDRODIN.Controllers
 
         public object SqlDateOrNull(DateTime? date)
         {
-            if (date == null || date.Value == DateTime.MinValue)
-                return DBNull.Value;
+            if (date == null || date.Value == DateTime.MinValue || date.Value.Year <= 1900)
+                return new DateTime(1900, 1, 1);
             return date.Value;
         }
 
         public object SqlDateOrNull(string? date)
         {
-            if (string.IsNullOrWhiteSpace(date) || date.StartsWith("0001-01-01", StringComparison.Ordinal))
+            if (string.IsNullOrWhiteSpace(date) || date.StartsWith("0001-01-01", StringComparison.Ordinal) || date.StartsWith("1900-01-01", StringComparison.Ordinal))
             {
-                return DBNull.Value;
+                return new DateTime(1900, 1, 1);
             }
 
-            if (DateTime.TryParse(date, out var parsed) && parsed != DateTime.MinValue)
+            if (DateTime.TryParse(date, out var parsed) && parsed != DateTime.MinValue && parsed.Year > 1900)
             {
                 return parsed;
             }
 
-            return DBNull.Value;
+            return new DateTime(1900, 1, 1);
         }
 
         private static DateTime? ReadExpiryDate(SqlDataReader reader, int index)
@@ -264,7 +264,7 @@ namespace APIDRODIN.Controllers
             }
 
             var dt = reader.GetDateTime(index);
-            return dt == DateTime.MinValue ? null : dt;
+            return (dt == DateTime.MinValue || dt.Year <= 1900) ? null : dt;
         }
 
         [HttpPost("SaveChallan")]
