@@ -588,6 +588,15 @@ export class grnComponent implements OnInit {
   onStockRepairManualEdit(): void {
     this.isStockRepairManuallyEdited = true;
     this.stockRepairAutoFillMessage = '';
+    this.dockernumber = this.cleanValue(this.stockRepair.docketNoDate) || this.dockernumber;
+  }
+
+  getDocketNumber(): string {
+    return this.cleanValue(this.stockRepair?.docketNoDate) || this.cleanValue(this.dockernumber) || '';
+  }
+
+  getOldDocketNumber(): string {
+    return this.cleanValue(this.grnListRptolddokerno) || this.getDocketNumber();
   }
 
   fetchStockRepairDefaults(): void {
@@ -595,7 +604,7 @@ export class grnComponent implements OnInit {
     const payload = {
       supplierId: Number(this.selectedsupplier) || 0,
       responsiblePerson: Number(this.selectedResponsiblePerson) || null,
-      dockerNumber: this.dockernumber || null,
+      dockerNumber: this.getDocketNumber() || null,
       grnStatus: this.selectedgrnstatus || null
     };
 
@@ -637,7 +646,8 @@ export class grnComponent implements OnInit {
     }
 
     this.stockRepair.stockReceivedParty = this.cleanValue(res.stockReceivedParty) || this.selectedSupplierName || '';
-    this.stockRepair.docketNoDate = this.cleanValue(res.docketNoDate);
+    this.stockRepair.docketNoDate = this.cleanValue(res.docketNoDate) || this.cleanValue(this.dockernumber);
+    this.dockernumber = this.stockRepair.docketNoDate || this.dockernumber;
     this.stockRepair.transport = this.cleanValue(res.transport);
     this.stockRepair.debitNoteInvoice = this.cleanValue(res.debitNoteInvoice);
     this.stockRepair.dateTime = this.cleanValue(res.dateTime);
@@ -1178,7 +1188,7 @@ export class grnComponent implements OnInit {
     const payload = {
       grnNumber: this.grnNumber, 
       responsiblePerson: Number(this.selectedResponsiblePerson) || 0,
-      dockerNo: this.dockernumber || '',
+      dockerNo: this.getDocketNumber(),
       Grnstatus: this.selectedgrnstatus || '',
       supplierId: Number(this.selectedsupplier) || 0,
       invoiceReceiptImage: this.invoiceReceiptImage || '',
@@ -1194,8 +1204,7 @@ export class grnComponent implements OnInit {
         demandedbyparty: grn.demandedbyparty || grn.demandedByParty || '',
         mrp: Number(grn.MRP ?? 0),
         batchNumber: grn.batchno || '',
-        // Empty string breaks API DateTime binding — send null when not set
-        expiryDate: grn.expiryDate ? new Date(grn.expiryDate).toISOString() : null,
+        expiryDate: this.toApiExpiryDate(grn.expiryDate),
         remarks1: grn.remarks || '',
         remarks2: grn.remarks2 || '',
         statusofrejected: grn.statusofrejected || '',
@@ -1320,6 +1329,45 @@ export class grnComponent implements OnInit {
     }
     const product = this.products.find(p => (p as any).productId === Number(productId) || (p as any).id === Number(productId) || String((p as any).productId) === String(productId) || String((p as any).id) === String(productId));
     return product ? product.name : '';
+  }
+
+  isPlaceholderExpiry(value: any): boolean {
+    if (value === null || value === undefined) {
+      return true;
+    }
+    const text = String(value).trim();
+    return !text || text.startsWith('0001-01-01') || text.startsWith('1900-01-01');
+  }
+
+  toApiExpiryDate(value: any): string | null {
+    if (this.isPlaceholderExpiry(value)) {
+      return null;
+    }
+    const parsed = new Date(value);
+    if (isNaN(parsed.getTime())) {
+      return null;
+    }
+    return parsed.toISOString();
+  }
+
+  displayExpiryDate(value: any): string {
+    if (this.isPlaceholderExpiry(value)) {
+      return '';
+    }
+    const text = String(value);
+    return text.includes('T') ? text.split('T')[0] : text;
+  }
+
+  hasBatchMrpAndExpiry(rows: any[] = this.rows): boolean {
+    if (!rows?.length) {
+      return false;
+    }
+    return rows.every(row => {
+      const batch = String(row.batchno ?? row.batchNumber ?? '').trim();
+      const mrp = Number(row.MRP ?? row.mrp ?? 0);
+      const expiry = row.expiryDate ?? row.dateofexpiry;
+      return batch.length > 0 && mrp > 0 && !this.isPlaceholderExpiry(expiry);
+    });
   }
  
   printGRN(): Promise<void> {
@@ -1870,14 +1918,15 @@ export class grnComponent implements OnInit {
       this.grnListRptoldDocuments = [...(grn.documents || [])];
       debugger
       this.selectedgrnOldstatus=grn.grnStatus;
-      this.grnListRptolddokerno=grn.dockerNumber;
+      this.grnListRptolddokerno = this.cleanValue(grn.dockerNumber ?? grn.DockerNumber);
+      this.stockRepair.docketNoDate = this.grnListRptolddokerno || this.stockRepair.docketNoDate;
+      this.dockernumber = this.grnListRptolddokerno || this.dockernumber;
       
       this.grnID=grn.id;
       
       this.grnListRptold = this.grnListRptold.map(grn => ({
         ...grn,
-        expiryDate: grn.expiryDate ? grn.expiryDate.split('T')[0] : '' // Convert to YYYY-MM-DD
-        //expiryDate: (grn.expiryDate === '0001-01-01T00:00:00' || !grn.expiryDate) ? '' : grn.expiryDate.split('T')[0] // Convert to YYYY-MM-DD or empty if default
+        expiryDate: this.displayExpiryDate(grn.expiryDate)
       }));
       const modal = new Modal(this.grnProductListpopup.nativeElement);
       modal.show();
@@ -1961,7 +2010,7 @@ export class grnComponent implements OnInit {
       grnNumber: this.grnListRptoldGrnNo, 
       responsiblePerson:responsiblePersonId,
       Grnstatus:this.selectedgrnOldstatus,
-      dockerNo:this.grnListRptolddokerno,
+      dockerNo: this.getOldDocketNumber(),
       supplierId: this.grnListRptoldSupplierID,
       invoiceReceiptImage: this.grnListRptoldInvoiceReceiptImage || '',
       documents: this.grnListRptoldDocuments,
@@ -1976,7 +2025,7 @@ export class grnComponent implements OnInit {
         demandedbyparty:grn.demandedbyparty,
         mrp: grn.mrp,
         batchNumber: grn.batchNumber,
-        expiryDate: grn.expiryDate ? new Date(grn.expiryDate).toISOString() : null,
+        expiryDate: this.toApiExpiryDate(grn.expiryDate),
         remarks1: grn.remarks1,
         remarks2: grn.remarks2,
         statusofrejected:grn.rejectedstatus,
@@ -1992,11 +2041,18 @@ export class grnComponent implements OnInit {
 
     this.GrnService.UpdateGrn(this.grnID,payload).subscribe({
       next: async (response) => {
-        alert("GRN Updated successfully! GRN print/download window will open.");
+        const canDownloadGrn = this.hasBatchMrpAndExpiry(this.grnListRptold);
+        alert(canDownloadGrn
+          ? "GRN Updated successfully! GRN print/download window will open."
+          : "GRN Updated successfully!");
         try {
-          await this.printGRNPopup();
+          if (canDownloadGrn) {
+            await this.printGRNPopup();
+          }
           if (this.challanOldList && this.challanOldList.length > 0) {
-            const downloadChallan = confirm("GRN print complete. Do you want to download/print the Challan as well?");
+            const downloadChallan = confirm(canDownloadGrn
+              ? "GRN print complete. Do you want to download/print the Challan as well?"
+              : "Do you want to download/print the Challan as well?");
             if (downloadChallan) {
               this.updatechallan();
               await this.printChallanOldPopup();

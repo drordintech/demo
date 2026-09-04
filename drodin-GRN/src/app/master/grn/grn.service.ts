@@ -9,12 +9,41 @@ import { environment } from '../../../environments/environment';
 
 export class grnService {
   constructor(private http: HttpClient) { }
+  /** Blank/invalid expiry is sent as null — never "" or a dummy date. */
+  private toOptionalExpiryDate(value: any): string | null {
+    if (value === null || value === undefined) {
+      return null;
+    }
+    const text = String(value).trim();
+    if (!text || text.startsWith('0001-01-01') || text.startsWith('1900-01-01')) {
+      return null;
+    }
+    const parsed = new Date(text);
+    if (isNaN(parsed.getTime())) {
+      return null;
+    }
+    return parsed.toISOString();
+  }
+
+  private sanitizeGrnPayload(payload: any): any {
+    if (!payload || !Array.isArray(payload.grnDetails)) {
+      return payload;
+    }
+    return {
+      ...payload,
+      grnDetails: payload.grnDetails.map((detail: any) => ({
+        ...detail,
+        expiryDate: this.toOptionalExpiryDate(detail?.expiryDate ?? detail?.ExpiryDate)
+      }))
+    };
+  }
+
   saveGrn(payload: any): Observable<any> {
     const token = localStorage.getItem('logintoken');
     const headers = new HttpHeaders({
       'Authorization': `Bearer ${token}`
     });
-    return this.http.post(environment['apiUrl'] + "GRN/SaveGRN", payload, { headers });
+    return this.http.post(environment['apiUrl'] + "GRN/SaveGRN", this.sanitizeGrnPayload(payload), { headers });
   }
 
   getStockRepairDefaults(payload: any): Observable<any> {
@@ -141,7 +170,7 @@ export class grnService {
       'Content-Type': 'application/json'
     });
   
-    return this.http.post(`${environment.apiUrl}GRN/UpdateGRN/${grnId}`, payload, { headers });
+    return this.http.post(`${environment.apiUrl}GRN/UpdateGRN/${grnId}`, this.sanitizeGrnPayload(payload), { headers });
   }
 
   updateChallan(challanId: number, payload: any): Observable<any> {
@@ -169,7 +198,7 @@ export class grnService {
   approvedbycompany: string;
     mrp: number;
   batchNumber: string;
-  expiryDate: string;
+  expiryDate?: string | null;
   remarks1?: string | null;
   remarks2?: string | null;
 }

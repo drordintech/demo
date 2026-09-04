@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using System.Data.SqlClient;
+using System.Text.Json.Serialization;
 
 namespace APIDRODIN.Controllers
 {
@@ -265,6 +266,16 @@ namespace APIDRODIN.Controllers
 
             var dt = reader.GetDateTime(index);
             return (dt == DateTime.MinValue || dt.Year <= 1900) ? null : dt;
+        }
+
+        private static string? FormatExpiryDate(DateTime? date)
+        {
+            if (date == null || date.Value == DateTime.MinValue || date.Value.Year <= 1900)
+            {
+                return null;
+            }
+
+            return date.Value.ToString("yyyy-MM-dd");
         }
 
         [HttpPost("SaveChallan")]
@@ -535,7 +546,7 @@ namespace APIDRODIN.Controllers
                                         Remarks1 = detailReader.IsDBNull(8) ? string.Empty : detailReader.GetString(8),
                                         Remarks2 = detailReader.IsDBNull(9) ? string.Empty : detailReader.GetString(9),
                                         QuantityAsPerParty = detailReader.IsDBNull(10) ? 0 : detailReader.GetInt32(10),
-                                        ExpiryDate = ReadExpiryDate(detailReader, 11),
+                                        ExpiryDate = FormatExpiryDate(ReadExpiryDate(detailReader, 11)),
                                         ProductName = detailReader.GetString(12),
                                         Demandedbyparty = detailReader.IsDBNull(13) ? string.Empty : detailReader.GetString(13),
                                         Approvedbycompany = detailReader.IsDBNull(14) ? string.Empty : detailReader.GetString(14),
@@ -833,7 +844,7 @@ namespace APIDRODIN.Controllers
                                         Remarks1 = detailReader.IsDBNull(9) ? null : detailReader.GetString(9),
                                         Remarks2 = detailReader.IsDBNull(10) ? null : detailReader.GetString(10),
                                         QuantityAsPerParty = detailReader.GetInt32(11),
-                                        ExpiryDate = ReadExpiryDate(detailReader, 12),
+                                        ExpiryDate = FormatExpiryDate(ReadExpiryDate(detailReader, 12)),
                                         Demandedbyparty = detailReader.IsDBNull(13) ? null : detailReader.GetString(13),
                                         Approvedbycompany = detailReader.IsDBNull(14) ? null : detailReader.GetString(14),
                                         Passedstatus = detailReader.IsDBNull(15) ? null : detailReader.GetString(15),
@@ -1063,7 +1074,7 @@ namespace APIDRODIN.Controllers
                                         Remarks1 = detailReader.IsDBNull(9) ? null : detailReader.GetString(9),
                                         Remarks2 = detailReader.IsDBNull(10) ? null : detailReader.GetString(10),
                                         QuantityAsPerParty = detailReader.GetInt32(11),
-                                        ExpiryDate = ReadExpiryDate(detailReader, 12),
+                                        ExpiryDate = FormatExpiryDate(ReadExpiryDate(detailReader, 12)),
                                         Demandedbyparty = detailReader.IsDBNull(13) ? null : detailReader.GetString(13),
                                         Approvedbycompany = detailReader.IsDBNull(14) ? null : detailReader.GetString(14),
                                         Passedstatus = detailReader.IsDBNull(15) ? null : detailReader.GetString(15),
@@ -1171,7 +1182,7 @@ namespace APIDRODIN.Controllers
                                         Remarks1 = detailReader.IsDBNull(9) ? null : detailReader.GetString(9),
                                         Remarks2 = detailReader.IsDBNull(10) ? null : detailReader.GetString(10),
                                         QuantityAsPerParty = detailReader.GetInt32(11),
-                                        ExpiryDate = ReadExpiryDate(detailReader, 12),
+                                        ExpiryDate = FormatExpiryDate(ReadExpiryDate(detailReader, 12)),
                                         Demandedbyparty = detailReader.IsDBNull(13) ? null : detailReader.GetString(13),
                                         Approvedbycompany = detailReader.IsDBNull(14) ? null : detailReader.GetString(14),
                                         Passedstatus = detailReader.IsDBNull(15) ? null : detailReader.GetString(15),
@@ -1295,7 +1306,11 @@ namespace APIDRODIN.Controllers
 
             public string? BatchNumber { get; set; }
 
-            public DateTime? ExpiryDate { get; set; }
+            /// <summary>
+            /// Optional. Bound as string so blank/null/empty never cause HTTP 400 DateTime conversion errors.
+            /// </summary>
+            [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+            public string? ExpiryDate { get; set; }
 
             public string? Remarks1 { get; set; }
 

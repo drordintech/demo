@@ -1080,7 +1080,7 @@
                   <i class="bi bi-box me-1"></i>Docker No
                 </label>
               </div>
-              <div class="info-display-value">{{grnListRptolddokerno}}</div>
+              <div class="info-display-value">{{ getOldDocketNumber() }}</div>
             </div>
 
             <div class="form-group">
@@ -1272,7 +1272,7 @@
       <!-- Modal Footer -->
       <div class="modal-footer d-flex justify-content-between align-items-center flex-wrap gap-2">
         <div class="d-flex gap-2">
-          <button class="btn btn-outline-primary btn-sm" (click)="printGRNPopup()" title="Download GRN PDF">
+          <button *ngIf="hasBatchMrpAndExpiry(grnListRptold)" class="btn btn-outline-primary btn-sm" (click)="printGRNPopup()" title="Download GRN PDF">
             <i class="bi bi-download me-1"></i> Download GRN
           </button>
           <button class="btn btn-outline-info btn-sm" (click)="printChallanOldPopup()" title="Download Challan PDF">
@@ -1307,7 +1307,7 @@
       <tr>
         <td><span>Supplier</span><strong>{{ grnListRptoldSupplierName || '—' }}</strong></td>
         <td><span>Responsible Person</span><strong>{{ grnListRptoldResponsiblePerson || '—' }}</strong></td>
-        <td><span>Docker No.</span><strong>{{ grnListRptolddokerno || '—' }}</strong></td>
+        <td><span>Docker No.</span><strong>{{ getOldDocketNumber() || '—' }}</strong></td>
         <td><span>GRN Status</span><strong>{{ selectedgrnOldstatus || '—' }}</strong></td>
         <td><span>GRN Number</span><strong>{{ grnListRptoldGrnNo || '—' }}</strong></td>
       </tr>
@@ -1378,7 +1378,7 @@
           </tr>
           <tr>
             <td class="lbl-repair">DOCKET NO / DATE</td>
-            <td class="val-edit"><input type="text" [attr.value]="stockRepair.docketNoDate || ''" /></td>
+            <td class="val-edit">{{ getOldDocketNumber() || '—' }}</td>
           </tr>
           <tr>
             <td class="lbl-repair">TRANSPORT</td>
@@ -1424,7 +1424,7 @@ printPOPUPSectionChallan -->
     </div>
     <div>
       <label class="form-label">Consignement Number: &nbsp;&nbsp;</label>
-      <label class="form-label">{{grnListRptolddokerno}}</label>
+      <label class="form-label">{{ getOldDocketNumber() }}</label>
     </div>
     <div>
       <label class="form-label">CHALLAN Number: &nbsp;&nbsp;</label>
@@ -1527,7 +1527,7 @@ printPOPUPSectionChallan -->
       <tr>
         <td><span>Supplier</span><strong>{{ getSelectedSupplierName(false) || '—' }}</strong></td>
         <td><span>Responsible Person</span><strong>{{ getSelectedResponsiblePersonName() || '—' }}</strong></td>
-        <td><span>Docker No.</span><strong>{{ dockernumber || '—' }}</strong></td>
+        <td><span>Docker No.</span><strong>{{ getDocketNumber() || '—' }}</strong></td>
         <td><span>GRN Status</span><strong>{{ selectedgrnstatus || '—' }}</strong></td>
         <td><span>GRN Number</span><strong>{{ grnNumber || '—' }}</strong></td>
       </tr>
@@ -1595,7 +1595,7 @@ printPOPUPSectionChallan -->
           </tr>
           <tr>
             <td class="lbl-repair">DOCKET NO / DATE</td>
-            <td class="val-edit"><input type="text" [attr.value]="stockRepair.docketNoDate || ''" /></td>
+            <td class="val-edit">{{ getDocketNumber() || '—' }}</td>
           </tr>
           <tr>
             <td class="lbl-repair">TRANSPORT</td>
@@ -1640,7 +1640,7 @@ printPOPUPSectionChallan -->
     </div>
     <div>
       <label class="form-label">Consignement Number: &nbsp;&nbsp;</label>
-      <label class="form-label">{{ dockernumber }}</label>
+      <label class="form-label">{{ getDocketNumber() }}</label>
     </div>
     <div>
       <label class="form-label">CHALLAN Number: &nbsp;&nbsp;</label>
@@ -1859,7 +1859,7 @@ printPOPUPSectionChallan -->
           Your Goods Received Note <strong>{{ grnNumber }}</strong> has been saved. Select options below to download documents:
         </p>
         <div class="d-grid gap-2 mb-3">
-          <button type="button" class="btn btn-outline-primary py-2 d-flex align-items-center justify-content-center gap-2" (click)="printGRN()">
+          <button *ngIf="hasBatchMrpAndExpiry()" type="button" class="btn btn-outline-primary py-2 d-flex align-items-center justify-content-center gap-2" (click)="printGRN()">
             <i class="bi bi-file-pdf text-danger fs-5"></i> Download GRN PDF
           </button>
           <button type="button" class="btn btn-outline-info py-2 d-flex align-items-center justify-content-center gap-2" (click)="printChallan()">
