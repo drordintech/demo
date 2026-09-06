@@ -90,8 +90,16 @@ export class grnComponent implements OnInit {
   FIELD_CONFIG = FIELD_CONFIG;
   TAB_COLUMNS = TAB_COLUMNS;
 
+  editTab: string = 'intake';
+
   getActiveColumns(): string[] {
     const rawCols = TAB_COLUMNS[this.activeTab] || TAB_COLUMNS['intake'] || [];
+    const otherCols = rawCols.filter(c => c !== 'sno' && c !== 'product');
+    return ['sno', 'product', ...otherCols];
+  }
+
+  getEditActiveColumns(): string[] {
+    const rawCols = TAB_COLUMNS[this.editTab] || TAB_COLUMNS['intake'] || [];
     const otherCols = rawCols.filter(c => c !== 'sno' && c !== 'product');
     return ['sno', 'product', ...otherCols];
   }
@@ -1016,12 +1024,14 @@ export class grnComponent implements OnInit {
 
   selectProduct(grn: any, product: any): void {
     grn.selectedProduct = product?.productId ?? null;
+    grn.productId = grn.selectedProduct;
     grn.searchText = '';
     this.filterProducts(grn);
   }
 
   clearProductSelection(grn: any): void {
     grn.selectedProduct = null;
+    grn.productId = null;
     grn.searchText = '';
     this.filterProducts(grn);
   }
@@ -1075,20 +1085,33 @@ export class grnComponent implements OnInit {
   }
   
   updateQuantity(grn: any) {
-    if (grn.quantityasperparty !== undefined) grn.asPerParty = grn.quantityasperparty;
+    if (grn.quantityasperparty !== undefined) {
+      grn.asPerParty = grn.quantityasperparty;
+      grn.quantityAsPerParty = grn.quantityasperparty;
+    }
     if (grn.receivedQuantity !== undefined) grn.received = grn.receivedQuantity;
+    if (grn.passed !== undefined) grn.passedQuantity = grn.passed;
+    if (grn.rejected !== undefined) grn.rejectedQuantity = grn.rejected;
+    if (grn.miscellaneous !== undefined) grn.miscellaneousQuantity = grn.miscellaneous;
+    if (grn.MRP !== undefined) grn.mrp = grn.MRP;
+    if (grn.batchno !== undefined) grn.batchNumber = grn.batchno;
+    if (grn.retQty !== undefined) grn.quantity = grn.retQty;
+    if (grn.remarks !== undefined) grn.remarks1 = grn.remarks;
     this.validateRow(grn);
   }
 
   validateRow(grn: any) {
-    if (grn.quantityasperparty !== undefined) grn.asPerParty = grn.quantityasperparty;
+    if (grn.quantityasperparty !== undefined) {
+      grn.asPerParty = grn.quantityasperparty;
+      grn.quantityAsPerParty = grn.quantityasperparty;
+    }
     if (grn.receivedQuantity !== undefined) grn.received = grn.receivedQuantity;
 
     const received = Number(grn.receivedQuantity || grn.received || 0);
-    const asPerParty = Number(grn.quantityasperparty || grn.asPerParty || 0);
-    const passed = Number(grn.passed || 0);
-    const rejected = Number(grn.rejected || 0);
-    const miscellaneous = Number(grn.miscellaneous || 0);
+    const asPerParty = Number(grn.quantityasperparty ?? grn.quantityAsPerParty ?? grn.asPerParty ?? 0);
+    const passed = Number(grn.passed ?? grn.passedQuantity ?? 0);
+    const rejected = Number(grn.rejected ?? grn.rejectedQuantity ?? 0);
+    const miscellaneous = Number(grn.miscellaneous ?? grn.miscellaneousQuantity ?? 0);
 
     // Non-blocking warning — do NOT use alert() on blur (it locks focus and blocks further edits)
     let warning = '';
@@ -1104,7 +1127,7 @@ export class grnComponent implements OnInit {
 
   /** Calculate shortage qty for a single row: max(0, asPerParty - received) */
   getShortageQty(grn: any): number {
-    const asPerParty = Number(grn.quantityasperparty || grn.asPerParty || 0);
+    const asPerParty = Number(grn.quantityasperparty ?? grn.quantityAsPerParty ?? grn.asPerParty ?? 0);
     const received = Number(grn.receivedQuantity || grn.received || 0);
     const diff = asPerParty - received;
     return diff > 0 ? diff : 0;
@@ -1112,7 +1135,7 @@ export class grnComponent implements OnInit {
 
   /** Check if received > asPerParty (excess delivery) */
   isExcessDelivery(grn: any): boolean {
-    const asPerParty = Number(grn.quantityasperparty || grn.asPerParty || 0);
+    const asPerParty = Number(grn.quantityasperparty ?? grn.quantityAsPerParty ?? grn.asPerParty ?? 0);
     const received = Number(grn.receivedQuantity || grn.received || 0);
     return received > asPerParty && asPerParty > 0;
   }
@@ -1904,34 +1927,100 @@ export class grnComponent implements OnInit {
       : new Date(date).toISOString().split('T')[0];
   }
 
+  normalizeEditRow(row: any, index: number): any {
+    const productId = row.productId ?? row.ProductId ?? row.selectedProduct ?? null;
+    const asPerParty = Number(row.quantityAsPerParty ?? row.quantityasperparty ?? 0);
+    const received = Number(row.receivedQuantity ?? row.ReceivedQuantity ?? 0);
+    const passed = Number(row.passedQuantity ?? row.passed ?? 0);
+    const rejected = Number(row.rejectedQuantity ?? row.rejected ?? 0);
+    const misc = Number(row.miscellaneousQuantity ?? row.miscellaneous ?? 0);
+    const mrp = Number(row.mrp ?? row.Mrp ?? row.MRP ?? 0);
+    const batch = row.batchNumber ?? row.batchno ?? '';
+    const remarks = row.remarks1 ?? row.remarks ?? '';
+    const retQty = Number(row.quantity ?? row.retQty ?? 0);
+    const passedReason = row.passedstatus ?? row.statusofpassed ?? '';
+    const rejectedReason = row.rejectedstatus ?? row.statusofrejected ?? '';
+    return {
+      ...row,
+      sno: index + 1,
+      productId,
+      selectedProduct: productId,
+      quantityAsPerParty: asPerParty,
+      quantityasperparty: asPerParty,
+      asPerParty,
+      receivedQuantity: received,
+      received,
+      passedQuantity: passed,
+      passed,
+      rejectedQuantity: rejected,
+      rejected,
+      miscellaneousQuantity: misc,
+      miscellaneous: misc,
+      status: row.status ?? row.Status ?? '',
+      passedstatus: passedReason,
+      statusofpassed: passedReason,
+      rejectedstatus: rejectedReason,
+      statusofrejected: rejectedReason,
+      statusofmiscellaneous: row.statusofmiscellaneous ?? '',
+      mrp,
+      MRP: mrp,
+      batchNumber: batch,
+      batchno: batch,
+      expiryDate: this.displayExpiryDate(row.expiryDate),
+      returnToParty: !!(row.returnToParty ?? row.ReturnToParty),
+      RetrunToParty: !!(row.returnToParty ?? row.ReturnToParty),
+      quantity: retQty,
+      retQty,
+      remarks1: remarks,
+      remarks,
+      remarks2: row.remarks2 ?? '',
+      demandedbyparty: row.demandedbyparty ?? '',
+      searchText: '',
+      filteredProducts: [...(this.products || [])],
+      isEditingStatus: false
+    };
+  }
+
+  onEditTabChange(tabId: string): void {
+    if (tabId === 'center') {
+      this.editTab = 'center';
+      return;
+    }
+    this.editTab = 'intake';
+  }
+
+  onEditDocketChange(): void {
+    this.grnListRptolddokerno = this.cleanValue(this.stockRepair.docketNoDate);
+    this.dockernumber = this.grnListRptolddokerno;
+  }
+
   editGRN(grn: any) {
-    debugger
     if (this.grnProductListpopup) {
-      this.grnListRptold = [...grn.grndetails];
-      this.grnListRptoldSupplierName=grn.supplierName;
-      this.grnListRptoldSupplierID=grn.supplierId;
-      this.grnListRptoldGrnNo=grn.grnNumber;
-      this.grnListRptoldchallanno=grn.challanNumber;
-      this.grnListRptoldResponsiblePerson=grn.responsiblePerson;
-      this.grnListRptoldgrnStatus=grn.grnStatus;
+      this.editTab = 'intake';
+      this.grnListRptoldSupplierName = grn.supplierName ?? grn.SupplierName ?? '';
+      this.grnListRptoldSupplierID = grn.supplierId ?? grn.SupplierId;
+      this.grnListRptoldGrnNo = grn.grnNumber ?? grn.GrnNumber;
+      this.grnListRptoldchallanno = grn.challanNumber ?? grn.ChallanNumber;
+      this.grnListRptoldResponsiblePerson = grn.responsiblePerson ?? grn.ResponsiblePerson ?? '';
+      this.grnListRptoldgrnStatus = grn.grnStatus ?? grn.GrnStatus ?? '';
       this.grnListRptoldInvoiceReceiptImage = grn.invoiceReceiptImage || '';
-      this.grnListRptoldDocuments = [...(grn.documents || [])];
-      debugger
-      this.selectedgrnOldstatus=grn.grnStatus;
+      this.grnListRptoldDocuments = [...(grn.documents || grn.Documents || [])];
+      this.selectedgrnOldstatus = this.grnListRptoldgrnStatus;
       this.grnListRptolddokerno = this.cleanValue(grn.dockerNumber ?? grn.DockerNumber);
-      this.stockRepair.docketNoDate = this.grnListRptolddokerno || this.stockRepair.docketNoDate;
-      this.dockernumber = this.grnListRptolddokerno || this.dockernumber;
-      
-      this.grnID=grn.id;
-      
-      this.grnListRptold = this.grnListRptold.map(grn => ({
-        ...grn,
-        expiryDate: this.displayExpiryDate(grn.expiryDate)
-      }));
+      this.stockRepair.stockReceivedParty = this.grnListRptoldSupplierName;
+      this.stockRepair.docketNoDate = this.grnListRptolddokerno;
+      this.dockernumber = this.grnListRptolddokerno;
+      this.dispatch.grnNo = this.grnListRptoldGrnNo || '';
+      this.dispatch.stockSentTo = this.grnListRptoldSupplierName;
+      this.grnID = grn.id ?? grn.Id;
+
+      const details = grn.grndetails ?? grn.grnDetails ?? grn.Grndetails ?? [];
+      this.grnListRptold = (Array.isArray(details) ? details : []).map((row: any, index: number) =>
+        this.normalizeEditRow(row, index)
+      );
       const modal = new Modal(this.grnProductListpopup.nativeElement);
       modal.show();
     }
-    
   } 
   
   filteredGrnOldList(): any[] {
@@ -1940,29 +2029,26 @@ export class grnComponent implements OnInit {
   }
 
   updateGrnRow(){
-    this.grnListRptold.push({ 
-      productId: null ,
-      //packSize:'',
-      quantityAsPerParty:0,
+    this.grnListRptold.push(this.normalizeEditRow({
+      productId: null,
+      quantityAsPerParty: 0,
       receivedQuantity: 0,
-      rejectedQuantity:0,
-      passedQuantity:0,
-      miscellaneousQuantity:0,
-      passedstatus:'',
-      rejectedstatus:'',
-      statusofmiscellaneous:'',
-      returnToParty:false,
-      quantity:0,
-      status:'',
-      demandedbyparty:'',
-      mrp:0,
-      batchNumber:'',
-      expiryDate:'',
-      remarks1:'',
-      remarks2:'',
-      statusofrejected:'',
-      statusofpassed:'',
-     });
+      rejectedQuantity: 0,
+      passedQuantity: 0,
+      miscellaneousQuantity: 0,
+      passedstatus: '',
+      rejectedstatus: '',
+      statusofmiscellaneous: '',
+      returnToParty: false,
+      quantity: 0,
+      status: '',
+      demandedbyparty: '',
+      mrp: 0,
+      batchNumber: '',
+      expiryDate: '',
+      remarks1: '',
+      remarks2: ''
+    }, this.grnListRptold.length));
   }
   
   removeGrnOldRow(index: number) {
@@ -1983,15 +2069,11 @@ export class grnComponent implements OnInit {
   
     for (let i = 0; i < this.grnListRptold.length; i++) {
       const grn = this.grnListRptold[i];
-      if (!grn.productId) {
+      if (!(grn.productId ?? grn.selectedProduct)) {
         alert("Please select a product for all rows.");
         return;
       }
-      // if (!grn.packSize || grn.packSize.trim() === '') {
-      //   alert("Pack size cannot be empty.");
-      //   return;
-      // }
-      if (grn.receivedQuantity < 0 || grn.quantityAsPerParty < 0 || grn.mrp < 0) {
+      if ((grn.receivedQuantity ?? 0) < 0 || (grn.quantityAsPerParty ?? grn.quantityasperparty ?? 0) < 0 || (grn.mrp ?? grn.MRP ?? 0) < 0) {
         alert("Negative values are not allowed.");
         return;
       }
@@ -2015,27 +2097,27 @@ export class grnComponent implements OnInit {
       invoiceReceiptImage: this.grnListRptoldInvoiceReceiptImage || '',
       documents: this.grnListRptoldDocuments,
       grnDetails: this.grnListRptold.map(grn => ({
-      productId: grn.productId,
-        quantityAsPerParty: grn.quantityAsPerParty,
-        receivedQuantity: grn.receivedQuantity,
-        rejectedQuantity: grn.rejectedQuantity,
-        passedQuantity: grn.passedQuantity,
-        miscellaneousQuantity: grn.miscellaneousQuantity || 0,
+        productId: grn.productId ?? grn.selectedProduct,
+        quantityAsPerParty: Number(grn.quantityAsPerParty ?? grn.quantityasperparty ?? 0),
+        receivedQuantity: Number(grn.receivedQuantity ?? 0),
+        rejectedQuantity: Number(grn.rejectedQuantity ?? grn.rejected ?? 0),
+        passedQuantity: Number(grn.passedQuantity ?? grn.passed ?? 0),
+        miscellaneousQuantity: Number(grn.miscellaneousQuantity ?? grn.miscellaneous ?? 0),
         status: grn.status,
-        demandedbyparty:grn.demandedbyparty,
-        mrp: grn.mrp,
-        batchNumber: grn.batchNumber,
+        demandedbyparty: grn.demandedbyparty,
+        mrp: Number(grn.mrp ?? grn.MRP ?? 0),
+        batchNumber: grn.batchNumber ?? grn.batchno ?? '',
         expiryDate: this.toApiExpiryDate(grn.expiryDate),
-        remarks1: grn.remarks1,
+        remarks1: grn.remarks1 ?? grn.remarks ?? '',
         remarks2: grn.remarks2,
-        statusofrejected:grn.rejectedstatus,
-        statusofpassed:grn.passedstatus,
-        statusofmiscellaneous:grn.statusofmiscellaneous || '',
-        approvedbycompany:"y",
-        passedstatus:grn.passedstatus,
-        rejectedstatus:grn.rejectedstatus,
-        returnToParty:grn.returnToParty,
-        quantity:grn.quantity
+        statusofrejected: grn.rejectedstatus ?? grn.statusofrejected,
+        statusofpassed: grn.passedstatus ?? grn.statusofpassed,
+        statusofmiscellaneous: grn.statusofmiscellaneous || '',
+        approvedbycompany: "y",
+        passedstatus: grn.passedstatus ?? grn.statusofpassed,
+        rejectedstatus: grn.rejectedstatus ?? grn.statusofrejected,
+        returnToParty: !!(grn.returnToParty || grn.RetrunToParty),
+        quantity: Number(grn.quantity ?? grn.retQty ?? 0)
       }))
     };
 

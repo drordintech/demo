@@ -1035,244 +1035,330 @@
 
 
 <div #grnProductListpopup class="modal fade" tabindex="-1" aria-hidden="true" style="z-index: 100008!important;">
-  <div class="modal-dialog modal-xl">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable" style="max-width: 96vw;">
     <div class="modal-content">
-      <!-- Modal Header -->
       <div class="modal-header bg-primary text-white">
-        <h5 class="modal-title">GRN Product List</h5>
+        <h5 class="modal-title">Edit GRN — {{ grnListRptoldGrnNo }}</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
 
-      <!-- Modal Body -->
-      <div class="modal-body">
-        <div class="grn-form-container">
-          <div class="form-row">
-            <div class="form-group">
-              <div class="d-flex align-items-center mb-1">
-                <label class="form-label mb-0 me-1">
-                  <i class="bi bi-building me-1"></i>Selected Supplier
-                </label>
-              </div>
-              <div class="info-display-value">{{grnListRptoldSupplierName}}</div>
-            </div>
-
-            <div class="form-group">
-              <div class="d-flex align-items-center mb-1">
-                <label class="form-label mb-0 me-1">
-                  <i class="bi bi-upc-scan me-1"></i>GRN NO
-                </label>
-              </div>
-              <div class="info-display-value">{{grnListRptoldGrnNo}}</div>
-            </div>
-
-            <div class="form-group">
-              <div class="d-flex align-items-center mb-1">
-                <label class="form-label mb-0 me-1">
-                  <i class="bi bi-person-badge me-1"></i>Responsible Person
-                </label>
-              </div>
-              <div class="info-display-value">{{grnListRptoldResponsiblePerson}}</div>
-            </div>
-
-            <div class="form-group">
-              <div class="d-flex align-items-center mb-1">
-                <label class="form-label mb-0 me-1">
-                  <i class="bi bi-box me-1"></i>Docker No
-                </label>
-              </div>
-              <div class="info-display-value">{{ getOldDocketNumber() }}</div>
-            </div>
-
-            <div class="form-group">
-              <div class="d-flex align-items-center mb-1">
-                <label class="form-label mb-0 me-1">
-                  <i class="bi bi-flag me-1"></i>GRN Status
-                </label>
-              </div>
-              <select id="grnstatusDropdown" [(ngModel)]="selectedgrnOldstatus" (change)="onGRNStatusChange()"
-                name="grnstatusDropdown" class="form-select custom-dropdown">
-                <option value="" disabled>Select GRN Status</option>
-                <option *ngFor="let p of grnstatus" [value]="p.name">
-                  {{ p.name }}
-                </option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <div class="d-flex align-items-center mb-1">
-                <label class="form-label mb-0 me-1">
-                  <i class="bi bi-image me-1"></i>Invoice Receipt
-                </label>
-              </div>
-              <div class="d-flex align-items-center gap-2">
-                <input type="file" id="editInvoiceImage" multiple (change)="onEditInvoiceImageSelected($event)" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" class="form-control custom-input" />
-                <button *ngIf="grnListRptoldDocuments.length" type="button" class="btn btn-outline-danger btn-sm p-1 d-flex align-items-center" (click)="clearEditInvoiceImage()" title="Remove all documents" style="height: 38px; width: 38px; justify-content: center;">
-                  <i class="bi bi-trash"></i>
-                </button>
-              </div>
-              <div class="document-list mt-2" *ngIf="grnListRptoldDocuments.length">
-                <div class="document-chip" *ngFor="let document of grnListRptoldDocuments; let i = index">
-                  <i class="bi bi-paperclip"></i><button type="button" class="document-name-link text-truncate" (click)="openDocument(document)" title="View document">{{ document.fileName }}</button>
-                  <button type="button" (click)="downloadDocument(document)" title="Download document"><i class="bi bi-download"></i></button>
-                  <button type="button" (click)="removeInvoiceDocument(i, true)" title="Remove document"><i class="bi bi-x"></i></button>
-                </div>
-              </div>
-            </div>
+      <div class="modal-body grn-page">
+        <div class="grn-step-bar">
+          <div class="nav nav-pills step-pills" role="tablist">
+            <button class="nav-link step-btn" [class.active]="editTab === 'intake'" type="button"
+              (click)="onEditTabChange('intake')">
+              <span class="step-num">1</span>
+              <i class="bi bi-box-seam me-1"></i> Product Intake
+            </button>
+            <button class="nav-link step-btn" [class.active]="editTab === 'center'" type="button"
+              (click)="onEditTabChange('center')">
+              <span class="step-num">2</span>
+              <i class="bi bi-building-gear me-1"></i> Repair Center
+            </button>
           </div>
+          <button *ngIf="editTab === 'intake'" class="btn btn-primary btn-sm px-3 rounded-pill" (click)="updateGrnRow()">
+            <i class="bi bi-plus-lg me-1"></i> Add Row
+          </button>
         </div>
-        <button class="btn btn-sm btn-primary mb-3" (click)="updateGrnRow()">
-          <i class="bi bi-plus-lg"></i> Add New Row
-        </button>
-        <div class="table-container">
-          <div class="table-responsive" style="max-height: 400px; overflow: auto;">
-            <table class="table table-bordered table-hover table-sm text-center align-middle fixed-table">
-              <thead class="table-dark">
-                <tr>
-                  <th scope="col" style="width: 50px; position: sticky; top: 0; z-index: 2;">S.No</th>
-                  <th scope="col" style="width: 370px; position: sticky; top: 0; z-index: 2;">Product</th>
-                  <th scope="col" colspan="2" style="width: 140px; position: sticky; top: 0; z-index: 2;">Quantity
-                  </th>
-                  <th scope="col" colspan="3" style="width: 450px; position: sticky; top: 0; z-index: 2;">Quantity
-                  </th>
-                  <th scope="col" style="width: 150px; position: sticky; top: 0; z-index: 2;">Status</th>
-                  <th scope="col" style="width: 80px; position: sticky; top: 0; z-index: 2;">MRP</th>
-                  <th scope="col" style="width: 120px; position: sticky; top: 0; z-index: 2;">Batch</th>
-                  <th scope="col" style="width: 120px; position: sticky; top: 0; z-index: 2;">Expiry</th>
-                  <th scope="col" style="width: 120px; position: sticky; top: 0; z-index: 2;">Retrun To Party</th>
-                  <th scope="col" style="width: 120px; position: sticky; top: 0; z-index: 2;">Retrun Quantity</th>
-                  <th scope="col" style="width: 120px; position: sticky; top: 0; z-index: 2;">Remarks 1</th>
-                  <th scope="col" style="width: 120px; position: sticky; top: 0; z-index: 2;">Remarks 2</th>
-                  <th scope="col" style="width: 60px; position: sticky; top: 0; z-index: 2;">Actions</th>
-                </tr>
-                <tr>
-                  <th style="position: sticky; top: 23px;  z-index: 1;"></th>
-                  <th style="position: sticky; top: 23px;  z-index: 1;"></th>
-                  <th style="width: 60px; position: sticky; top: 23px;  z-index: 1;">As per party</th>
-                  <th style="width: 60px; position: sticky; top: 23px;  z-index: 1;">Received</th>
-                  <th style="width: 150px; position: sticky; top: 23px;  z-index: 1;">Passed</th>
-                  <th style="width: 150px; position: sticky; top: 23px;  z-index: 1;">Rejected</th>
-                  <th style="width: 150px; position: sticky; top: 23px;  z-index: 1;">Miscellaneous</th>
-                  <th style="position: sticky; top: 23px;  z-index: 1;"></th>
-                  <th style="position: sticky; top: 23px;  z-index: 1;">By Party</th>
-                  <th style="position: sticky; top: 23px;  z-index: 1;"></th>
-                  <th style="position: sticky; top: 23px;  z-index: 1;"></th>
-                  <th style="position: sticky; top: 23px;  z-index: 1;"></th>
-                  <th style="position: sticky; top: 23px;  z-index: 1;"></th>
-                  <th style="position: sticky; top: 23px;  z-index: 1;"></th>
-                  <th style="position: sticky; top: 23px;  z-index: 1;"></th>
-                  <th style="position: sticky; top: 23px;  z-index: 1;"></th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let grn of grnListRptold; let i = index">
-                  <td>{{ i + 1 }}</td>
-                  <td style="width: 200px;">
-                    <div class="d-flex align-items-center">
-                      <select [(ngModel)]="grn.productId" class="form-select form-select-sm w-100 Dropdown">
-                        <option value="" disabled>Select</option>
-                        <option *ngFor="let p of products" [ngValue]="p.productId">{{ p.name }}</option>
-                      </select>
-                      <button type="button" class="btn btn-sm ms-2" style="padding: 2px 5px; font-size: 0.7rem;"
-                        (click)="openproductInfoModal(grn.productId)">
-                        <i class="bi bi-info-circle text-primary"></i>
-                      </button>
-                    </div>
-                  </td>
-                  <td>
-                    <input type="number" [(ngModel)]="grn.quantityAsPerParty" class="form-control form-control-sm"
-                      (change)="updateQuantity(grn)" />
-                  </td>
-                  <td>
-                    <input type="number" [(ngModel)]="grn.receivedQuantity" class="form-control form-control-sm"
-                      (change)="updateQuantity(grn)" />
-                  </td>
-                  <td>
-                    <input type="number" [(ngModel)]="grn.passedQuantity" class="form-control form-control-sm"
-                      (change)="updateQuantity(grn)" />
-                    <select [(ngModel)]="grn.passedstatus" class="form-select form-select-sm Dropdown">
-                      <option value="" disabled>Select</option>
-                      <option *ngFor="let p of statusofpassed" [ngValue]="p.name">{{ p.name }}</option>
-                    </select>
-                  </td>
-                  <td>
-                    <input type="number" [(ngModel)]="grn.rejectedQuantity" class="form-control form-control-sm"
-                      (change)="updateQuantity(grn)" />
-                    <select [(ngModel)]="grn.rejectedstatus" class="form-select form-select-sm Dropdown">
-                      <option value="" disabled>Select</option>
-                      <option *ngFor="let p of statusofrejected" [ngValue]="p.name">{{ p.name }}</option>
-                    </select>
-                  </td>
-                  <td>
-                    <input type="number" [(ngModel)]="grn.miscellaneousQuantity" class="form-control form-control-sm"
-                      (change)="updateQuantity(grn)" />
-                    <select [(ngModel)]="grn.statusofmiscellaneous" class="form-select form-select-sm Dropdown">
-                      <option value="" disabled>Select</option>
-                      <option *ngFor="let p of statusofmiscellaneous" [ngValue]="p.name">{{ p.name }}</option>
-                    </select>
-                  </td>
-                  <td>
-                    <select [(ngModel)]="grn.status" class="form-select form-select-sm Dropdown">
-                      <option value="" disabled>Select</option>
-                      <option *ngFor="let p of status" [ngValue]="p.name">{{ p.name }}</option>
-                    </select>
-                  </td>
-                  <!-- <td style="width: 100px;">
-                    <select [(ngModel)]="grn.demandedbyparty" class="form-select form-select-sm Dropdown">
-                      <option value="" disabled>Select</option>
-                      <option *ngFor="let p of demandedbyparty" [ngValue]="p.name">{{ p.name }}</option>
-                    </select>
-                  </td> -->
 
-                  <td>
-                    <input type="number" [(ngModel)]="grn.mrp" class="form-control form-control-sm"
-                      (change)="updateQuantity(grn)" />
+        <div class="blue-banner-panel mb-3" *ngIf="editTab === 'intake'">
+          <div class="banner-header"><span>STOCK REPAIR DETAILS</span></div>
+          <div class="table-responsive">
+            <table class="table table-bordered horizontal-row-table mb-0">
+              <tbody>
+                <tr>
+                  <th class="label-blue-bg">STOCK RECEIVED PARTY</th>
+                  <td style="min-width: 220px;">
+                    <div class="form-control form-control-sm bg-light">{{ grnListRptoldSupplierName || '—' }}</div>
                   </td>
+                  <th class="label-blue-bg">DOCKET NO / DATE</th>
                   <td>
-                    <input type="text" [(ngModel)]="grn.batchNumber" class="form-control form-control-sm"
-                      placeholder="Batch" />
+                    <input type="text" class="form-control form-control-sm" [(ngModel)]="stockRepair.docketNoDate"
+                      (input)="onEditDocketChange()" name="editDocket" placeholder="Docket no / date" />
                   </td>
+                  <th class="label-blue-bg">TRANSPORT</th>
                   <td>
-                    <input type="date" [(ngModel)]="grn.expiryDate" class="form-control form-control-sm" />
+                    <input type="text" class="form-control form-control-sm" [(ngModel)]="stockRepair.transport"
+                      name="editTransport" placeholder="Transport name" />
                   </td>
+                </tr>
+                <tr>
+                  <th class="label-blue-bg">DEBIT / INVOICE NO &amp; DATE</th>
                   <td>
-                    <input type="checkbox" [(ngModel)]="grn.returnToParty" class="form-check-input"
-                      id="returnToParty" />
+                    <input type="text" class="form-control form-control-sm" [(ngModel)]="stockRepair.debitNoteInvoice"
+                      name="editDebit" placeholder="Debit / invoice no &amp; date" />
                   </td>
+                  <th class="label-blue-bg">INVOICE DATE</th>
                   <td>
-                    <input type="number" [(ngModel)]="grn.quantity" class="form-control form-control-sm w-100"
-                      placeholder="Retrun Quantity" />
+                    <input type="date" class="form-control form-control-sm" [(ngModel)]="stockRepair.dateTime"
+                      name="editInvoiceDate" />
                   </td>
+                  <th class="label-blue-bg">RESPONSIBLE PERSON</th>
                   <td>
-                    <input type="text" [(ngModel)]="grn.remarks1" class="form-control form-control-sm"
-                      placeholder="Remarks" />
+                    <div class="form-control form-control-sm bg-light">{{ grnListRptoldResponsiblePerson || '—' }}</div>
                   </td>
+                </tr>
+                <tr>
+                  <th class="label-blue-bg">GRN STATUS</th>
                   <td>
-                    <input type="text" [(ngModel)]="grn.remarks2" class="form-control form-control-sm"
-                      placeholder="Remarks" />
+                    <select [(ngModel)]="selectedgrnOldstatus" name="editGrnStatus"
+                      class="form-select form-select-sm custom-dropdown">
+                      <option value="" disabled>Select GRN Status</option>
+                      <option *ngFor="let p of grnstatus" [value]="p.name">{{ p.name }}</option>
+                    </select>
                   </td>
-                  <td>
-                    <button class="btn btn-sm text-danger" (click)="removeGrnOldRow(i)">
-                      <i class="bi bi-trash"></i>
-                    </button>
+                  <th class="label-blue-bg">INVOICE / DOCUMENTS</th>
+                  <td colspan="3">
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                      <input type="file" id="editInvoiceImage" multiple (change)="onEditInvoiceImageSelected($event)"
+                        accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" class="form-control form-control-sm"
+                        style="max-width: 320px; font-size: 12px;" />
+                      <button *ngIf="grnListRptoldDocuments.length" type="button" class="btn btn-outline-danger btn-sm"
+                        (click)="clearEditInvoiceImage()" title="Remove all">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                      <span class="badge bg-light text-dark border d-inline-flex align-items-center gap-1 px-2 py-1"
+                        *ngFor="let document of grnListRptoldDocuments; let i = index" style="font-size: 11px;">
+                        <button type="button" class="btn btn-link btn-sm p-0 text-dark text-decoration-none"
+                          (click)="openDocument(document)">{{ document.fileName }}</button>
+                        <button type="button" class="btn btn-link btn-sm p-0" (click)="removeInvoiceDocument(i, true)">
+                          <i class="bi bi-x text-danger"></i>
+                        </button>
+                      </span>
+                    </div>
                   </td>
                 </tr>
               </tbody>
-              <tfoot>
-                <tr class="table-footer">
-                  <td colspan="16" class="text-start fw-bold"><i>Total Product Added: {{ grnListRptold.length }}</i>
-                  </td>
-                </tr>
-              </tfoot>
             </table>
           </div>
         </div>
 
+        <div class="table-container shadow-sm rounded-3 overflow-hidden border">
+          <div class="table-responsive grn-table-scroll">
+            <table class="table modern-grn-table align-middle text-center mb-0">
+              <thead>
+                <ng-container *ngIf="editTab === 'intake'">
+                  <tr class="header-main-row">
+                    <th rowspan="2" class="align-middle main-th sticky-th">S.No</th>
+                    <th rowspan="2" class="align-middle main-th sticky-th sticky-th-product">Product Name</th>
+                    <th colspan="3" class="text-center group-header-qty py-1 sticky-th">QUANTITY</th>
+                    <th rowspan="2" class="align-middle main-th text-center sticky-th sticky-th-actions">Actions</th>
+                  </tr>
+                  <tr class="header-sub-row">
+                    <th class="sub-th sticky-sub-th">As Per Party</th>
+                    <th class="sub-th sticky-sub-th">Received</th>
+                    <th class="sub-th sticky-sub-th">Shortage Qty</th>
+                  </tr>
+                </ng-container>
+                <ng-container *ngIf="editTab === 'center'">
+                  <tr class="header-main-row">
+                    <th rowspan="2" class="align-middle main-th sticky-th">S.No</th>
+                    <th rowspan="2" class="align-middle main-th sticky-th sticky-th-product-sm" style="width: 360px;">Product Name</th>
+                    <th colspan="5" class="text-center group-header-qty py-1 sticky-th">QUANTITY</th>
+                    <th rowspan="2" class="align-middle main-th text-center sticky-th">Status</th>
+                    <th rowspan="2" class="align-middle main-th text-center sticky-th">Return</th>
+                    <th rowspan="2" class="align-middle main-th text-center sticky-th">Ret Qty</th>
+                    <th rowspan="2" class="align-middle main-th text-center sticky-th">Remarks</th>
+                  </tr>
+                  <tr class="header-sub-row">
+                    <th class="sub-th sticky-sub-th">Rec Qty</th>
+                    <th class="sub-th sticky-sub-th">S. Qty</th>
+                    <th class="sub-th sticky-sub-th">Passed</th>
+                    <th class="sub-th sticky-sub-th">Rejected</th>
+                    <th class="sub-th sticky-sub-th">Miscellaneous</th>
+                  </tr>
+                </ng-container>
+              </thead>
+              <tbody>
+                <tr *ngFor="let grn of grnListRptold; let i = index">
+                  <td *ngFor="let col of getEditActiveColumns()">
+                    <ng-container *ngIf="col === 'sno'">
+                      <span class="fw-semibold text-secondary">{{ i + 1 }}</span>
+                    </ng-container>
+                    <ng-container *ngIf="col === 'product'">
+                      <div *ngIf="editTab === 'intake'" class="product-picker-container">
+                        <div ngbDropdown container="body" class="w-100">
+                          <div class="d-flex align-items-center gap-1">
+                            <button class="form-select form-select-sm text-start product-dropdown-toggle text-truncate"
+                              ngbDropdownToggle type="button"
+                              style="border-radius: 4px; font-size: 12px; height: 31px; border: 1px solid #ced4da;">
+                              {{ getProductName(grn.selectedProduct || grn.productId) || 'Select product' }}
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" style="height: 31px;"
+                              (click)="openproductInfoModal(grn.selectedProduct || grn.productId)">
+                              <i class="bi bi-info-circle"></i>
+                            </button>
+                          </div>
+                          <div ngbDropdownMenu class="shadow-sm border p-0" style="border-radius: 8px; min-width: 280px;">
+                            <div class="p-2 border-bottom bg-light">
+                              <input type="text" class="form-control form-control-sm" placeholder="Search Product..."
+                                [(ngModel)]="grn.searchText" (ngModelChange)="filterProducts(grn)"
+                                (click)="$event.stopPropagation()" />
+                            </div>
+                            <div style="max-height: 250px; overflow-y: auto; padding: 4px 0;">
+                              <button class="dropdown-item" type="button" (click)="clearProductSelection(grn)">Select product</button>
+                              <button class="dropdown-item text-wrap" type="button"
+                                *ngFor="let product of grn.filteredProducts" (click)="selectProduct(grn, product)"
+                                [innerHTML]="highlightMatch(product.name, grn.searchText)">
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div *ngIf="editTab === 'center'" class="text-start px-2 py-1" style="min-width: 330px;">
+                        <div class="fw-bold mb-2 text-dark text-wrap" style="font-size: 13px;">
+                          {{ getProductName(grn.selectedProduct || grn.productId) }}
+                        </div>
+                        <div class="row g-2 mt-1">
+                          <div class="col-4">
+                            <label class="small text-muted fw-bold d-block mb-1" style="font-size: 10px;">MRP</label>
+                            <input type="number" [(ngModel)]="grn.MRP" (ngModelChange)="grn.mrp = $event"
+                              class="form-control form-control-sm text-center" placeholder="MRP"
+                              style="font-size: 11px; height: 28px;" />
+                          </div>
+                          <div class="col-4">
+                            <label class="small text-muted fw-bold d-block mb-1" style="font-size: 10px;">Batch No</label>
+                            <input type="text" [(ngModel)]="grn.batchno" (ngModelChange)="grn.batchNumber = $event"
+                              class="form-control form-control-sm text-center" placeholder="Batch"
+                              style="font-size: 11px; height: 28px;" />
+                          </div>
+                          <div class="col-4">
+                            <label class="small text-muted fw-bold d-block mb-1" style="font-size: 10px;">Expiry Date</label>
+                            <input type="date" [(ngModel)]="grn.expiryDate" class="form-control form-control-sm"
+                              style="font-size: 11px; height: 28px; padding: 2px 5px;" />
+                          </div>
+                        </div>
+                      </div>
+                    </ng-container>
+                    <ng-container *ngIf="col === 'asPerParty'">
+                      <input type="number" [(ngModel)]="grn.quantityasperparty" (change)="updateQuantity(grn)"
+                        (input)="updateQuantity(grn)" class="form-control form-control-sm text-center qty-input" />
+                    </ng-container>
+                    <ng-container *ngIf="col === 'received'">
+                      <input type="number" [(ngModel)]="grn.receivedQuantity" (change)="updateQuantity(grn)"
+                        (input)="updateQuantity(grn)" class="form-control form-control-sm text-center qty-input" />
+                    </ng-container>
+                    <ng-container *ngIf="col === 'shortageQty'">
+                      <div class="shortage-qty-cell">
+                        <span *ngIf="!isExcessDelivery(grn)"
+                          [class]="getShortageQty(grn) > 0 ? 'shortage-value shortage-warning' : 'shortage-value shortage-matched'">
+                          {{ getShortageQty(grn) }}
+                        </span>
+                        <span *ngIf="isExcessDelivery(grn)" class="shortage-value shortage-excess">
+                          0 <span class="excess-badge">Excess</span>
+                        </span>
+                      </div>
+                    </ng-container>
+                    <ng-container *ngIf="col === 'passed'">
+                      <input type="number" [(ngModel)]="grn.passed" (change)="updateQuantity(grn)"
+                        class="form-control form-control-sm text-center qty-input" />
+                      <select [(ngModel)]="grn.statusofpassed" (ngModelChange)="grn.passedstatus = $event"
+                        class="form-select form-select-sm Dropdown mt-1 reason-select">
+                        <option value="" disabled>Select</option>
+                        <option *ngFor="let p of statusofpassed" [ngValue]="p.name">{{ p.name }}</option>
+                      </select>
+                    </ng-container>
+                    <ng-container *ngIf="col === 'rejected'">
+                      <input type="number" [(ngModel)]="grn.rejected" (change)="updateQuantity(grn)"
+                        class="form-control form-control-sm text-center qty-input" />
+                      <select [(ngModel)]="grn.statusofrejected" (ngModelChange)="grn.rejectedstatus = $event"
+                        class="form-select form-select-sm Dropdown mt-1 reason-select">
+                        <option value="" disabled>Select</option>
+                        <option *ngFor="let p of statusofrejected" [ngValue]="p.name">{{ p.name }}</option>
+                      </select>
+                    </ng-container>
+                    <ng-container *ngIf="col === 'miscellaneous'">
+                      <input type="number" [(ngModel)]="grn.miscellaneous" (change)="updateQuantity(grn)"
+                        class="form-control form-control-sm text-center qty-input" />
+                      <select [(ngModel)]="grn.statusofmiscellaneous"
+                        class="form-select form-select-sm Dropdown mt-1 reason-select">
+                        <option value="" disabled>Select</option>
+                        <option *ngFor="let p of statusofmiscellaneous" [ngValue]="p.name">{{ p.name }}</option>
+                      </select>
+                    </ng-container>
+                    <ng-container *ngIf="col === 'status'">
+                      <select [(ngModel)]="grn.status" class="form-select form-select-sm">
+                        <option value="" disabled>Select</option>
+                        <option *ngFor="let p of status" [ngValue]="p.name">{{ p.name }}</option>
+                      </select>
+                    </ng-container>
+                    <ng-container *ngIf="col === 'returnToParty'">
+                      <input type="checkbox" [(ngModel)]="grn.returnToParty"
+                        (ngModelChange)="grn.RetrunToParty = $event" class="form-check-input" />
+                    </ng-container>
+                    <ng-container *ngIf="col === 'retQty'">
+                      <input type="number" [(ngModel)]="grn.retQty" (ngModelChange)="grn.quantity = $event"
+                        class="form-control form-control-sm text-center qty-input" />
+                    </ng-container>
+                    <ng-container *ngIf="col === 'remarks'">
+                      <input type="text" [(ngModel)]="grn.remarks" (ngModelChange)="grn.remarks1 = $event"
+                        class="form-control form-control-sm" placeholder="Remarks" />
+                    </ng-container>
+                  </td>
+                  <td *ngIf="editTab === 'intake'" class="text-center">
+                    <button class="btn btn-sm btn-outline-danger border-0 rounded-circle" (click)="removeGrnOldRow(i)"
+                      title="Remove Row" style="width: 32px; height: 32px; padding: 0;">
+                      <i class="bi bi-trash-fill"></i>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="dispatch-edit-panel mt-3" *ngIf="editTab === 'center'">
+          <div class="blue-banner-panel mb-3">
+            <div class="banner-header" style="background-color: #0ea5e9;"><span>DISPATCH DETAILS</span></div>
+            <div class="table-responsive">
+              <table class="table table-bordered horizontal-row-table mb-0">
+                <tbody>
+                  <tr>
+                    <th class="label-blue-bg" style="background-color: #e0f2fe; color: #0369a1;">STOCK SENT TO</th>
+                    <td>
+                      <input type="text" class="form-control form-control-sm" [(ngModel)]="dispatch.stockSentTo"
+                        name="editStockSent" placeholder="Party name" />
+                    </td>
+                    <th class="label-blue-bg" style="background-color: #e0f2fe; color: #0369a1;">CHALLAN NO / INVOICE NO / CREDIT NOTE NO / DATED</th>
+                    <td>
+                      <input type="text" class="form-control form-control-sm"
+                        [(ngModel)]="dispatch.challanInvoiceCreditNote" name="editChallan"
+                        placeholder="Challan / invoice / credit note &amp; date" />
+                    </td>
+                    <th class="label-blue-bg" style="background-color: #e0f2fe; color: #0369a1;">DOCKET NO / DATE</th>
+                    <td>
+                      <input type="text" class="form-control form-control-sm" [(ngModel)]="dispatch.docketNoDate"
+                        name="editDispatchDocket" placeholder="Docket no / date" />
+                    </td>
+                  </tr>
+                  <tr>
+                    <th class="label-blue-bg" style="background-color: #e0f2fe; color: #0369a1;">TRANSPORT</th>
+                    <td>
+                      <input type="text" class="form-control form-control-sm" [(ngModel)]="dispatch.transport"
+                        name="editDispatchTransport" placeholder="Transport name" />
+                    </td>
+                    <th class="label-blue-bg" style="background-color: #e0f2fe; color: #0369a1;">GRN NO</th>
+                    <td>
+                      <input type="text" class="form-control form-control-sm" [(ngModel)]="dispatch.grnNo"
+                        name="editDispatchGrn" />
+                    </td>
+                    <th class="label-blue-bg" style="background-color: #e0f2fe; color: #0369a1;">NO CREDIT NOTE WILL BE ISSUED</th>
+                    <td>
+                      <input type="text" class="form-control form-control-sm" [(ngModel)]="dispatch.noCreditNoteRemark"
+                        name="editNoCn" />
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <!-- Modal Footer -->
       <div class="modal-footer d-flex justify-content-between align-items-center flex-wrap gap-2">
         <div class="d-flex gap-2">
-          <button *ngIf="hasBatchMrpAndExpiry(grnListRptold)" class="btn btn-outline-primary btn-sm" (click)="printGRNPopup()" title="Download GRN PDF">
+          <button *ngIf="hasBatchMrpAndExpiry(grnListRptold)" class="btn btn-outline-primary btn-sm"
+            (click)="printGRNPopup()" title="Download GRN PDF">
             <i class="bi bi-download me-1"></i> Download GRN
           </button>
           <button class="btn btn-outline-info btn-sm" (click)="printChallanOldPopup()" title="Download Challan PDF">
@@ -1280,8 +1366,14 @@
           </button>
         </div>
         <div class="d-flex gap-2">
-          <button class="btn btn-success btn-sm" style="background-color: #2196f3;border: #2196f3;"
-            (click)="UpdateoldGRN()">
+          <button *ngIf="editTab === 'intake'" class="btn btn-primary btn-sm" (click)="onEditTabChange('center')">
+            Save &amp; Continue <i class="bi bi-arrow-right ms-1"></i>
+          </button>
+          <button *ngIf="editTab === 'center'" class="btn btn-outline-secondary btn-sm" (click)="onEditTabChange('intake')">
+            <i class="bi bi-arrow-left me-1"></i> Back to Intake
+          </button>
+          <button *ngIf="editTab === 'center'" class="btn btn-success btn-sm"
+            style="background-color: #2196f3; border: #2196f3;" (click)="UpdateoldGRN()">
             <i class="bi bi-check-circle"></i> Submit
           </button>
           <button type="button" class="btn btn-danger btn-sm" data-bs-dismiss="modal">
