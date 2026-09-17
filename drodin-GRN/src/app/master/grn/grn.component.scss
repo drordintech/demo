@@ -358,11 +358,22 @@
 }
 
 @media print {
+  /* Bugfix: hide chrome; no fixed body size that clips print */
+  .no-print,
+  nav, .navbar, .sidebar, aside,
+  .btn, button {
+    display: none !important;
+  }
+
   body {
-    width: 297mm;
-    height: 210mm;
-    margin: 0;
-    padding: 20mm;
+    width: auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
   .table thead {
@@ -370,19 +381,13 @@
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
-
-  .btn {
-    display: none;
-  }
 }
 
+/* Page setup — matches injected GRN/Challan print styles */
 @page {
   size: A4 landscape;
-  margin: 0mm !important;
+  margin: 8mm;
 }
-@page :left { margin: 0mm !important; }
-@page :right { margin: 0mm !important; }
-@page :first { margin: 0mm !important; }
 
 .nav-tabs .nav-link.active,
 .nav-tabs .nav-item.show .nav-link {

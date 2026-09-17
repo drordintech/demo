@@ -1357,7 +1357,7 @@
 
       <div class="modal-footer d-flex justify-content-between align-items-center flex-wrap gap-2">
         <div class="d-flex gap-2">
-          <button *ngIf="hasBatchMrpAndExpiry(grnListRptold)" class="btn btn-outline-primary btn-sm"
+          <button class="btn btn-outline-primary btn-sm"
             (click)="printGRNPopup()" title="Download GRN PDF">
             <i class="bi bi-download me-1"></i> Download GRN
           </button>
@@ -1387,76 +1387,97 @@
 <!-- PRINT GRN POPUP EDIT -->
 <div id="printSectionpopup" style="display: none;">
   <div class="grn-print-doc">
-    <div class="grn-print-date">Date: {{ todayDate }}</div>
-    <div class="grn-print-header">
-      <h2>Odin Healthcare Pvt. Ltd.</h2>
-      <p>Plot No. 45, Industrial Area, Phase-2, Panchkula (Haryana)</p>
-      <p>Call Us: +91 9878785333 &nbsp;|&nbsp; E-mail: customercare&#64;drodin.in</p>
-      <h3>Goods Received Note / Inspection Report</h3>
+    <div class="grn-print-main">
+      <div class="grn-print-top">
+        <div class="grn-print-date">Date: {{ todayDate }}</div>
+        <div class="grn-print-header">
+          <h2>Odin Healthcare Pvt. Ltd.</h2>
+          <p>Plot No. 45, Industrial Area, Phase-2, Panchkula (Haryana)</p>
+          <p>Call Us: +91 9878785333 &nbsp;|&nbsp; E-mail: customercare&#64;drodin.in</p>
+          <h3>Goods Received Note / Inspection Report</h3>
+        </div>
+
+        <table class="grn-print-meta">
+          <tr>
+            <td><span>Supplier</span><strong>{{ grnListRptoldSupplierName || '—' }}</strong></td>
+            <td><span>Responsible Person</span><strong>{{ grnListRptoldResponsiblePerson || '—' }}</strong></td>
+            <td><span>Docker No.</span><strong>{{ getOldDocketNumber() || '—' }}</strong></td>
+            <td><span>GRN Status</span><strong>{{ selectedgrnOldstatus || '—' }}</strong></td>
+            <td><span>GRN Number</span><strong>{{ grnListRptoldGrnNo || '—' }}</strong></td>
+          </tr>
+        </table>
+      </div>
+
+      <table class="grn-print-table">
+        <colgroup>
+          <col class="col-sno" />
+          <col class="col-product" />
+          <col class="col-party" />
+          <col class="col-recd" />
+          <col class="col-passed" />
+          <col class="col-pass-reason" />
+          <col class="col-rejected" />
+          <col class="col-reject-reason" />
+          <col class="col-status" />
+          <col class="col-demanded" />
+          <col class="col-mrp" />
+          <col class="col-batch" />
+          <col class="col-expiry" />
+          <col class="col-return" />
+          <col class="col-remarks" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th rowspan="2" class="col-sno">S.No</th>
+            <th rowspan="2" class="col-product">Product Name</th>
+            <th colspan="2" class="group-intake">Product Intake</th>
+            <th colspan="4" class="group-repair">Repair Center</th>
+            <th rowspan="2" class="col-status">Status</th>
+            <th rowspan="2" class="col-demanded">Demanded</th>
+            <th rowspan="2" class="col-mrp">MRP</th>
+            <th rowspan="2" class="col-batch">Batch No</th>
+            <th rowspan="2" class="col-expiry">Expiry</th>
+            <th rowspan="2" class="col-return">Return Qty</th>
+            <th rowspan="2" class="col-remarks">Remarks</th>
+          </tr>
+          <tr>
+            <th class="col-party">As Per Party</th>
+            <th class="col-recd">Received</th>
+            <th class="col-passed">Passed</th>
+            <th class="col-pass-reason">Pass Reason</th>
+            <th class="col-rejected">Rejected</th>
+            <th class="col-reject-reason">Reject Reason</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let grn of grnListRptold; let i = index">
+            <td class="col-sno">{{ i + 1 }}</td>
+            <td class="col-product text-start">{{ getProductName(grn.productId) }}</td>
+            <td class="col-party">{{ grn.quantityAsPerParty }}</td>
+            <td class="col-recd">{{ grn.receivedQuantity }}</td>
+            <td class="col-passed">{{ grn.passedQuantity }}</td>
+            <td class="col-pass-reason">{{ grn.passedstatus || '—' }}</td>
+            <td class="col-rejected">{{ grn.rejectedQuantity }}</td>
+            <td class="col-reject-reason">{{ grn.rejectedstatus || '—' }}</td>
+            <td class="col-status">{{ grn.status || '—' }}</td>
+            <td class="col-demanded">{{ grn.demandedbyparty || '—' }}</td>
+            <td class="col-mrp">{{ grn.mrp }}</td>
+            <td class="col-batch">{{ grn.batchNumber || '—' }}</td>
+            <td class="col-expiry">{{ grn.expiryDate || '—' }}</td>
+            <td class="col-return">{{ getReturnQtyDisplay(grn) }}</td>
+            <td class="col-remarks text-start">{{ grn.remarks1 || '—' }}</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="15" class="text-start"><strong>Total Product Added: {{ grnListRptold.length }}</strong></td>
+          </tr>
+        </tfoot>
+      </table>
     </div>
 
-    <table class="grn-print-meta">
-      <tr>
-        <td><span>Supplier</span><strong>{{ grnListRptoldSupplierName || '—' }}</strong></td>
-        <td><span>Responsible Person</span><strong>{{ grnListRptoldResponsiblePerson || '—' }}</strong></td>
-        <td><span>Docker No.</span><strong>{{ getOldDocketNumber() || '—' }}</strong></td>
-        <td><span>GRN Status</span><strong>{{ selectedgrnOldstatus || '—' }}</strong></td>
-        <td><span>GRN Number</span><strong>{{ grnListRptoldGrnNo || '—' }}</strong></td>
-      </tr>
-    </table>
-
-    <table class="grn-print-table">
-      <thead>
-        <tr>
-          <th rowspan="2" class="col-sno">S.No</th>
-          <th rowspan="2" class="col-product">Product Name</th>
-          <th colspan="2" class="group-intake">Product Intake</th>
-          <th colspan="4" class="group-repair">Repair Center</th>
-          <th rowspan="2">Status</th>
-          <th rowspan="2">Demanded</th>
-          <th rowspan="2">MRP</th>
-          <th rowspan="2">Batch No</th>
-          <th rowspan="2">Expiry</th>
-          <th rowspan="2">Return Qty</th>
-          <th rowspan="2">Remarks</th>
-        </tr>
-        <tr>
-          <th>As Per Party</th>
-          <th>Received</th>
-          <th>Passed</th>
-          <th>Pass Reason</th>
-          <th>Rejected</th>
-          <th>Reject Reason</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let grn of grnListRptold; let i = index">
-          <td class="col-sno">{{ i + 1 }}</td>
-          <td class="col-product text-start">{{ getProductName(grn.productId) }}</td>
-          <td>{{ grn.quantityAsPerParty }}</td>
-          <td>{{ grn.receivedQuantity }}</td>
-          <td>{{ grn.passedQuantity }}</td>
-          <td>{{ grn.passedstatus || '—' }}</td>
-          <td>{{ grn.rejectedQuantity }}</td>
-          <td>{{ grn.rejectedstatus || '—' }}</td>
-          <td>{{ grn.status || '—' }}</td>
-          <td>{{ grn.demandedbyparty || '—' }}</td>
-          <td>{{ grn.mrp }}</td>
-          <td>{{ grn.batchNumber || '—' }}</td>
-          <td>{{ grn.expiryDate || '—' }}</td>
-          <td>{{ getReturnQtyDisplay(grn) }}</td>
-          <td class="text-start">{{ grn.remarks1 || '—' }}</td>
-        </tr>
-      </tbody>
-      <tfoot>
-        <tr>
-          <td colspan="16" class="text-start"><strong>Total Product Added: {{ grnListRptold.length }}</strong></td>
-        </tr>
-      </tfoot>
-    </table>
-
-    <!-- Stock Repair only on GRN popup; Dispatch Details print on Challan download -->
-    <div class="grn-print-footer-blocks grn-print-footer-blocks--grn-only">
+    <!-- Stock Repair stays under table; signatures pin to page bottom -->
+    <div class="grn-print-mid">
       <table class="grn-print-dispatch">
         <thead>
           <tr>
@@ -1486,6 +1507,8 @@
           </tr>
         </tbody>
       </table>
+    </div>
+    <div class="grn-print-page-footer">
       <table class="grn-print-sign-table">
         <tr>
           <td>Inspection Done By: ____________________</td>
@@ -1499,181 +1522,196 @@
 <!-- 
 printPOPUPSectionChallan -->
 <div id="printPOPUPSectionChallan" style="display: none;">
-  <!--    -->
-  <div class="col-md-12 mb-3 d-flex justify-content-between">
-    <div>GSTIN: 06AAACO7774J1Z2</div>
-    <div>Date: {{ todayDate }}</div>
-  </div>
-  <h3 class="text-center">Odin Healthcare Pvt. Ltd.</h3>
-  <h5 class="text-center">Plotno 45, Industrial Area, Phase-2, Panchkula(Haryana)</h5>
-  <h5 class="text-center">Call Us: 0172-4624664, E-mail: customercare&#64;drodin.in</h5>
-  <h5 class="text-center">CHALLAN</h5>
-  <hr />
-  <div class="d-flex justify-content-between">
-    <div>
-      <label class="form-label">Name of Supplier: &nbsp;&nbsp;</label>
-      <label class="form-label">{{grnListRptoldSupplierName}}</label>
+  <div class="grn-print-doc">
+    <div class="grn-print-main">
+      <div class="grn-print-top">
+        <div class="grn-print-challan-header">
+          <div class="grn-print-date">Date: {{ todayDate }}</div>
+          <p class="gstin">GSTIN: 06AAACO7774J1Z2</p>
+          <h2>Odin Healthcare Pvt. Ltd.</h2>
+          <p>Plotno 45, Industrial Area, Phase-2, Panchkula(Haryana)</p>
+          <p>Call Us: 0172-4624664, E-mail: customercare&#64;drodin.in</p>
+        </div>
+        <div class="grn-print-challan-banner">CHALLAN</div>
+        <div class="grn-print-challan-meta">
+          <div><strong>Name of Supplier:</strong> {{ grnListRptoldSupplierName }}</div>
+          <div><strong>Consignement Number:</strong> {{ getOldDocketNumber() }}</div>
+          <div><strong>CHALLAN Number:</strong> {{ grnListRptoldchallanno }}</div>
+        </div>
+      </div>
+      <table class="grn-print-challan-table">
+        <colgroup>
+          <col class="col-sno" />
+          <col class="col-product" />
+          <col class="col-qty" />
+          <col class="col-value" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th class="col-sno">S.No</th>
+            <th class="col-product">Product Name</th>
+            <th class="col-qty">Quantity</th>
+            <th class="col-value">Aprox. Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let grn of challanOldList; let i = index">
+            <td class="col-sno">{{ i + 1 }}</td>
+            <td class="col-product text-start">{{ getProductName(grn.productId) }}</td>
+            <td class="col-qty">{{ getReturnQtyDisplay(grn) }}</td>
+            <td class="col-value">{{ grn.mrp }}</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
-    <div>
-      <label class="form-label">Consignement Number: &nbsp;&nbsp;</label>
-      <label class="form-label">{{ getOldDocketNumber() }}</label>
-    </div>
-    <div>
-      <label class="form-label">CHALLAN Number: &nbsp;&nbsp;</label>
-      <label class="form-label">{{grnListRptoldchallanno}}</label>
-    </div>
-  </div>
-  <table class="table table-bordered table-hover table-sm text-center align-middle">
-    <thead class="table-dark">
-      <tr>
-        <th scope="col">S.No</th>
-        <th scope="col">Product Name</th>
-        <th scope="col">Quantity</th>
-        <th scope="col">Aprox. Value</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let grn of filteredGrnOldList(); let i = index">
-        <td>{{ i + 1 }}</td>
-        <td>{{ getProductName(grn.productId) }}</td>
-        <td>{{ getReturnQtyDisplay(grn) }}</td>
-        <td>{{grn.mrp}}</td>
-      </tr>
-    </tbody>
-    <tfoot>
-      <tr class="table-footer">
-        <td colspan="2" class="text-start fw-bold">
-          <br /> <i>Order Booked By: ___________________</i>
-        </td>
-        <td colspan="2" class="text-end fw-bold">
-          <br /> <i>For Odin Healthcare Pvt. Ltd.</i>
-        </td>
-      </tr>
-      <tr class="table-footer">
-        <td colspan="2" class="text-start fw-bold">
-          <br /> <i>Receiver's Signature ____________
-            <br /> <br /> Received the above goods in good conditions
-          </i>
-        </td>
-        <td colspan="2" class="text-end fw-bold">
-          <br /> <i>Authorized Signatory</i>
-        </td>
-      </tr>
-    </tfoot>
-  </table>
 
-  <div class="grn-print-footer-blocks">
-    <table class="grn-print-dispatch">
-      <thead>
+    <div class="grn-print-mid">
+      <table class="grn-print-dispatch">
+        <thead>
+          <tr>
+            <th colspan="2" class="section-dispatch">DISPATCH DETAILS</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="lbl-dispatch">STOCK SENT TO</td>
+            <td class="val-edit"><input type="text" [attr.value]="dispatch.stockSentTo || ''" /></td>
+          </tr>
+          <tr>
+            <td class="lbl-dispatch">CHALLAN NO / INVOICE NO / CREDIT NOTE NO / DATED</td>
+            <td class="val-edit"><input type="text" [attr.value]="dispatch.challanInvoiceCreditNote || ''" /></td>
+          </tr>
+          <tr>
+            <td class="lbl-dispatch">DOCKET NO / DATE</td>
+            <td class="val-edit"><input type="text" [attr.value]="dispatch.docketNoDate || ''" /></td>
+          </tr>
+          <tr>
+            <td class="lbl-dispatch">TRANSPORT</td>
+            <td class="val-edit"><input type="text" [attr.value]="dispatch.transport || ''" /></td>
+          </tr>
+          <tr>
+            <td class="lbl-dispatch">GRN NO</td>
+            <td class="val-edit"><input type="text" [attr.value]="dispatch.grnNo || ''" /></td>
+          </tr>
+          <tr>
+            <td class="lbl-dispatch">NO CREDIT NOTE WILL BE ISSUED FOR THESE PRODUCTS</td>
+            <td class="val-edit"><input type="text" [attr.value]="dispatch.noCreditNoteRemark || ''" /></td>
+          </tr>
+          <tr>
+            <td class="lbl-dispatch">NEED DEBIT NOTE FROM THE PARTY FOR THESE PRODUCTS TO ISSUE CREDIT NOTE</td>
+            <td class="val-edit"><input type="text" [attr.value]="dispatch.needDebitNoteRemark || ''" /></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="grn-print-page-footer">
+      <table class="grn-print-sign-table">
         <tr>
-          <th colspan="2" class="section-dispatch">DISPATCH DETAILS</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td class="lbl-dispatch">STOCK SENT TO</td>
-          <td class="val-edit"><input type="text" [attr.value]="dispatch.stockSentTo || ''" /></td>
+          <td>Order Booked By: ____________________</td>
+          <td class="text-end">For Odin Healthcare Pvt. Ltd.</td>
         </tr>
         <tr>
-          <td class="lbl-dispatch">CHALLAN NO / INVOICE NO / CREDIT NOTE NO / DATED</td>
-          <td class="val-edit"><input type="text" [attr.value]="dispatch.challanInvoiceCreditNote || ''" /></td>
+          <td>
+            Receiver's Signature ____________<br />
+            <em>Received the above goods in good conditions</em>
+          </td>
+          <td class="text-end"><em>Authorized Signatory</em></td>
         </tr>
-        <tr>
-          <td class="lbl-dispatch">DOCKET NO / DATE</td>
-          <td class="val-edit"><input type="text" [attr.value]="dispatch.docketNoDate || ''" /></td>
-        </tr>
-        <tr>
-          <td class="lbl-dispatch">TRANSPORT</td>
-          <td class="val-edit"><input type="text" [attr.value]="dispatch.transport || ''" /></td>
-        </tr>
-        <tr>
-          <td class="lbl-dispatch">GRN NO</td>
-          <td class="val-edit"><input type="text" [attr.value]="dispatch.grnNo || ''" /></td>
-        </tr>
-        <tr>
-          <td class="lbl-dispatch">NO CREDIT NOTE WILL BE ISSUED FOR THESE PRODUCTS</td>
-          <td class="val-edit"><input type="text" [attr.value]="dispatch.noCreditNoteRemark || ''" /></td>
-        </tr>
-        <tr>
-          <td class="lbl-dispatch">NEED DEBIT NOTE FROM THE PARTY FOR THESE PRODUCTS TO ISSUE CREDIT NOTE</td>
-          <td class="val-edit"><input type="text" [attr.value]="dispatch.needDebitNoteRemark || ''" /></td>
-        </tr>
-      </tbody>
-    </table>
+      </table>
+    </div>
   </div>
-
 </div>
 
 <!-- PRINT NEW GRN -->
 <div id="printSection" style="display: none;">
   <div class="grn-print-doc">
-    <div class="grn-print-date">Date: {{ todayDate }}</div>
-    <div class="grn-print-header">
-      <h2>Odin Healthcare Pvt. Ltd.</h2>
-      <p>Plot No. 45, Industrial Area, Phase-2, Panchkula (Haryana)</p>
-      <p>Call Us: +91 9878785333 &nbsp;|&nbsp; E-mail: customercare&#64;drodin.in</p>
-      <h3>Goods Received Note / Inspection Report</h3>
-    </div>
+    <div class="grn-print-main">
+      <div class="grn-print-top">
+        <div class="grn-print-date">Date: {{ todayDate }}</div>
+        <div class="grn-print-header">
+          <h2>Odin Healthcare Pvt. Ltd.</h2>
+          <p>Plot No. 45, Industrial Area, Phase-2, Panchkula (Haryana)</p>
+          <p>Call Us: +91 9878785333 &nbsp;|&nbsp; E-mail: customercare&#64;drodin.in</p>
+          <h3>Goods Received Note / Inspection Report</h3>
+        </div>
 
-    <table class="grn-print-meta">
-      <tr>
-        <td><span>Supplier</span><strong>{{ getSelectedSupplierName(false) || '—' }}</strong></td>
-        <td><span>Responsible Person</span><strong>{{ getSelectedResponsiblePersonName() || '—' }}</strong></td>
-        <td><span>Docker No.</span><strong>{{ getDocketNumber() || '—' }}</strong></td>
-        <td><span>GRN Status</span><strong>{{ selectedgrnstatus || '—' }}</strong></td>
-        <td><span>GRN Number</span><strong>{{ grnNumber || '—' }}</strong></td>
-      </tr>
-    </table>
+        <table class="grn-print-meta">
+          <tr>
+            <td><span>Supplier</span><strong>{{ getSelectedSupplierName(false) || '—' }}</strong></td>
+            <td><span>Responsible Person</span><strong>{{ getSelectedResponsiblePersonName() || '—' }}</strong></td>
+            <td><span>Docker No.</span><strong>{{ getDocketNumber() || '—' }}</strong></td>
+            <td><span>GRN Status</span><strong>{{ selectedgrnstatus || '—' }}</strong></td>
+            <td><span>GRN Number</span><strong>{{ grnNumber || '—' }}</strong></td>
+          </tr>
+        </table>
+      </div>
 
-    <table class="grn-print-table">
+      <table class="grn-print-table grn-print-table--no-demanded">
+      <colgroup>
+        <col class="col-sno" />
+        <col class="col-product" />
+        <col class="col-party" />
+        <col class="col-recd" />
+        <col class="col-passed" />
+        <col class="col-pass-reason" />
+        <col class="col-rejected" />
+        <col class="col-reject-reason" />
+        <col class="col-status" />
+        <col class="col-mrp" />
+        <col class="col-batch" />
+        <col class="col-expiry" />
+        <col class="col-return" />
+        <col class="col-remarks" />
+      </colgroup>
       <thead>
         <tr>
           <th rowspan="2" class="col-sno">S.No</th>
           <th rowspan="2" class="col-product">Product Name</th>
           <th colspan="2" class="group-intake">Product Intake</th>
           <th colspan="4" class="group-repair">Repair Center</th>
-          <th rowspan="2">Status</th>
-          <th rowspan="2">MRP</th>
-          <th rowspan="2">Batch No</th>
-          <th rowspan="2">Expiry</th>
-          <th rowspan="2">Return Qty</th>
-          <th rowspan="2">Remarks</th>
+          <th rowspan="2" class="col-status">Status</th>
+          <th rowspan="2" class="col-mrp">MRP</th>
+          <th rowspan="2" class="col-batch">Batch No</th>
+          <th rowspan="2" class="col-expiry">Expiry</th>
+          <th rowspan="2" class="col-return">Return Qty</th>
+          <th rowspan="2" class="col-remarks">Remarks</th>
         </tr>
         <tr>
-          <th>As Per Party</th>
-          <th>Received</th>
-          <th>Passed</th>
-          <th>Pass Reason</th>
-          <th>Rejected</th>
-          <th>Reject Reason</th>
+          <th class="col-party">As Per Party</th>
+          <th class="col-recd">Received</th>
+          <th class="col-passed">Passed</th>
+          <th class="col-pass-reason">Pass Reason</th>
+          <th class="col-rejected">Rejected</th>
+          <th class="col-reject-reason">Reject Reason</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let grn of rows; let i = index">
           <td class="col-sno">{{ i + 1 }}</td>
           <td class="col-product text-start">{{ getProductName(grn.selectedProduct) }}</td>
-          <td>{{ grn.quantityasperparty || 0 }}</td>
-          <td>{{ grn.receivedQuantity || 0 }}</td>
-          <td>{{ grn.passed || 0 }}</td>
-          <td>{{ grn.statusofpassed || '—' }}</td>
-          <td>{{ grn.rejected || 0 }}</td>
-          <td>{{ grn.statusofrejected || '—' }}</td>
-          <td>{{ grn.status || '—' }}</td>
-          <td>{{ grn.MRP || 0 }}</td>
-          <td>{{ grn.batchno || '—' }}</td>
-          <td>{{ grn.expiryDate || '—' }}</td>
-          <td>{{ getReturnQtyDisplay(grn) }}</td>
-          <td class="text-start">{{ grn.remarks || '—' }}</td>
+          <td class="col-party">{{ grn.quantityasperparty || 0 }}</td>
+          <td class="col-recd">{{ grn.receivedQuantity || 0 }}</td>
+          <td class="col-passed">{{ grn.passed || 0 }}</td>
+          <td class="col-pass-reason">{{ grn.statusofpassed || '—' }}</td>
+          <td class="col-rejected">{{ grn.rejected || 0 }}</td>
+          <td class="col-reject-reason">{{ grn.statusofrejected || '—' }}</td>
+          <td class="col-status">{{ grn.status || '—' }}</td>
+          <td class="col-mrp">{{ grn.MRP || 0 }}</td>
+          <td class="col-batch">{{ grn.batchno || '—' }}</td>
+          <td class="col-expiry">{{ grn.expiryDate || '—' }}</td>
+          <td class="col-return">{{ getReturnQtyDisplay(grn) }}</td>
+          <td class="col-remarks text-start">{{ grn.remarks || '—' }}</td>
         </tr>
       </tbody>
-      <tfoot>
-        <tr>
-          <td colspan="15" class="text-start"><strong>Total Product Added: {{ rows.length }}</strong></td>
-        </tr>
-      </tfoot>
-    </table>
+        <tfoot>
+          <tr>
+            <td colspan="14" class="text-start"><strong>Total Product Added: {{ rows.length }}</strong></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
 
-    <div class="grn-print-footer-blocks grn-print-footer-blocks--grn-only">
+    <div class="grn-print-mid">
       <table class="grn-print-dispatch">
         <thead>
           <tr>
@@ -1703,6 +1741,8 @@ printPOPUPSectionChallan -->
           </tr>
         </tbody>
       </table>
+    </div>
+    <div class="grn-print-page-footer">
       <table class="grn-print-sign-table">
         <tr>
           <td>Inspection Done By: ____________________</td>
@@ -1716,106 +1756,103 @@ printPOPUPSectionChallan -->
 
 <!-- PRINT NEW CHALLAN -->
 <div id="printSectionChallan" style="display: none;">
-  <div class="col-md-12 mb-3 d-flex justify-content-between">
-    <div>GSTIN: 06AAACO7774J1Z2</div>
-    <div>Date: {{ todayDate }}</div>
-  </div>
-  <h3 class="text-center">Odin Healthcare Pvt. Ltd.</h3>
-  <h5 class="text-center">Plotno 45, Industrial Area, Phase-2, Panchkula(Haryana)</h5>
-  <h5 class="text-center">Call Us: 0172-4624664, E-mail: customercare&#64;drodin.in</h5>
-  <h5 class="text-center">CHALLAN</h5>
-  <hr />
-  <div class="d-flex justify-content-between">
-    <div>
-      <label class="form-label">Name of Supplier: &nbsp;&nbsp;</label>
-      <label class="form-label">{{ getSelectedSupplierName(false) }}</label>
+  <div class="grn-print-doc">
+    <div class="grn-print-main">
+      <div class="grn-print-top">
+        <div class="grn-print-challan-header">
+          <div class="grn-print-date">Date: {{ todayDate }}</div>
+          <p class="gstin">GSTIN: 06AAACO7774J1Z2</p>
+          <h2>Odin Healthcare Pvt. Ltd.</h2>
+          <p>Plotno 45, Industrial Area, Phase-2, Panchkula(Haryana)</p>
+          <p>Call Us: 0172-4624664, E-mail: customercare&#64;drodin.in</p>
+        </div>
+        <div class="grn-print-challan-banner">CHALLAN</div>
+        <div class="grn-print-challan-meta">
+          <div><strong>Name of Supplier:</strong> {{ getSelectedSupplierName(false) }}</div>
+          <div><strong>Consignement Number:</strong> {{ getDocketNumber() }}</div>
+          <div><strong>CHALLAN Number:</strong> {{ challanNumber }}</div>
+        </div>
+      </div>
+      <table class="grn-print-challan-table">
+        <colgroup>
+          <col class="col-sno" />
+          <col class="col-product" />
+          <col class="col-qty" />
+          <col class="col-value" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th class="col-sno">S.No</th>
+            <th class="col-product">Product Name</th>
+            <th class="col-qty">Quantity</th>
+            <th class="col-value">Aprox. Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let grn of challanList; let i = index">
+            <td class="col-sno">{{ i + 1 }}</td>
+            <td class="col-product text-start">{{ getProductName(grn.selectedProduct) }}</td>
+            <td class="col-qty">{{ getReturnQtyDisplay(grn) }}</td>
+            <td class="col-value">{{ grn.MRP || 0 }}</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
-    <div>
-      <label class="form-label">Consignement Number: &nbsp;&nbsp;</label>
-      <label class="form-label">{{ getDocketNumber() }}</label>
-    </div>
-    <div>
-      <label class="form-label">CHALLAN Number: &nbsp;&nbsp;</label>
-      <label class="form-label">{{ challanNumber }}</label>
-    </div>
-  </div>
-  <table class="table table-bordered table-hover table-sm text-center align-middle">
-    <thead class="table-dark">
-      <tr>
-        <th scope="col">S.No</th>
-        <th scope="col">Product Name</th>
-        <th scope="col">Quantity</th>
-        <th scope="col">Aprox. Value</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let grn of challanList; let i = index">
-        <td>{{ i + 1 }}</td>
-        <td>{{ getProductName(grn.selectedProduct) }}</td>
-        <td>{{ getReturnQtyDisplay(grn) }}</td>
-        <td>{{ grn.MRP || 0 }}</td>
-      </tr>
-    </tbody>
-    <tfoot>
-      <tr class="table-footer">
-        <td colspan="2" class="text-start fw-bold">
-          <br /> <i>Order Booked By: ___________________</i>
-        </td>
-        <td colspan="2" class="text-end fw-bold">
-          <br /> <i>For Odin Healthcare Pvt. Ltd.</i>
-        </td>
-      </tr>
-      <tr class="table-footer">
-        <td colspan="2" class="text-start fw-bold">
-          <br /> <i>Receiver's Signature ____________
-            <br /> <br /> Received the above goods in good conditions
-          </i>
-        </td>
-        <td colspan="2" class="text-end fw-bold">
-          <br /> <i>Authorized Signatory</i>
-        </td>
-      </tr>
-    </tfoot>
-  </table>
 
-  <div class="grn-print-footer-blocks">
-    <table class="grn-print-dispatch">
-      <thead>
+    <div class="grn-print-mid">
+      <table class="grn-print-dispatch">
+        <thead>
+          <tr>
+            <th colspan="2" class="section-dispatch">DISPATCH DETAILS</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="lbl-dispatch">STOCK SENT TO</td>
+            <td class="val-edit"><input type="text" [attr.value]="dispatch.stockSentTo || ''" /></td>
+          </tr>
+          <tr>
+            <td class="lbl-dispatch">CHALLAN NO / INVOICE NO / CREDIT NOTE NO / DATED</td>
+            <td class="val-edit"><input type="text" [attr.value]="dispatch.challanInvoiceCreditNote || ''" /></td>
+          </tr>
+          <tr>
+            <td class="lbl-dispatch">DOCKET NO / DATE</td>
+            <td class="val-edit"><input type="text" [attr.value]="dispatch.docketNoDate || ''" /></td>
+          </tr>
+          <tr>
+            <td class="lbl-dispatch">TRANSPORT</td>
+            <td class="val-edit"><input type="text" [attr.value]="dispatch.transport || ''" /></td>
+          </tr>
+          <tr>
+            <td class="lbl-dispatch">GRN NO</td>
+            <td class="val-edit"><input type="text" [attr.value]="dispatch.grnNo || ''" /></td>
+          </tr>
+          <tr>
+            <td class="lbl-dispatch">NO CREDIT NOTE WILL BE ISSUED FOR THESE PRODUCTS</td>
+            <td class="val-edit"><input type="text" [attr.value]="dispatch.noCreditNoteRemark || ''" /></td>
+          </tr>
+          <tr>
+            <td class="lbl-dispatch">NEED DEBIT NOTE FROM THE PARTY FOR THESE PRODUCTS TO ISSUE CREDIT NOTE</td>
+            <td class="val-edit"><input type="text" [attr.value]="dispatch.needDebitNoteRemark || ''" /></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="grn-print-page-footer">
+      <table class="grn-print-sign-table">
         <tr>
-          <th colspan="2" class="section-dispatch">DISPATCH DETAILS</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td class="lbl-dispatch">STOCK SENT TO</td>
-          <td class="val-edit"><input type="text" [attr.value]="dispatch.stockSentTo || ''" /></td>
+          <td>Order Booked By: ____________________</td>
+          <td class="text-end">For Odin Healthcare Pvt. Ltd.</td>
         </tr>
         <tr>
-          <td class="lbl-dispatch">CHALLAN NO / INVOICE NO / CREDIT NOTE NO / DATED</td>
-          <td class="val-edit"><input type="text" [attr.value]="dispatch.challanInvoiceCreditNote || ''" /></td>
+          <td>
+            Receiver's Signature ____________<br />
+            <em>Received the above goods in good conditions</em>
+          </td>
+          <td class="text-end"><em>Authorized Signatory</em></td>
         </tr>
-        <tr>
-          <td class="lbl-dispatch">DOCKET NO / DATE</td>
-          <td class="val-edit"><input type="text" [attr.value]="dispatch.docketNoDate || ''" /></td>
-        </tr>
-        <tr>
-          <td class="lbl-dispatch">TRANSPORT</td>
-          <td class="val-edit"><input type="text" [attr.value]="dispatch.transport || ''" /></td>
-        </tr>
-        <tr>
-          <td class="lbl-dispatch">GRN NO</td>
-          <td class="val-edit"><input type="text" [attr.value]="dispatch.grnNo || ''" /></td>
-        </tr>
-        <tr>
-          <td class="lbl-dispatch">NO CREDIT NOTE WILL BE ISSUED FOR THESE PRODUCTS</td>
-          <td class="val-edit"><input type="text" [attr.value]="dispatch.noCreditNoteRemark || ''" /></td>
-        </tr>
-        <tr>
-          <td class="lbl-dispatch">NEED DEBIT NOTE FROM THE PARTY FOR THESE PRODUCTS TO ISSUE CREDIT NOTE</td>
-          <td class="val-edit"><input type="text" [attr.value]="dispatch.needDebitNoteRemark || ''" /></td>
-        </tr>
-      </tbody>
-    </table>
+      </table>
+    </div>
   </div>
 </div>
 

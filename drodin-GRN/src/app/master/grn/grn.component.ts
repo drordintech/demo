@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnInit, ViewChild, HostListener } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild, HostListener, ChangeDetectorRef } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -345,7 +345,8 @@ export class grnComponent implements OnInit {
       private GrnService: grnService,
       private supplierService:SupplierService,
       private productService: productService,
-      private sanitizer: DomSanitizer
+      private sanitizer: DomSanitizer,
+      private cdr: ChangeDetectorRef
   ) { }
  
   ngOnInit() {
@@ -1292,8 +1293,25 @@ export class grnComponent implements OnInit {
     
   }
 
+  private hasChallanProduct(grn: any): boolean {
+    const productId = grn?.productId ?? grn?.selectedProduct ?? grn?.ProductId;
+    return productId !== null && productId !== undefined && productId !== '';
+  }
+
   getChallanQuantity(grn: any): number {
-    return Number(grn?.retQty ?? grn?.quantity ?? 0);
+    const retQty = Number(grn?.retQty ?? grn?.quantity ?? 0);
+    if (retQty > 0) {
+      return retQty;
+    }
+    const rejected = Number(grn?.rejectedQuantity ?? grn?.rejected ?? 0);
+    if (rejected > 0) {
+      return rejected;
+    }
+    const received = Number(grn?.receivedQuantity ?? grn?.received ?? 0);
+    if (received > 0) {
+      return received;
+    }
+    return Number(grn?.quantityAsPerParty ?? grn?.quantityasperparty ?? grn?.asPerParty ?? 0);
   }
 
   getReturnQtyDisplay(grn: any): string {
@@ -1301,33 +1319,45 @@ export class grnComponent implements OnInit {
     return quantity > 0 ? String(quantity) : '';
   }
 
-  /** Rows that belong on Challan: Return ticked, Ret Qty > 0, or reject reason is return-to-party. */
+  /** Challan: show all products — Return checkbox NOT required. */
   buildChallanList(): any[] {
-    this.challanList = this.rows.filter(grn => {
-      const retQty = Number(grn.retQty || 0);
-      const rejected = Number(grn.rejected || 0);
-      const rejectStatus = String(grn.statusofrejected || '').toLowerCase();
-      const isReturnFlag = !!(grn.RetrunToParty || grn.returnToParty);
-      const isReturnStatus = rejectStatus.includes('retrun') || rejectStatus.includes('return');
-      return isReturnFlag || retQty > 0 || (rejected > 0 && isReturnStatus);
-    }).map(grn => {
-      const retQty = Number(grn.retQty || 0);
+    this.challanList = this.rows.filter(grn => this.hasChallanProduct(grn)).map(grn => {
+      const qty = this.getChallanQuantity(grn);
       return {
         ...grn,
-        retQty: retQty > 0 ? retQty : null,
-        RetrunToParty: true,
-        returnToParty: true
+        retQty: qty > 0 ? qty : null,
+        quantity: qty,
+        RetrunToParty: !!(grn as any).RetrunToParty || !!(grn as any).returnToParty,
+        returnToParty: !!(grn as any).returnToParty || !!(grn as any).RetrunToParty
       };
     });
     return this.challanList;
   }
 
+  /** Edit Challan: show all GRN products — Return checkbox NOT required. */
+  buildChallanOldList(): any[] {
+    this.challanOldList = (this.grnListRptold || []).filter(grn => this.hasChallanProduct(grn)).map(grn => {
+      const qty = this.getChallanQuantity(grn);
+      return {
+        ...grn,
+        retQty: qty > 0 ? qty : null,
+        quantity: qty,
+        RetrunToParty: !!(grn.RetrunToParty || grn.returnToParty),
+        returnToParty: !!(grn.returnToParty || grn.RetrunToParty)
+      };
+    });
+    return this.challanOldList;
+  }
+
   filteredGrnList(): any[] {
-    // Prefer current challanList (built for print); otherwise rebuild
     if (this.challanList?.length) {
       return this.challanList;
     }
     return this.buildChallanList();
+  }
+
+  filteredGrnOldList(): any[] {
+    return this.buildChallanOldList();
   }
 
   onReturnQtyChange(grn: any): void {
@@ -1403,8 +1433,14 @@ export class grnComponent implements OnInit {
   }
 
   printChallan(): Promise<void> {
+    this.buildChallanList();
+    this.cdr.detectChanges();
     const printContent = document.getElementById('printSectionChallan')?.innerHTML;
     if (!printContent) {
+      return Promise.resolve();
+    }
+    if (!this.challanList?.length) {
+      alert('No products found for Challan. Add products on the GRN first.');
       return Promise.resolve();
     }
     const fileName = `Challan-${(this.challanNumber || 'document').toString().replace(/[\\/:*?"<>|]/g, '-')}.pdf`;
@@ -1421,95 +1457,173 @@ export class grnComponent implements OnInit {
   }
 
   printChallanOldPopup(): Promise<void> {
+    this.buildChallanOldList();
+    this.cdr.detectChanges();
     const printContent = document.getElementById('printPOPUPSectionChallan')?.innerHTML;
     if (!printContent) {
+      return Promise.resolve();
+    }
+    if (!this.challanOldList?.length) {
+      alert('No products found for Challan. Add products on the GRN first.');
       return Promise.resolve();
     }
     const fileName = `Challan-${(this.grnListRptoldchallanno || this.challanNumber || 'document').toString().replace(/[\\/:*?"<>|]/g, '-')}.pdf`;
     return this.openPrintWindow('Challan', printContent, fileName);
   }
 
-  /** Shared print styles — zero @page margin so browser chrome has no room; PDF export bypasses browser headers entirely. */
+  /** Shared print styles for GRN / Challan — A4 landscape, no clip, fit short docs on 1 page. */
   private getPrintStyles(): string {
     return `
-      @page { size: A4 landscape; margin: 0 !important; }
-      @page :left, @page :right, @page :first { margin: 0 !important; }
+      /* Bugfix: page setup — A4 landscape; no fixed page chrome that eats height */
+      @page { size: A4 landscape; margin: 8mm; }
       * { box-sizing: border-box; }
       html, body {
         margin: 0 !important;
         padding: 0 !important;
+        width: auto !important;
+        height: auto !important;
+        min-height: 0 !important;
+        overflow: visible !important;
         font-family: Arial, Helvetica, sans-serif;
         color: #161c25;
-        font-size: 9px;
+        font-size: 10px;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
       }
-      body { padding: 5mm 6mm !important; }
-      .grn-print-doc {
+
+      /* Bugfix: hide UI chrome in print only */
+      @media print {
+        .no-print,
+        .print-toolbar,
+        nav, .navbar, .sidebar, aside,
+        .btn, button {
+          display: none !important;
+        }
+      }
+
+      /* Bugfix cut-off: NO overflow:hidden / fixed height / transform on print shell */
+      .grn-print-preview-sheet,
+      #grnPrintableArea {
         width: 100%;
-        page-break-inside: avoid;
-        break-inside: avoid;
+        max-width: 100%;
+        height: auto !important;
+        overflow: visible !important;
+        transform: none !important;
+        box-shadow: none;
       }
-      .grn-print-date { text-align: right; font-size: 9px; margin: 0 0 2px; color: #525b69; }
-      .grn-print-header { text-align: center; margin-bottom: 4px; }
-      .grn-print-header h2 { margin: 0; font-size: 14px; color: #161c25; line-height: 1.2; }
+
+      /* Flex page: main+mid flow; signatures pin to page bottom (min-height set in JS to avoid blank page 2) */
+      .grn-print-doc {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        max-width: 100%;
+        min-height: 0;
+        height: auto !important;
+        overflow: visible !important;
+        transform: none !important;
+      }
+      .grn-print-main { width: 100%; flex: 0 0 auto; }
+      .grn-print-mid {
+        width: 100%;
+        flex: 0 0 auto;
+        margin-top: 10px;
+      }
+
+      /* Gap: header/meta ↔ product table (center) */
+      .grn-print-top {
+        margin-bottom: 14px;
+      }
+      .grn-print-date { text-align: right; font-size: 10px; margin: 0 0 2px; color: #525b69; }
+      /* Company block thoda upar feel; neeche space before title/meta/table */
+      .grn-print-header {
+        text-align: center;
+        margin-top: 0;
+        margin-bottom: 12px;
+        padding-bottom: 4px;
+      }
+      .grn-print-header h2 { margin: 0; font-size: 16px; color: #161c25; line-height: 1.15; }
       .grn-print-header h3 {
-        margin: 3px 0 0;
-        font-size: 11px;
+        margin: 12px 0 0;
+        font-size: 12px;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.2px;
-        color: #2196f3;
-        border-top: 1px solid #2196f3;
-        border-bottom: 1px solid #2196f3;
-        padding: 2px 0;
-        display: inline-block;
-        min-width: 55%;
+        color: #fff !important;
+        background: #2196f3 !important;
+        border: none;
+        padding: 4px 6px;
+        display: block;
+        width: 100%;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
       }
-      .grn-print-header p { margin: 0; font-size: 9px; color: #525b69; line-height: 1.25; }
+      .grn-print-header p { margin: 0; font-size: 10px; color: #525b69; line-height: 1.25; }
+      /* Extra gap after company address/contact, before blue title / meta (center) */
+      .grn-print-header p:last-of-type {
+        margin-bottom: 8px;
+      }
       .grn-print-meta {
         width: 100%;
         border-collapse: collapse;
-        margin: 4px 0 6px;
+        margin: 8px 0 0;
         table-layout: fixed;
       }
       .grn-print-meta td {
         border: 1px solid #90caf9;
-        padding: 3px 5px;
+        padding: 4px 6px;
         vertical-align: top;
         background: #e3f2fd;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
       }
       .grn-print-meta span {
         display: block;
-        font-size: 7px;
+        font-size: 8px;
         text-transform: uppercase;
         letter-spacing: 0.3px;
         color: #525b69;
         margin-bottom: 1px;
       }
       .grn-print-meta strong {
-        font-size: 9px;
+        font-size: 11px;
         color: #161c25;
         word-break: break-word;
+        overflow-wrap: anywhere;
       }
+
+      /* Table body −1pt so footer stays on page 1 */
       .grn-print-table {
         width: 100%;
+        max-width: 100%;
         border-collapse: collapse;
         table-layout: fixed;
-        font-size: 8px;
+        font-size: 10px;
+      }
+      .grn-print-table thead { display: table-header-group; }
+      .grn-print-table tfoot { display: table-footer-group; }
+      .grn-print-table tbody tr {
+        page-break-inside: avoid;
+        break-inside: avoid;
       }
       .grn-print-table th, .grn-print-table td {
         border: 1px solid #90caf9;
-        padding: 2px 3px;
+        padding: 4px 3px;
         text-align: center;
         vertical-align: middle;
+        line-height: 1.15;
+        overflow-wrap: break-word;
         word-wrap: break-word;
-        line-height: 1.2;
+        word-break: break-word;
+        white-space: normal;
       }
       .grn-print-table thead th {
         background: #2196f3 !important;
         color: #fff !important;
         font-weight: 700;
-        font-size: 7.5px;
+        font-size: 7px;
         text-transform: uppercase;
+        padding: 4px 2px;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
       }
@@ -1517,88 +1631,258 @@ export class grnComponent implements OnInit {
       .grn-print-table thead .group-repair {
         background: #1c76da !important;
       }
-      .grn-print-table .col-sno { width: 28px; }
-      .grn-print-table .col-product { width: 120px; }
-      .grn-print-table .text-start { text-align: left !important; padding-left: 4px; }
+      .grn-print-table .col-sno,
+      .grn-print-table col.col-sno { width: 3%; }
+      .grn-print-table .col-product,
+      .grn-print-table col.col-product { width: 28%; }
+      .grn-print-table .col-party,
+      .grn-print-table col.col-party { width: 4%; }
+      .grn-print-table .col-recd,
+      .grn-print-table col.col-recd { width: 4%; }
+      .grn-print-table .col-passed,
+      .grn-print-table col.col-passed { width: 4%; }
+      .grn-print-table .col-pass-reason,
+      .grn-print-table col.col-pass-reason { width: 7%; }
+      .grn-print-table .col-rejected,
+      .grn-print-table col.col-rejected { width: 4%; }
+      .grn-print-table .col-reject-reason,
+      .grn-print-table col.col-reject-reason { width: 7%; }
+      .grn-print-table .col-status,
+      .grn-print-table col.col-status { width: 5%; }
+      .grn-print-table .col-demanded,
+      .grn-print-table col.col-demanded { width: 4%; }
+      .grn-print-table .col-mrp,
+      .grn-print-table col.col-mrp { width: 4%; }
+      .grn-print-table .col-batch,
+      .grn-print-table col.col-batch { width: 7%; }
+      .grn-print-table .col-expiry,
+      .grn-print-table col.col-expiry { width: 6%; }
+      .grn-print-table .col-return,
+      .grn-print-table col.col-return { width: 4%; }
+      .grn-print-table .col-remarks,
+      .grn-print-table col.col-remarks { width: 9%; }
+      .grn-print-table.grn-print-table--no-demanded .col-product,
+      .grn-print-table.grn-print-table--no-demanded col.col-product { width: 30%; }
+      .grn-print-table.grn-print-table--no-demanded .col-remarks,
+      .grn-print-table.grn-print-table--no-demanded col.col-remarks { width: 11%; }
+      .grn-print-table .col-product,
+      .grn-print-table td.col-product {
+        font-weight: 600;
+        text-align: left !important;
+      }
+      .grn-print-table .text-start { text-align: left !important; }
       .grn-print-table .text-end { text-align: right !important; }
       .grn-print-table .text-center { text-align: center !important; }
-      .grn-print-table tbody tr:nth-child(even) td { background: #e3f2fd; }
+      .grn-print-table tbody tr:nth-child(even) td {
+        background: #e3f2fd;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
       .grn-print-table tfoot td {
         background: #fff;
         font-size: 9px;
-        padding: 3px 5px;
+        padding: 2px 3px;
       }
-      .grn-print-footer-blocks {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
+
+      /* Challan header −1pt for 1-page fit */
+      .grn-print-challan-header {
+        text-align: center;
+        position: relative;
+        padding: 0 0 2px;
+        margin: 0 0 8px;
+      }
+      .grn-print-challan-header .grn-print-date {
+        position: absolute;
+        top: 0;
+        right: 0;
+        text-align: right;
+        font-size: 10px;
+        margin: 0;
+        color: #525b69;
+      }
+      .grn-print-challan-header .gstin {
+        margin: 0 0 1px;
+        font-size: 11px;
+        font-weight: 600;
+        color: #161c25;
+      }
+      .grn-print-challan-header h2 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 700;
+        color: #161c25;
+        line-height: 1.15;
+      }
+      .grn-print-challan-header p {
+        margin: 0;
+        font-size: 10px;
+        color: #525b69;
+        line-height: 1.25;
+      }
+      .grn-print-challan-header p:last-of-type {
+        margin-bottom: 8px;
+      }
+      .grn-print-challan-banner {
+        background: #2196f3 !important;
+        color: #fff !important;
+        font-weight: 700;
+        font-size: 12px;
+        letter-spacing: 0.4px;
+        text-transform: uppercase;
+        text-align: center;
+        padding: 4px 6px;
+        margin: 10px 0 6px;
+        border: 1px solid #1c76da;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .grn-print-challan-meta {
+        display: flex;
+        justify-content: space-between;
         gap: 6px;
-        align-items: start;
-        margin-top: 6px;
+        margin: 0;
+        padding: 4px 6px;
+        font-size: 11px;
+        text-align: left;
+        color: #161c25;
+        background: #e3f2fd;
+        border: 1px solid #90caf9;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .grn-print-challan-table {
+        width: 100%;
+        max-width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+        font-size: 10px;
+        margin: 0;
+      }
+      .grn-print-challan-table thead { display: table-header-group; }
+      .grn-print-challan-table tbody tr {
         page-break-inside: avoid;
         break-inside: avoid;
       }
-      .grn-print-footer-blocks--grn-only { grid-template-columns: 1fr; }
-      .grn-print-footer-blocks .grn-print-dispatch { width: 100%; margin-bottom: 0; }
-      .grn-print-footer-blocks .grn-print-sign-table { grid-column: 1 / -1; }
+      .grn-print-challan-table th, .grn-print-challan-table td {
+        border: 1px solid #90caf9;
+        padding: 4px 3px;
+        text-align: center;
+        vertical-align: middle;
+        overflow-wrap: break-word;
+        word-wrap: break-word;
+        word-break: break-word;
+      }
+      .grn-print-challan-table thead th {
+        background: #2196f3 !important;
+        color: #fff !important;
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 8px;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .grn-print-challan-table .col-sno,
+      .grn-print-challan-table col.col-sno { width: 8%; }
+      .grn-print-challan-table .col-product,
+      .grn-print-challan-table col.col-product { width: 52%; font-weight: 600; text-align: left !important; }
+      .grn-print-challan-table .col-qty,
+      .grn-print-challan-table col.col-qty { width: 20%; }
+      .grn-print-challan-table .col-value,
+      .grn-print-challan-table col.col-value { width: 20%; }
+
+      /* Stock/dispatch mid-block stays under table; signatures go to page bottom */
+      .grn-print-footer-blocks {
+        display: block;
+        width: 100%;
+        margin-top: 10px;
+        padding-top: 0;
+        padding-bottom: 2px;
+      }
+      .grn-print-footer-blocks--grn-only { display: block; }
+      .grn-print-footer-blocks .grn-print-dispatch,
+      .grn-print-mid .grn-print-dispatch { width: 100%; margin: 0; }
       .grn-print-dispatch {
         width: 100%;
         border-collapse: collapse;
-        margin-bottom: 4px;
-        font-size: 8px;
+        font-size: 9px;
         table-layout: fixed;
+        page-break-inside: auto;
+        break-inside: auto;
       }
       .grn-print-dispatch th, .grn-print-dispatch td {
         border: 1px solid #90caf9;
-        padding: 2px 4px;
+        padding: 2px 3px;
         vertical-align: middle;
-        line-height: 1.2;
+        line-height: 1.1;
       }
       .grn-print-dispatch .section-repair,
       .grn-print-dispatch .section-dispatch {
         background: #2196f3 !important;
         color: #fff !important;
         text-align: left;
-        font-size: 8px;
+        font-size: 9px;
         letter-spacing: 0.2px;
-        padding: 3px 4px !important;
+        padding: 2px 3px !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
       }
       .grn-print-dispatch .lbl-repair,
       .grn-print-dispatch .lbl-dispatch {
-        width: 42%;
+        width: 40%;
         color: #1c76da;
         font-weight: 700;
         text-transform: uppercase;
         background: #e3f2fd;
         font-size: 7px;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
       }
       .grn-print-dispatch .val-edit input {
         width: 100%;
         border: 1px dashed #90caf9;
         background: #fff;
-        padding: 1px 3px;
-        font-size: 8px;
+        padding: 1px 2px;
+        font-size: 9px;
         color: #161c25;
         height: 16px;
       }
       .grn-print-dispatch .val-edit .frozen-value {
         display: inline-block;
         width: 100%;
-        min-height: 14px;
+        min-height: 12px;
         border-bottom: 1px solid #90caf9;
-        font-size: 8px;
+        font-size: 9px;
         color: #161c25;
         padding: 1px 2px;
+      }
+      /* Signatures: remove from under table; pin to bottom of page (highlighted footer zone) */
+      .grn-print-page-footer {
+        width: 100%;
+        margin-top: auto;
+        padding-top: 8px;
+        padding-bottom: 4px;
+        page-break-inside: avoid;
+        break-inside: avoid;
       }
       .grn-print-sign-table {
         width: 100%;
         border-collapse: collapse;
-        margin-top: 6px;
+        margin-top: 0;
         font-size: 9px;
         clear: both;
+        page-break-inside: avoid;
+        break-inside: avoid;
       }
-      .grn-print-sign-table td { border: none; padding: 8px 4px 2px; }
+      .grn-print-sign-table td {
+        border: none;
+        padding: 4px 3px 1px;
+        vertical-align: top;
+        width: 50%;
+      }
+      .grn-print-sign-table .text-end { text-align: right !important; }
+      .grn-print-sign-table .text-center { text-align: center !important; }
+
+      /* Screen-only preview chrome (stripped before PDF capture) */
       .print-toolbar {
         position: sticky;
         top: 0;
@@ -1648,12 +1932,19 @@ export class grnComponent implements OnInit {
           <button type="button" class="btn-print" id="grnPrintBtn">Download PDF</button>
           <button type="button" class="btn-close-preview" id="grnClosePreviewBtn">Close</button>
         </div>
-        <div id="grnPrintableArea" style="max-width:1100px;margin:16px auto 40px;background:#fff;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.25);">
+        <div id="grnPrintableArea" class="grn-print-preview-sheet" style="max-width:1050px;margin:16px auto 40px;background:#fff;padding:12px;box-shadow:0 10px 30px rgba(0,0,0,.25);">
           ${bodyHtml}
         </div>
         <style>${styles}</style>
       `;
       document.body.appendChild(root);
+
+      requestAnimationFrame(() => {
+        const doc = root.querySelector('.grn-print-doc') as HTMLElement | null;
+        if (doc) {
+          this.pinSignaturesToPageBottom(doc);
+        }
+      });
 
       let settled = false;
       const finish = () => {
@@ -1692,6 +1983,30 @@ export class grnComponent implements OnInit {
     });
   }
 
+  /**
+   * Pin signatures to bottom of page 1 without overflowing into a blank page 2.
+   * Uses html2pdf printable area (A4 landscape minus margins) minus a safety buffer.
+   */
+  private pinSignaturesToPageBottom(doc: HTMLElement, contentWidthPx = 1000): void {
+    const marginTopMm = 8;
+    const marginBottomMm = 10;
+    const printableHmm = 210 - marginTopMm - marginBottomMm; // 192
+    const printableWmm = 297 - 8 - 8; // 281
+    // Stay safely under one PDF page so html2canvas scale doesn't spill a blank page
+    const maxPagePx = Math.floor(contentWidthPx * (printableHmm / printableWmm)) - 24;
+    doc.style.minHeight = `${Math.max(400, maxPagePx)}px`;
+  }
+
+  /** Drop trailing empty pages html2pdf sometimes adds when height ≈ page boundary. */
+  private trimBlankPdfPages(pdf: any, expectedMaxPages: number): void {
+    let total = pdf.internal.getNumberOfPages();
+    const maxKeep = Math.max(1, expectedMaxPages);
+    while (total > maxKeep) {
+      pdf.deletePage(total);
+      total = pdf.internal.getNumberOfPages();
+    }
+  }
+
   /** Replace editable inputs with plain text so the PDF captures current values (no localhost URL). */
   private freezeInputsForPdf(source: HTMLElement): HTMLElement {
     const clone = source.cloneNode(true) as HTMLElement;
@@ -1725,21 +2040,39 @@ export class grnComponent implements OnInit {
     const html2pdf = html2pdfModule.default || html2pdfModule;
 
     const frozen = this.freezeInputsForPdf(printable);
+    // Bugfix cut-off + preview≠PDF: strip preview padding/fixed width before capture
+    frozen.removeAttribute('style');
+    frozen.classList.add('grn-print-preview-sheet');
+    frozen.style.cssText = 'width:100%;max-width:100%;margin:0;padding:0;background:#fff;box-shadow:none;overflow:visible;height:auto;';
+
+    // A4 landscape printable ≈ 281mm ≈ 1060px @96dpi; keep under that to avoid right clip after margins
+    const contentWidthPx = 1000;
     const host = document.createElement('div');
-    host.style.cssText = 'position:fixed;left:-10000px;top:0;width:1100px;background:#fff;z-index:-1;';
+    host.style.cssText = `position:fixed;left:-10000px;top:0;width:${contentWidthPx}px;background:#fff;z-index:-1;overflow:visible;height:auto;`;
     host.innerHTML = `<style>${styles}</style>`;
     const wrap = document.createElement('div');
-    wrap.style.cssText = 'padding:5mm 6mm;background:#fff;width:1100px;';
+    wrap.className = 'grn-print-pdf-root';
+    wrap.style.cssText = `width:${contentWidthPx}px;max-width:${contentWidthPx}px;padding:0;margin:0;background:#fff;overflow:visible;height:auto;`;
     wrap.appendChild(frozen);
     host.appendChild(wrap);
     document.body.appendChild(host);
 
     try {
-      // Allow layout/styles to apply before canvas capture
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      const doc = wrap.querySelector('.grn-print-doc') as HTMLElement | null;
+      if (doc) {
+        this.pinSignaturesToPageBottom(doc, contentWidthPx);
+      }
       await new Promise((r) => requestAnimationFrame(() => r(null)));
 
+      const onePagePx = Math.floor(contentWidthPx * (192 / 281));
+      const contentH = Math.max(wrap.scrollHeight, doc?.scrollHeight || 0);
+      // If content fits ~1 page (with small tolerance), never allow a 2nd page
+      const expectedPages = contentH <= onePagePx + 8 ? 1 : Math.max(1, Math.ceil(contentH / onePagePx));
+
       const opt = {
-        margin: [8, 8, 12, 8],
+        // Match @page 8mm; slightly tighter bottom so page-number text fits without forcing page 2
+        margin: [8, 8, 10, 8],
         filename: fileName,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: {
@@ -1749,15 +2082,17 @@ export class grnComponent implements OnInit {
           backgroundColor: '#ffffff',
           scrollX: 0,
           scrollY: 0,
-          windowWidth: 1100
+          windowWidth: contentWidthPx,
+          width: contentWidthPx
         },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
-        pagebreak: { mode: ['css', 'legacy'] }
+        pagebreak: { mode: ['css'], avoid: ['.grn-print-sign-table'] }
       };
 
       const worker = html2pdf().set(opt).from(wrap);
       await worker.toPdf();
       const pdf = await worker.get('pdf');
+      this.trimBlankPdfPages(pdf, expectedPages);
       const total = pdf.internal.getNumberOfPages();
       for (let i = 1; i <= total; i++) {
         pdf.setPage(i);
@@ -1765,8 +2100,7 @@ export class grnComponent implements OnInit {
         pdf.setTextColor(80);
         const w = pdf.internal.pageSize.getWidth();
         const h = pdf.internal.pageSize.getHeight();
-        // Page number only — never URL / title / date from the browser
-        pdf.text(`Page ${i} of ${total}`, w / 2, h - 5, { align: 'center' });
+        pdf.text(`Page ${i} of ${total}`, w / 2, h - 4, { align: 'center' });
       }
       pdf.save(fileName);
     } finally {
@@ -1937,7 +2271,7 @@ export class grnComponent implements OnInit {
     const mrp = Number(row.mrp ?? row.Mrp ?? row.MRP ?? 0);
     const batch = row.batchNumber ?? row.batchno ?? '';
     const remarks = row.remarks1 ?? row.remarks ?? '';
-    const retQty = Number(row.quantity ?? row.retQty ?? 0);
+    const retQty = Number(row.quantity ?? row.retQty ?? row.ReturnQuantity ?? row.returnQuantity ?? 0);
     const passedReason = row.passedstatus ?? row.statusofpassed ?? '';
     const rejectedReason = row.rejectedstatus ?? row.statusofrejected ?? '';
     return {
@@ -1967,8 +2301,8 @@ export class grnComponent implements OnInit {
       batchNumber: batch,
       batchno: batch,
       expiryDate: this.displayExpiryDate(row.expiryDate),
-      returnToParty: !!(row.returnToParty ?? row.ReturnToParty),
-      RetrunToParty: !!(row.returnToParty ?? row.ReturnToParty),
+      returnToParty: !!(row.returnToParty ?? row.ReturnToParty ?? row.RetrunToParty),
+      RetrunToParty: !!(row.returnToParty ?? row.ReturnToParty ?? row.RetrunToParty),
       quantity: retQty,
       retQty,
       remarks1: remarks,
@@ -2023,11 +2357,6 @@ export class grnComponent implements OnInit {
     }
   } 
   
-  filteredGrnOldList(): any[] {
-    this.challanOldList=this.grnListRptold.filter(grn => grn.returnToParty === true);
-    return this.challanOldList;
-  }
-
   updateGrnRow(){
     this.grnListRptold.push(this.normalizeEditRow({
       productId: null,
@@ -2061,7 +2390,7 @@ export class grnComponent implements OnInit {
   }
 
   UpdateoldGRN(){
-    this.filteredGrnOldList();
+    this.buildChallanOldList();
     if (this.grnListRptold.length === 0) {
       alert("No GRN data to submit.");
       return;
@@ -2123,18 +2452,12 @@ export class grnComponent implements OnInit {
 
     this.GrnService.UpdateGrn(this.grnID,payload).subscribe({
       next: async (response) => {
-        const canDownloadGrn = this.hasBatchMrpAndExpiry(this.grnListRptold);
-        alert(canDownloadGrn
-          ? "GRN Updated successfully! GRN print/download window will open."
-          : "GRN Updated successfully!");
+        alert("GRN Updated successfully! Print/download windows will open.");
         try {
-          if (canDownloadGrn) {
-            await this.printGRNPopup();
-          }
+          // Always offer GRN first, then Challan when return lines exist
+          await this.printGRNPopup();
           if (this.challanOldList && this.challanOldList.length > 0) {
-            const downloadChallan = confirm(canDownloadGrn
-              ? "GRN print complete. Do you want to download/print the Challan as well?"
-              : "Do you want to download/print the Challan as well?");
+            const downloadChallan = confirm("GRN print complete. Do you want to download/print the Challan as well?");
             if (downloadChallan) {
               this.updatechallan();
               await this.printChallanOldPopup();
