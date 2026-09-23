@@ -1988,7 +1988,7 @@ printPOPUPSectionChallan -->
           Your Goods Received Note <strong>{{ grnNumber }}</strong> has been saved. Select options below to download documents:
         </p>
         <div class="d-grid gap-2 mb-3">
-          <button *ngIf="hasBatchMrpAndExpiry()" type="button" class="btn btn-outline-primary py-2 d-flex align-items-center justify-content-center gap-2" (click)="printGRN()">
+          <button type="button" class="btn btn-outline-primary py-2 d-flex align-items-center justify-content-center gap-2" (click)="printGRN()">
             <i class="bi bi-file-pdf text-danger fs-5"></i> Download GRN PDF
           </button>
           <button type="button" class="btn btn-outline-info py-2 d-flex align-items-center justify-content-center gap-2" (click)="printChallan()">

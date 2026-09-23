@@ -1315,8 +1315,13 @@ export class grnComponent implements OnInit {
   }
 
   getReturnQtyDisplay(grn: any): string {
-    const quantity = this.getChallanQuantity(grn);
-    return quantity > 0 ? String(quantity) : '';
+    // Only show explicitly entered/saved return qty — do not fall back to received/rejected/party qty
+    const raw = grn?.retQty ?? grn?.ReturnQuantity ?? grn?.returnQuantity;
+    if (raw === null || raw === undefined || raw === '') {
+      return '';
+    }
+    const qty = Number(raw);
+    return qty > 0 ? String(qty) : '';
   }
 
   /** Challan: show all products — Return checkbox NOT required. */
