@@ -1195,7 +1195,7 @@ export class grnComponent implements OnInit {
         return;
       }
 
-      if (grn.expiryDate) {
+      if (grn.expiryDate && !this.isPlaceholderExpiry(grn.expiryDate)) {
         const d = new Date(grn.expiryDate);
         if (isNaN(d.getTime())) {
           console.warn(`Invalid Expiry Date at row index ${i}. Raw value:`, grn.expiryDate);
@@ -1260,7 +1260,7 @@ export class grnComponent implements OnInit {
       },
       error: (error) => {
         console.error("Error submitting GRN:", error);
-        const apiMsg = error?.error?.message || error?.error?.error || error?.message || 'Please try again.';
+        const apiMsg = this.extractErrorMessage(error);
         alert("Failed to submit GRN: " + apiMsg);
       }
     });
@@ -1397,15 +1397,32 @@ export class grnComponent implements OnInit {
     return !text || text.startsWith('0001-01-01') || text.startsWith('1900-01-01');
   }
 
-  toApiExpiryDate(value: any): string | null {
+  toApiExpiryDate(value: any): string {
     if (this.isPlaceholderExpiry(value)) {
-      return null;
+      return '1900-01-01T00:00:00';
     }
     const parsed = new Date(value);
     if (isNaN(parsed.getTime())) {
-      return null;
+      return '1900-01-01T00:00:00';
     }
     return parsed.toISOString();
+  }
+
+  extractErrorMessage(error: any): string {
+    if (!error) return 'Please try again.';
+    if (typeof error.error === 'string' && error.error.trim()) return error.error;
+    if (error.error?.message) return error.error.message;
+    if (error.error?.error) return error.error.error;
+    if (error.error?.title) {
+      if (error.error?.errors && typeof error.error.errors === 'object') {
+        const fieldErrors = Object.entries(error.error.errors)
+          .map(([field, msgs]: [string, any]) => `${field}: ${Array.isArray(msgs) ? msgs.join(', ') : msgs}`)
+          .join(' | ');
+        if (fieldErrors) return `${error.error.title}: ${fieldErrors}`;
+      }
+      return error.error.title;
+    }
+    return error.message || 'Please try again.';
   }
 
   displayExpiryDate(value: any): string {
@@ -2412,7 +2429,7 @@ export class grnComponent implements OnInit {
         return;
       }
 
-      if (grn.expiryDate) {
+      if (grn.expiryDate && !this.isPlaceholderExpiry(grn.expiryDate)) {
         const d = new Date(grn.expiryDate);
         if (isNaN(d.getTime())) {
           console.warn(`Invalid Expiry Date at row index ${i}. Raw value:`, grn.expiryDate);
@@ -2476,7 +2493,7 @@ export class grnComponent implements OnInit {
       },
       error: (error) => {
         console.error("Error submitting GRN:", error);
-        alert("Failed to submit GRN. Please try again.");
+        alert("Failed to submit GRN: " + this.extractErrorMessage(error));
       }
     });
   

@@ -238,7 +238,7 @@ namespace APIDRODIN.Controllers
         public object SqlDateOrNull(DateTime? date)
         {
             if (date == null || date.Value == DateTime.MinValue || date.Value.Year <= 1900)
-                return new DateTime(1900, 1, 1);
+                return DBNull.Value;
             return date.Value;
         }
 
@@ -246,7 +246,7 @@ namespace APIDRODIN.Controllers
         {
             if (string.IsNullOrWhiteSpace(date) || date.StartsWith("0001-01-01", StringComparison.Ordinal) || date.StartsWith("1900-01-01", StringComparison.Ordinal))
             {
-                return new DateTime(1900, 1, 1);
+                return DBNull.Value;
             }
 
             if (DateTime.TryParse(date, out var parsed) && parsed != DateTime.MinValue && parsed.Year > 1900)
@@ -254,7 +254,7 @@ namespace APIDRODIN.Controllers
                 return parsed;
             }
 
-            return new DateTime(1900, 1, 1);
+            return DBNull.Value;
         }
 
         private static DateTime? ReadExpiryDate(SqlDataReader reader, int index)

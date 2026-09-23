@@ -1463,7 +1463,7 @@
             <td class="col-demanded">{{ grn.demandedbyparty || '—' }}</td>
             <td class="col-mrp">{{ grn.mrp }}</td>
             <td class="col-batch">{{ grn.batchNumber || '—' }}</td>
-            <td class="col-expiry">{{ grn.expiryDate || '—' }}</td>
+            <td class="col-expiry">{{ displayExpiryDate(grn.expiryDate) || '—' }}</td>
             <td class="col-return">{{ getReturnQtyDisplay(grn) }}</td>
             <td class="col-remarks text-start">{{ grn.remarks1 || '—' }}</td>
           </tr>
@@ -1698,7 +1698,7 @@ printPOPUPSectionChallan -->
           <td class="col-status">{{ grn.status || '—' }}</td>
           <td class="col-mrp">{{ grn.MRP || 0 }}</td>
           <td class="col-batch">{{ grn.batchno || '—' }}</td>
-          <td class="col-expiry">{{ grn.expiryDate || '—' }}</td>
+          <td class="col-expiry">{{ displayExpiryDate(grn.expiryDate) || '—' }}</td>
           <td class="col-return">{{ getReturnQtyDisplay(grn) }}</td>
           <td class="col-remarks text-start">{{ grn.remarks || '—' }}</td>
         </tr>
