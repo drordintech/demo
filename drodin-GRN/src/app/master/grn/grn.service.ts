@@ -9,18 +9,18 @@ import { environment } from '../../../environments/environment';
 
 export class grnService {
   constructor(private http: HttpClient) { }
-  /** Blank/invalid/placeholder expiry is sent as '1900-01-01T00:00:00' — a valid DateTime for older servers while recognized as placeholder by DB and frontend. */
-  private toOptionalExpiryDate(value: any): string {
+  /** Blank/invalid/placeholder expiry is sent as null — database column allows NULL. */
+  private toOptionalExpiryDate(value: any): string | null {
     if (value === null || value === undefined) {
-      return '1900-01-01T00:00:00';
+      return null;
     }
     const text = String(value).trim();
     if (!text || text.startsWith('0001-01-01') || text.startsWith('1900-01-01')) {
-      return '1900-01-01T00:00:00';
+      return null;
     }
     const parsed = new Date(text);
     if (isNaN(parsed.getTime())) {
-      return '1900-01-01T00:00:00';
+      return null;
     }
     return parsed.toISOString();
   }

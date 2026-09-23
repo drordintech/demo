@@ -1397,13 +1397,13 @@ export class grnComponent implements OnInit {
     return !text || text.startsWith('0001-01-01') || text.startsWith('1900-01-01');
   }
 
-  toApiExpiryDate(value: any): string {
+  toApiExpiryDate(value: any): string | null {
     if (this.isPlaceholderExpiry(value)) {
-      return '1900-01-01T00:00:00';
+      return null;
     }
     const parsed = new Date(value);
     if (isNaN(parsed.getTime())) {
-      return '1900-01-01T00:00:00';
+      return null;
     }
     return parsed.toISOString();
   }
