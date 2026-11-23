@@ -825,17 +825,23 @@ export class grnComponent implements OnInit {
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
 
-    const html2pdf = (window as any).html2pdf;
-    if (html2pdf) {
-      html2pdf().set(opt).from(printContainer).save().then(() => {
+    import('html2pdf.js').then((html2pdfModule: any) => {
+      const html2pdf = (window as any).html2pdf || html2pdfModule.default || html2pdfModule;
+      (html2pdf as any)().set(opt).from(printContainer).save().then(() => {
         this.isGeneratingExport = false;
       }).catch(() => {
         this.isGeneratingExport = false;
       });
-    } else {
-      this.isGeneratingExport = false;
-      alert('Generating PDF file...');
-    }
+    }).catch(() => {
+      if ((window as any).html2pdf) {
+        (window as any).html2pdf().set(opt).from(printContainer).save().then(() => {
+          this.isGeneratingExport = false;
+        });
+      } else {
+        this.isGeneratingExport = false;
+        alert('Generating PDF file...');
+      }
+    });
   }
 
   downloadExcel(): void {
@@ -2052,11 +2058,8 @@ export class grnComponent implements OnInit {
    * Never uses window.print(), so Chrome/Edge cannot inject localhost / route footers.
    */
   private async downloadCleanPdf(printable: HTMLElement, fileName: string, styles: string): Promise<void> {
-    const html2pdf = (window as any).html2pdf;
-    if (!html2pdf) {
-      alert('PDF generation library is still loading. Please try again.');
-      return;
-    }
+    const html2pdfModule: any = await import('html2pdf.js');
+    const html2pdf = html2pdfModule.default || html2pdfModule;
 
     const frozen = this.freezeInputsForPdf(printable);
     // Bugfix cut-off + preview≠PDF: strip preview padding/fixed width before capture

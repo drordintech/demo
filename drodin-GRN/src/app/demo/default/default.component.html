@@ -242,19 +242,12 @@
           <div class="chart-body">
             <div class="chart-container">
               <google-chart 
-                *ngIf="rejectedstate && rejectedstate.length > 0; else noStateData"
                 [type]="type" 
                 [data]="rejectedstate" 
                 [options]="modernOptions" 
                 [width]="width" 
                 [height]="height">
               </google-chart>
-              <ng-template #noStateData>
-                <div class="d-flex flex-column align-items-center justify-content-center text-muted py-5">
-                  <i class="ti ti-chart-bar fs-1 mb-2"></i>
-                  <p class="mb-0">No rejection data available</p>
-                </div>
-              </ng-template>
             </div>
           </div>
         </div>
@@ -277,19 +270,12 @@
           <div class="chart-body">
             <div class="chart-container">
               <google-chart 
-                *ngIf="top10rejectedproducts && top10rejectedproducts.length > 0; else noProductData"
                 [type]="type" 
                 [data]="top10rejectedproducts" 
                 [options]="modernOptionsReturn" 
                 [width]="width" 
                 [height]="height">
               </google-chart>
-              <ng-template #noProductData>
-                <div class="d-flex flex-column align-items-center justify-content-center text-muted py-5">
-                  <i class="ti ti-package fs-1 mb-2"></i>
-                  <p class="mb-0">No returned product data available</p>
-                </div>
-              </ng-template>
             </div>
           </div>
         </div>
