@@ -197,7 +197,7 @@
                     <tr>
                       <th rowspan="2" class="product-col">Product</th>
                       <th colspan="2" class="quantity-col">Quantity (Party)</th>
-                      <th colspan="2" class="quantity-col">Quantity (Received)</th>
+                      <th colspan="5" class="quantity-col">Quantity (Received)</th>
                       <th rowspan="2" class="demand-col">Demanded By Party</th>
                       <th rowspan="2" class="return-col">Return To Party</th>
                       <th rowspan="2" class="mrp-col">MRP</th>
@@ -206,6 +206,9 @@
                     <tr>
                       <th>As per Party</th>
                       <th>Received</th>
+                      <th>New</th>
+                      <th>Saleable</th>
+                      <th>Scratch</th>
                       <th>Passed</th>
                       <th>Rejected</th>
                     </tr>
@@ -215,6 +218,9 @@
                       <td class="product-name">{{ detail.productName }}</td>
                       <td class="quantity-party">{{ detail.quantityAsPerParty }}</td>
                       <td class="quantity-received">{{ detail.receivedQuantity }}</td>
+                      <td class="quantity-new">{{ detail.new ?? detail.New ?? 0 }}</td>
+                      <td class="quantity-saleable">{{ detail.saleable ?? detail.Saleable ?? 0 }}</td>
+                      <td class="quantity-scratch">{{ detail.scratch ?? detail.Scratch ?? 0 }}</td>
                       <td class="quantity-passed">
                         {{ detail.passedQuantity }}
                         <span class="status-indicator passed" *ngIf="detail.passedstatus">✓</span>

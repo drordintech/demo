@@ -22,6 +22,9 @@ export const FIELD_CONFIG: Record<string, FieldConfig> = {
   quantityasperparty: { label: 'As Per Party', type: 'number' },
   received: { label: 'Received Qty', type: 'number' },
   receivedQuantity: { label: 'Received Qty', type: 'number' },
+  newQty: { label: 'New', type: 'number' },
+  saleable: { label: 'Saleable', type: 'number' },
+  scratch: { label: 'Scratch', type: 'number' },
   passed: { label: 'Passed Qty', type: 'number' },
   rejected: { label: 'Rejected Qty', type: 'number' },
   miscellaneous: { label: 'Miscellaneous Qty', type: 'number' },
@@ -39,7 +42,7 @@ export const FIELD_CONFIG: Record<string, FieldConfig> = {
 export const TAB_COLUMNS: Record<string, string[]> = {
   intake: ['sno', 'product', 'asPerParty', 'received', 'shortageQty'],
   center: [
-    'sno', 'product', 'received', 'shortageQty', 'passed', 'rejected', 'miscellaneous', 'status',
+    'sno', 'product', 'received', 'shortageQty', 'newQty', 'saleable', 'scratch', 'passed', 'rejected', 'miscellaneous', 'status',
     'returnToParty', 'retQty', 'remarks'
   ]
 };
@@ -50,9 +53,19 @@ export interface GrnRow {
   sku: string;
   asPerParty: number;
   received: number;
+  newQty?: number;
+  saleable?: number;
+  scratch?: number;
+  new?: number;
+  New?: number;
+  Saleable?: number;
+  Scratch?: number;
   passed: number;
+  passedQuantity?: number;
   rejected: number;
+  rejectedQuantity?: number;
   miscellaneous?: number;
+  miscellaneousQuantity?: number;
   status: string;
   demandedByParty: string;
   demandedbyparty?: string;
@@ -1054,6 +1067,13 @@ export class grnComponent implements OnInit {
       sku: '',
       asPerParty: 0,
       received: 0,
+      newQty: 0,
+      saleable: 0,
+      scratch: 0,
+      new: 0,
+      New: 0,
+      Saleable: 0,
+      Scratch: 0,
       passed: 0,
       rejected: 0,
       miscellaneous: 0,
@@ -1084,6 +1104,41 @@ export class grnComponent implements OnInit {
     this.rows.splice(index, 1);
     this.rows.forEach((row, i) => row.sno = i + 1);
   }
+
+  /** Allow only non-negative whole numbers (digits 0-9) */
+  sanitizeInteger(value: any): number {
+    if (value === null || value === undefined || value === '') return 0;
+    const parsed = parseInt(String(value), 10);
+    return isNaN(parsed) || parsed < 0 ? 0 : Math.floor(parsed);
+  }
+
+  allowOnlyWholeNumbers(event: KeyboardEvent): boolean {
+    if (['Backspace', 'Tab', 'ArrowLeft', 'ArrowRight', 'Delete', 'Enter', 'Home', 'End'].includes(event.key)) {
+      return true;
+    }
+    if (!/^\d$/.test(event.key)) {
+      event.preventDefault();
+      return false;
+    }
+    return true;
+  }
+
+  onIntegerPaste(event: ClipboardEvent, grn: any, field: string): void {
+    event.preventDefault();
+    const text = event.clipboardData?.getData('text') || '';
+    const cleaned = parseInt(text.replace(/\D/g, ''), 10);
+    grn[field] = isNaN(cleaned) ? 0 : cleaned;
+    this.updateQuantity(grn);
+  }
+
+  isBreakdownMismatch(grn: any): boolean {
+    if (!grn) return false;
+    const newQty = Number(grn.newQty ?? grn.new ?? grn.New ?? 0);
+    const saleable = Number(grn.saleable ?? grn.Saleable ?? 0);
+    const scratch = Number(grn.scratch ?? grn.Scratch ?? 0);
+    const passed = Number(grn.passed ?? grn.passedQuantity ?? 0);
+    return (newQty + saleable + scratch) !== passed;
+  }
   
   updateQuantity(grn: any) {
     if (grn.quantityasperparty !== undefined) {
@@ -1094,6 +1149,38 @@ export class grnComponent implements OnInit {
     if (grn.passed !== undefined) grn.passedQuantity = grn.passed;
     if (grn.rejected !== undefined) grn.rejectedQuantity = grn.rejected;
     if (grn.miscellaneous !== undefined) grn.miscellaneousQuantity = grn.miscellaneous;
+
+    // Sanitize NEW, SALEABLE, SCRATCH to non-negative whole numbers (integers)
+    if (grn.newQty !== undefined) {
+      grn.newQty = this.sanitizeInteger(grn.newQty);
+      grn.new = grn.newQty;
+      grn.New = grn.newQty;
+    } else if (grn.new !== undefined) {
+      grn.new = this.sanitizeInteger(grn.new);
+      grn.newQty = grn.new;
+      grn.New = grn.new;
+    } else if (grn.New !== undefined) {
+      grn.New = this.sanitizeInteger(grn.New);
+      grn.newQty = grn.New;
+      grn.new = grn.New;
+    }
+
+    if (grn.saleable !== undefined) {
+      grn.saleable = this.sanitizeInteger(grn.saleable);
+      grn.Saleable = grn.saleable;
+    } else if (grn.Saleable !== undefined) {
+      grn.Saleable = this.sanitizeInteger(grn.Saleable);
+      grn.saleable = grn.Saleable;
+    }
+
+    if (grn.scratch !== undefined) {
+      grn.scratch = this.sanitizeInteger(grn.scratch);
+      grn.Scratch = grn.scratch;
+    } else if (grn.Scratch !== undefined) {
+      grn.Scratch = this.sanitizeInteger(grn.Scratch);
+      grn.scratch = grn.Scratch;
+    }
+
     if (grn.MRP !== undefined) grn.mrp = grn.MRP;
     if (grn.batchno !== undefined) grn.batchNumber = grn.batchno;
     if (grn.retQty !== undefined) grn.quantity = grn.retQty;
@@ -1113,6 +1200,10 @@ export class grnComponent implements OnInit {
     const passed = Number(grn.passed ?? grn.passedQuantity ?? 0);
     const rejected = Number(grn.rejected ?? grn.rejectedQuantity ?? 0);
     const miscellaneous = Number(grn.miscellaneous ?? grn.miscellaneousQuantity ?? 0);
+    const newQty = Number(grn.newQty ?? grn.new ?? grn.New ?? 0);
+    const saleable = Number(grn.saleable ?? grn.Saleable ?? 0);
+    const scratch = Number(grn.scratch ?? grn.Scratch ?? 0);
+    const sumBreakdown = newQty + saleable + scratch;
 
     // Non-blocking warning — do NOT use alert() on blur (it locks focus and blocks further edits)
     let warning = '';
@@ -1120,6 +1211,8 @@ export class grnComponent implements OnInit {
       warning = `Row #${grn.sno || ''}: Received (${received}) exceeds As Per Party (${asPerParty}).`;
     } else if (received > 0 && (passed + rejected + miscellaneous) > received) {
       warning = `Row #${grn.sno || ''}: Passed + Rejected + Miscellaneous (${passed + rejected + miscellaneous}) exceeds Received (${received}).`;
+    } else if (sumBreakdown !== passed) {
+      warning = `Row #${grn.sno || ''}: NEW (${newQty}) + SALEABLE (${saleable}) + SCRATCH (${scratch}) = ${sumBreakdown}, which must equal PASSED (${passed}).`;
     }
 
     grn.qtyWarning = warning;
@@ -1195,6 +1288,21 @@ export class grnComponent implements OnInit {
         return;
       }
 
+      const newQty = Number(grn.newQty ?? grn.new ?? grn.New ?? 0);
+      const saleable = Number(grn.saleable ?? grn.Saleable ?? 0);
+      const scratch = Number(grn.scratch ?? grn.Scratch ?? 0);
+      const passed = Number(grn.passed ?? grn.passedQuantity ?? 0);
+
+      if (newQty < 0 || saleable < 0 || scratch < 0) {
+        alert(`Row ${i + 1}: NEW, SALEABLE, and SCRATCH quantities must be non-negative whole numbers.`);
+        return;
+      }
+
+      if (newQty + saleable + scratch !== passed) {
+        alert(`Row ${i + 1}: Validation failed: NEW (${newQty}) + SALEABLE (${saleable}) + SCRATCH (${scratch}) must equal PASSED (${passed}).`);
+        return;
+      }
+
       if (grn.expiryDate && !this.isPlaceholderExpiry(grn.expiryDate)) {
         const d = new Date(grn.expiryDate);
         if (isNaN(d.getTime())) {
@@ -1223,6 +1331,9 @@ export class grnComponent implements OnInit {
         receivedQuantity: Number(grn.receivedQuantity ?? grn.received ?? 0),
         rejectedQuantity: Number(grn.rejected ?? 0),
         passedQuantity: Number(grn.passed ?? 0),
+        new: Number(grn.newQty ?? grn.new ?? grn.New ?? 0),
+        saleable: Number(grn.saleable ?? grn.Saleable ?? 0),
+        scratch: Number(grn.scratch ?? grn.Scratch ?? 0),
         miscellaneousQuantity: Number(grn.miscellaneous ?? 0),
         status: grn.status || '',
         demandedbyparty: grn.demandedbyparty || grn.demandedByParty || '',
@@ -2288,6 +2399,9 @@ export class grnComponent implements OnInit {
     const asPerParty = Number(row.quantityAsPerParty ?? row.quantityasperparty ?? 0);
     const received = Number(row.receivedQuantity ?? row.ReceivedQuantity ?? 0);
     const passed = Number(row.passedQuantity ?? row.passed ?? 0);
+    const newQty = this.sanitizeInteger(row.new ?? row.New ?? row.newQty ?? 0);
+    const saleable = this.sanitizeInteger(row.saleable ?? row.Saleable ?? 0);
+    const scratch = this.sanitizeInteger(row.scratch ?? row.Scratch ?? 0);
     const rejected = Number(row.rejectedQuantity ?? row.rejected ?? 0);
     const misc = Number(row.miscellaneousQuantity ?? row.miscellaneous ?? 0);
     const mrp = Number(row.mrp ?? row.Mrp ?? row.MRP ?? 0);
@@ -2308,6 +2422,13 @@ export class grnComponent implements OnInit {
       received,
       passedQuantity: passed,
       passed,
+      newQty,
+      new: newQty,
+      New: newQty,
+      saleable,
+      Saleable: saleable,
+      scratch,
+      Scratch: scratch,
       rejectedQuantity: rejected,
       rejected,
       miscellaneousQuantity: misc,
@@ -2386,6 +2507,13 @@ export class grnComponent implements OnInit {
       receivedQuantity: 0,
       rejectedQuantity: 0,
       passedQuantity: 0,
+      new: 0,
+      New: 0,
+      saleable: 0,
+      Saleable: 0,
+      scratch: 0,
+      Scratch: 0,
+      newQty: 0,
       miscellaneousQuantity: 0,
       passedstatus: '',
       rejectedstatus: '',
@@ -2429,6 +2557,21 @@ export class grnComponent implements OnInit {
         return;
       }
 
+      const newQty = Number(grn.newQty ?? grn.new ?? grn.New ?? 0);
+      const saleable = Number(grn.saleable ?? grn.Saleable ?? 0);
+      const scratch = Number(grn.scratch ?? grn.Scratch ?? 0);
+      const passed = Number(grn.passedQuantity ?? grn.passed ?? 0);
+
+      if (newQty < 0 || saleable < 0 || scratch < 0) {
+        alert(`Row ${i + 1}: NEW, SALEABLE, and SCRATCH quantities must be non-negative whole numbers.`);
+        return;
+      }
+
+      if (newQty + saleable + scratch !== passed) {
+        alert(`Row ${i + 1}: Validation failed: NEW (${newQty}) + SALEABLE (${saleable}) + SCRATCH (${scratch}) must equal PASSED (${passed}).`);
+        return;
+      }
+
       if (grn.expiryDate && !this.isPlaceholderExpiry(grn.expiryDate)) {
         const d = new Date(grn.expiryDate);
         if (isNaN(d.getTime())) {
@@ -2453,6 +2596,9 @@ export class grnComponent implements OnInit {
         receivedQuantity: Number(grn.receivedQuantity ?? 0),
         rejectedQuantity: Number(grn.rejectedQuantity ?? grn.rejected ?? 0),
         passedQuantity: Number(grn.passedQuantity ?? grn.passed ?? 0),
+        new: Number(grn.newQty ?? grn.new ?? grn.New ?? 0),
+        saleable: Number(grn.saleable ?? grn.Saleable ?? 0),
+        scratch: Number(grn.scratch ?? grn.Scratch ?? 0),
         miscellaneousQuantity: Number(grn.miscellaneousQuantity ?? grn.miscellaneous ?? 0),
         status: grn.status,
         demandedbyparty: grn.demandedbyparty,

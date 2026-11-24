@@ -269,7 +269,7 @@
                       <th rowspan="2" scope="col" class="align-middle main-th sticky-th">S.No</th>
                       <th rowspan="2" scope="col" class="align-middle main-th sticky-th sticky-th-product-sm"
                         style="width: 360px;">Product Name</th>
-                      <th colspan="5" scope="col" class="text-center group-header-qty py-1 sticky-th">QUANTITY</th>
+                      <th colspan="8" scope="col" class="text-center group-header-qty py-1 sticky-th">QUANTITY</th>
                       <th rowspan="2" scope="col" class="align-middle main-th text-center sticky-th">Status</th>
                       <th rowspan="2" scope="col" class="align-middle main-th text-center sticky-th">Return</th>
                       <th rowspan="2" scope="col" class="align-middle main-th text-center sticky-th">Ret Qty</th>
@@ -278,6 +278,9 @@
                     <tr class="header-sub-row">
                       <th scope="col" class="sub-th sticky-sub-th">Rec Qty</th>
                       <th scope="col" class="sub-th sticky-sub-th">S. Qty</th>
+                      <th scope="col" class="sub-th sticky-sub-th">New</th>
+                      <th scope="col" class="sub-th sticky-sub-th">Saleable</th>
+                      <th scope="col" class="sub-th sticky-sub-th">Scratch</th>
                       <th scope="col" class="sub-th sticky-sub-th">Passed</th>
                       <th scope="col" class="sub-th sticky-sub-th">Rejected</th>
                       <th scope="col" class="sub-th sticky-sub-th">Miscellaneous</th>
@@ -395,13 +398,57 @@
                         </div>
                       </ng-container>
 
+                      <!-- New Qty -->
+                      <ng-container *ngIf="col === 'newQty'">
+                        <input type="number" min="0" step="1" [(ngModel)]="grn.newQty"
+                          class="form-control form-control-sm text-center qty-input"
+                          [class.is-invalid]="isBreakdownMismatch(grn)"
+                          (keydown)="allowOnlyWholeNumbers($event)"
+                          (paste)="onIntegerPaste($event, grn, 'newQty')"
+                          (input)="updateQuantity(grn)"
+                          (change)="updateQuantity(grn)"
+                          (blur)="validateRow(grn)"
+                          title="NEW Quantity (whole number >= 0)" />
+                      </ng-container>
 
+                      <!-- Saleable Qty -->
+                      <ng-container *ngIf="col === 'saleable'">
+                        <input type="number" min="0" step="1" [(ngModel)]="grn.saleable"
+                          class="form-control form-control-sm text-center qty-input"
+                          [class.is-invalid]="isBreakdownMismatch(grn)"
+                          (keydown)="allowOnlyWholeNumbers($event)"
+                          (paste)="onIntegerPaste($event, grn, 'saleable')"
+                          (input)="updateQuantity(grn)"
+                          (change)="updateQuantity(grn)"
+                          (blur)="validateRow(grn)"
+                          title="SALEABLE Quantity (whole number >= 0)" />
+                      </ng-container>
+
+                      <!-- Scratch Qty -->
+                      <ng-container *ngIf="col === 'scratch'">
+                        <input type="number" min="0" step="1" [(ngModel)]="grn.scratch"
+                          class="form-control form-control-sm text-center qty-input"
+                          [class.is-invalid]="isBreakdownMismatch(grn)"
+                          (keydown)="allowOnlyWholeNumbers($event)"
+                          (paste)="onIntegerPaste($event, grn, 'scratch')"
+                          (input)="updateQuantity(grn)"
+                          (change)="updateQuantity(grn)"
+                          (blur)="validateRow(grn)"
+                          title="SCRATCH Quantity (whole number >= 0)" />
+                      </ng-container>
 
                       <!-- Passed Qty -->
                       <ng-container *ngIf="col === 'passed'">
                         <input type="number" [(ngModel)]="grn.passed"
-                          class="form-control form-control-sm text-center qty-input" (change)="updateQuantity(grn)"
-                          (blur)="validateRow(grn)" />
+                          class="form-control form-control-sm text-center qty-input"
+                          [class.is-invalid]="isBreakdownMismatch(grn)"
+                          (change)="updateQuantity(grn)"
+                          (blur)="validateRow(grn)"
+                          title="Passed Quantity. Must equal NEW + SALEABLE + SCRATCH" />
+                        <div *ngIf="isBreakdownMismatch(grn)" class="small text-danger mt-1 fw-bold text-center" style="font-size: 10px;"
+                          title="NEW + SALEABLE + SCRATCH = {{ (grn.newQty || 0) + (grn.saleable || 0) + (grn.scratch || 0) }}, must equal PASSED ({{ grn.passed || 0 }})">
+                          Sum: {{ (grn.newQty || 0) + (grn.saleable || 0) + (grn.scratch || 0) }}
+                        </div>
                         <select [(ngModel)]="grn.statusofpassed"
                           class="form-select form-select-sm Dropdown mt-1 reason-select">
                           <option value="" disabled>Select</option>
@@ -854,9 +901,12 @@
                       <thead>
                         <tr>
                           <th>Product Name</th>
-                          <th style="text-align: center; width: 90px;">Rec. Qty</th>
-                          <th style="text-align: center; width: 90px;">Rej. Qty</th>
-                          <th style="text-align: center; width: 90px;">Pass Qty</th>
+                          <th style="text-align: center; width: 80px;">Rec. Qty</th>
+                          <th style="text-align: center; width: 65px;">New</th>
+                          <th style="text-align: center; width: 70px;">Saleable</th>
+                          <th style="text-align: center; width: 65px;">Scratch</th>
+                          <th style="text-align: center; width: 80px;">Pass Qty</th>
+                          <th style="text-align: center; width: 80px;">Rej. Qty</th>
                           <th style="text-align: center; width: 100px;">Status</th>
                         </tr>
                       </thead>
@@ -865,12 +915,18 @@
                           <td class="fw-semibold">{{ detail.productName || detail.ProductName }}</td>
                           <td style="text-align: center;"><span class="badge bg-light text-dark border">{{
                               detail.receivedQuantity ?? detail.ReceivedQuantity }}</span></td>
-                          <td style="text-align: center;"><span
-                              class="badge bg-danger-subtle text-danger border border-danger-subtle">{{
-                              detail.rejectedQuantity ?? detail.RejectedQuantity }}</span></td>
+                          <td style="text-align: center;"><span class="badge bg-primary-subtle text-primary border border-primary-subtle">{{
+                              detail.new ?? detail.New ?? 0 }}</span></td>
+                          <td style="text-align: center;"><span class="badge bg-info-subtle text-info border border-info-subtle">{{
+                              detail.saleable ?? detail.Saleable ?? 0 }}</span></td>
+                          <td style="text-align: center;"><span class="badge bg-warning-subtle text-warning border border-warning-subtle">{{
+                              detail.scratch ?? detail.Scratch ?? 0 }}</span></td>
                           <td style="text-align: center;"><span
                               class="badge bg-success-subtle text-success border border-success-subtle">{{
                               detail.passedQuantity ?? detail.PassedQuantity }}</span></td>
+                          <td style="text-align: center;"><span
+                              class="badge bg-danger-subtle text-danger border border-danger-subtle">{{
+                              detail.rejectedQuantity ?? detail.RejectedQuantity }}</span></td>
                           <td style="text-align: center;">
                             <span class="badge" [ngClass]="getStatusClass(detail.status || detail.Status)">
                               {{ detail.status || detail.Status || '—' }}
@@ -1154,7 +1210,7 @@
                   <tr class="header-main-row">
                     <th rowspan="2" class="align-middle main-th sticky-th">S.No</th>
                     <th rowspan="2" class="align-middle main-th sticky-th sticky-th-product-sm" style="width: 360px;">Product Name</th>
-                    <th colspan="5" class="text-center group-header-qty py-1 sticky-th">QUANTITY</th>
+                    <th colspan="8" class="text-center group-header-qty py-1 sticky-th">QUANTITY</th>
                     <th rowspan="2" class="align-middle main-th text-center sticky-th">Status</th>
                     <th rowspan="2" class="align-middle main-th text-center sticky-th">Return</th>
                     <th rowspan="2" class="align-middle main-th text-center sticky-th">Ret Qty</th>
@@ -1163,6 +1219,9 @@
                   <tr class="header-sub-row">
                     <th class="sub-th sticky-sub-th">Rec Qty</th>
                     <th class="sub-th sticky-sub-th">S. Qty</th>
+                    <th class="sub-th sticky-sub-th">New</th>
+                    <th class="sub-th sticky-sub-th">Saleable</th>
+                    <th class="sub-th sticky-sub-th">Scratch</th>
                     <th class="sub-th sticky-sub-th">Passed</th>
                     <th class="sub-th sticky-sub-th">Rejected</th>
                     <th class="sub-th sticky-sub-th">Miscellaneous</th>
@@ -1249,9 +1308,50 @@
                         </span>
                       </div>
                     </ng-container>
+                    <ng-container *ngIf="col === 'newQty'">
+                      <input type="number" min="0" step="1" [(ngModel)]="grn.newQty"
+                        class="form-control form-control-sm text-center qty-input"
+                        [class.is-invalid]="isBreakdownMismatch(grn)"
+                        (keydown)="allowOnlyWholeNumbers($event)"
+                        (paste)="onIntegerPaste($event, grn, 'newQty')"
+                        (input)="updateQuantity(grn)"
+                        (change)="updateQuantity(grn)"
+                        (blur)="validateRow(grn)"
+                        title="NEW Quantity (whole number >= 0)" />
+                    </ng-container>
+                    <ng-container *ngIf="col === 'saleable'">
+                      <input type="number" min="0" step="1" [(ngModel)]="grn.saleable"
+                        class="form-control form-control-sm text-center qty-input"
+                        [class.is-invalid]="isBreakdownMismatch(grn)"
+                        (keydown)="allowOnlyWholeNumbers($event)"
+                        (paste)="onIntegerPaste($event, grn, 'saleable')"
+                        (input)="updateQuantity(grn)"
+                        (change)="updateQuantity(grn)"
+                        (blur)="validateRow(grn)"
+                        title="SALEABLE Quantity (whole number >= 0)" />
+                    </ng-container>
+                    <ng-container *ngIf="col === 'scratch'">
+                      <input type="number" min="0" step="1" [(ngModel)]="grn.scratch"
+                        class="form-control form-control-sm text-center qty-input"
+                        [class.is-invalid]="isBreakdownMismatch(grn)"
+                        (keydown)="allowOnlyWholeNumbers($event)"
+                        (paste)="onIntegerPaste($event, grn, 'scratch')"
+                        (input)="updateQuantity(grn)"
+                        (change)="updateQuantity(grn)"
+                        (blur)="validateRow(grn)"
+                        title="SCRATCH Quantity (whole number >= 0)" />
+                    </ng-container>
                     <ng-container *ngIf="col === 'passed'">
-                      <input type="number" [(ngModel)]="grn.passed" (change)="updateQuantity(grn)"
-                        class="form-control form-control-sm text-center qty-input" />
+                      <input type="number" [(ngModel)]="grn.passed"
+                        class="form-control form-control-sm text-center qty-input"
+                        [class.is-invalid]="isBreakdownMismatch(grn)"
+                        (change)="updateQuantity(grn)"
+                        (blur)="validateRow(grn)"
+                        title="Passed Quantity. Must equal NEW + SALEABLE + SCRATCH" />
+                      <div *ngIf="isBreakdownMismatch(grn)" class="small text-danger mt-1 fw-bold text-center" style="font-size: 10px;"
+                        title="NEW + SALEABLE + SCRATCH = {{ (grn.newQty || 0) + (grn.saleable || 0) + (grn.scratch || 0) }}, must equal PASSED ({{ grn.passed || 0 }})">
+                        Sum: {{ (grn.newQty || 0) + (grn.saleable || 0) + (grn.scratch || 0) }}
+                      </div>
                       <select [(ngModel)]="grn.statusofpassed" (ngModelChange)="grn.passedstatus = $event"
                         class="form-select form-select-sm Dropdown mt-1 reason-select">
                         <option value="" disabled>Select</option>
@@ -1431,7 +1531,7 @@
             <th rowspan="2" class="col-sno">S.No</th>
             <th rowspan="2" class="col-product">Product Name</th>
             <th colspan="2" class="group-intake">Product Intake</th>
-            <th colspan="4" class="group-repair">Repair Center</th>
+            <th colspan="7" class="group-repair">Repair Center</th>
             <th rowspan="2" class="col-status">Status</th>
             <th rowspan="2" class="col-demanded">Demanded</th>
             <th rowspan="2" class="col-mrp">MRP</th>
@@ -1443,6 +1543,9 @@
           <tr>
             <th class="col-party">As Per Party</th>
             <th class="col-recd">Received</th>
+            <th class="col-qty">New</th>
+            <th class="col-qty">Saleable</th>
+            <th class="col-qty">Scratch</th>
             <th class="col-passed">Passed</th>
             <th class="col-pass-reason">Pass Reason</th>
             <th class="col-rejected">Rejected</th>
@@ -1455,6 +1558,9 @@
             <td class="col-product text-start">{{ getProductName(grn.productId) }}</td>
             <td class="col-party">{{ grn.quantityAsPerParty }}</td>
             <td class="col-recd">{{ grn.receivedQuantity }}</td>
+            <td class="col-qty">{{ grn.new ?? grn.New ?? grn.newQty ?? 0 }}</td>
+            <td class="col-qty">{{ grn.saleable ?? grn.Saleable ?? 0 }}</td>
+            <td class="col-qty">{{ grn.scratch ?? grn.Scratch ?? 0 }}</td>
             <td class="col-passed">{{ grn.passedQuantity }}</td>
             <td class="col-pass-reason">{{ grn.passedstatus || '—' }}</td>
             <td class="col-rejected">{{ grn.rejectedQuantity }}</td>
@@ -1470,7 +1576,7 @@
         </tbody>
         <tfoot>
           <tr>
-            <td colspan="15" class="text-start"><strong>Total Product Added: {{ grnListRptold.length }}</strong></td>
+            <td colspan="18" class="text-start"><strong>Total Product Added: {{ grnListRptold.length }}</strong></td>
           </tr>
         </tfoot>
       </table>
@@ -1668,7 +1774,7 @@ printPOPUPSectionChallan -->
           <th rowspan="2" class="col-sno">S.No</th>
           <th rowspan="2" class="col-product">Product Name</th>
           <th colspan="2" class="group-intake">Product Intake</th>
-          <th colspan="4" class="group-repair">Repair Center</th>
+          <th colspan="7" class="group-repair">Repair Center</th>
           <th rowspan="2" class="col-status">Status</th>
           <th rowspan="2" class="col-mrp">MRP</th>
           <th rowspan="2" class="col-batch">Batch No</th>
@@ -1679,6 +1785,9 @@ printPOPUPSectionChallan -->
         <tr>
           <th class="col-party">As Per Party</th>
           <th class="col-recd">Received</th>
+          <th class="col-qty">New</th>
+          <th class="col-qty">Saleable</th>
+          <th class="col-qty">Scratch</th>
           <th class="col-passed">Passed</th>
           <th class="col-pass-reason">Pass Reason</th>
           <th class="col-rejected">Rejected</th>
@@ -1691,6 +1800,9 @@ printPOPUPSectionChallan -->
           <td class="col-product text-start">{{ getProductName(grn.selectedProduct) }}</td>
           <td class="col-party">{{ grn.quantityasperparty || 0 }}</td>
           <td class="col-recd">{{ grn.receivedQuantity || 0 }}</td>
+          <td class="col-qty">{{ grn.new ?? grn.New ?? grn.newQty ?? 0 }}</td>
+          <td class="col-qty">{{ grn.saleable ?? grn.Saleable ?? 0 }}</td>
+          <td class="col-qty">{{ grn.scratch ?? grn.Scratch ?? 0 }}</td>
           <td class="col-passed">{{ grn.passed || 0 }}</td>
           <td class="col-pass-reason">{{ grn.statusofpassed || '—' }}</td>
           <td class="col-rejected">{{ grn.rejected || 0 }}</td>
@@ -1705,7 +1817,7 @@ printPOPUPSectionChallan -->
       </tbody>
         <tfoot>
           <tr>
-            <td colspan="14" class="text-start"><strong>Total Product Added: {{ rows.length }}</strong></td>
+            <td colspan="17" class="text-start"><strong>Total Product Added: {{ rows.length }}</strong></td>
           </tr>
         </tfoot>
       </table>

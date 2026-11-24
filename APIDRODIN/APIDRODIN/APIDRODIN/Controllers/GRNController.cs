@@ -18,6 +18,39 @@ namespace APIDRODIN.Controllers
             _connectionString = configuration.GetConnectionString("DefaultConnection")!;
             EnsureInvoiceReceiptImageColumnExists();
             EnsureGrnDocumentsTableExists();
+            EnsureNewSaleableScratchColumnsExist();
+        }
+
+        private void EnsureNewSaleableScratchColumnsExist()
+        {
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(_connectionString))
+                {
+                    connection.Open();
+                    string query = @"
+                        IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('GRNDetails') AND name = 'New')
+                        BEGIN
+                            ALTER TABLE GRNDetails ADD [New] INT NOT NULL CONSTRAINT DF_GRNDetails_New DEFAULT 0 WITH VALUES;
+                        END;
+                        IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('GRNDetails') AND name = 'Saleable')
+                        BEGIN
+                            ALTER TABLE GRNDetails ADD [Saleable] INT NOT NULL CONSTRAINT DF_GRNDetails_Saleable DEFAULT 0 WITH VALUES;
+                        END;
+                        IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('GRNDetails') AND name = 'Scratch')
+                        BEGIN
+                            ALTER TABLE GRNDetails ADD [Scratch] INT NOT NULL CONSTRAINT DF_GRNDetails_Scratch DEFAULT 0 WITH VALUES;
+                        END;";
+                    using (SqlCommand command = new SqlCommand(query, connection))
+                    {
+                        command.ExecuteNonQuery();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error ensuring New, Saleable, Scratch columns exist: " + ex.Message);
+            }
         }
 
         private void EnsureGrnDocumentsTableExists()
@@ -163,6 +196,24 @@ namespace APIDRODIN.Controllers
                 return BadRequest(new { message = "At least one GRN detail entry with a valid product is required." });
             }
 
+            foreach (var detail in grnDto.GrnDetails.Where(d => d.ProductId > 0))
+            {
+                int newQty = detail.New ?? 0;
+                int saleable = detail.Saleable ?? 0;
+                int scratch = detail.Scratch ?? 0;
+                int passed = detail.PassedQuantity ?? 0;
+
+                if (newQty < 0 || saleable < 0 || scratch < 0)
+                {
+                    return BadRequest(new { message = "NEW, SALEABLE, and SCRATCH quantities must be non-negative whole numbers." });
+                }
+
+                if (newQty + saleable + scratch != passed)
+                {
+                    return BadRequest(new { message = $"Validation failed: NEW ({newQty}) + SALEABLE ({saleable}) + SCRATCH ({scratch}) must equal PASSED ({passed})." });
+                }
+            }
+
             int grnId = 0;
             using (SqlConnection connection = new SqlConnection(_connectionString))
             {
@@ -191,9 +242,9 @@ namespace APIDRODIN.Controllers
 
                         string insertDetailsQuery = @"
                             INSERT INTO GRNDetails 
-                            (GrnId, ProductId, QuantityAsPerParty, ReceivedQuantity, RejectedQuantity, PassedQuantity, Status, MRP, BatchNumber, ExpiryDate, Remarks1, Remarks2, Demandedbyparty, Approvedbycompany, Rejectedstatus, Passedstatus, ReturnToParty, Quantity) 
+                            (GrnId, ProductId, QuantityAsPerParty, ReceivedQuantity, RejectedQuantity, PassedQuantity, [New], [Saleable], [Scratch], Status, MRP, BatchNumber, ExpiryDate, Remarks1, Remarks2, Demandedbyparty, Approvedbycompany, Rejectedstatus, Passedstatus, ReturnToParty, Quantity) 
                             VALUES 
-                            (@GrnId, @ProductId, @QuantityAsPerParty, @ReceivedQuantity, @RejectedQuantity, @PassedQuantity, @Status, @Mrp, @BatchNumber, @ExpiryDate, @Remarks1, @Remarks2, @Demandedbyparty, @Approvedbycompany, @Rejectedstatus, @Passedstatus, @ReturnToParty, @Quantity);";
+                            (@GrnId, @ProductId, @QuantityAsPerParty, @ReceivedQuantity, @RejectedQuantity, @PassedQuantity, @New, @Saleable, @Scratch, @Status, @Mrp, @BatchNumber, @ExpiryDate, @Remarks1, @Remarks2, @Demandedbyparty, @Approvedbycompany, @Rejectedstatus, @Passedstatus, @ReturnToParty, @Quantity);";
 
                         foreach (var detail in grnDto.GrnDetails.Where(d => d.ProductId > 0))
                         {
@@ -205,6 +256,9 @@ namespace APIDRODIN.Controllers
                                 cmd.Parameters.AddWithValue("@ReceivedQuantity", detail.ReceivedQuantity ?? 0);
                                 cmd.Parameters.AddWithValue("@RejectedQuantity", detail.RejectedQuantity ?? 0);
                                 cmd.Parameters.AddWithValue("@PassedQuantity", detail.PassedQuantity ?? 0);
+                                cmd.Parameters.AddWithValue("@New", detail.New ?? 0);
+                                cmd.Parameters.AddWithValue("@Saleable", detail.Saleable ?? 0);
+                                cmd.Parameters.AddWithValue("@Scratch", detail.Scratch ?? 0);
                                 cmd.Parameters.AddWithValue("@Status", (object)detail.Status ?? DBNull.Value);
                                 cmd.Parameters.AddWithValue("@Mrp", (object)detail.Mrp ?? DBNull.Value);
                                 cmd.Parameters.AddWithValue("@BatchNumber", string.IsNullOrWhiteSpace(detail.BatchNumber) ? (object)DBNull.Value : detail.BatchNumber);
@@ -517,7 +571,10 @@ namespace APIDRODIN.Controllers
                                 gd.Passedstatus,
                                 gd.Rejectedstatus,
                                 ISNULL(gd.ReturnToParty, 0) AS ReturnToParty,
-                                ISNULL(gd.Quantity, 0) AS Quantity
+                                ISNULL(gd.Quantity, 0) AS Quantity,
+                                ISNULL(gd.[New], 0) AS [New],
+                                ISNULL(gd.Saleable, 0) AS Saleable,
+                                ISNULL(gd.Scratch, 0) AS Scratch
                             FROM GRNDetails gd
                             LEFT JOIN product p ON gd.ProductId = p.product_id
                             WHERE gd.GrnId IN ({string.Join(",", parameterNames)});";
@@ -554,6 +611,9 @@ namespace APIDRODIN.Controllers
                                         Rejectedstatus = detailReader.IsDBNull(16) ? string.Empty : detailReader.GetString(16),
                                         ReturnToParty = !detailReader.IsDBNull(17) && detailReader.GetBoolean(17),
                                         Quantity = detailReader.GetInt32(18),
+                                        New = detailReader.IsDBNull(19) ? 0 : detailReader.GetInt32(19),
+                                        Saleable = detailReader.IsDBNull(20) ? 0 : detailReader.GetInt32(20),
+                                        Scratch = detailReader.IsDBNull(21) ? 0 : detailReader.GetInt32(21),
                                     };
 
                                     if (grnMap.TryGetValue(grnId, out var grn))
@@ -647,6 +707,24 @@ namespace APIDRODIN.Controllers
             if (grnDto.SupplierId == 0) return BadRequest(new { message = "Supplier ID is required." });
             if (grnDto.GrnDetails == null || !grnDto.GrnDetails.Any()) return BadRequest(new { message = "At least one GRN detail entry is required." });
 
+            foreach (var detail in grnDto.GrnDetails.Where(d => d.ProductId > 0))
+            {
+                int newQty = detail.New ?? 0;
+                int saleable = detail.Saleable ?? 0;
+                int scratch = detail.Scratch ?? 0;
+                int passed = detail.PassedQuantity ?? 0;
+
+                if (newQty < 0 || saleable < 0 || scratch < 0)
+                {
+                    return BadRequest(new { message = "NEW, SALEABLE, and SCRATCH quantities must be non-negative whole numbers." });
+                }
+
+                if (newQty + saleable + scratch != passed)
+                {
+                    return BadRequest(new { message = $"Validation failed: NEW ({newQty}) + SALEABLE ({saleable}) + SCRATCH ({scratch}) must equal PASSED ({passed})." });
+                }
+            }
+
             using (SqlConnection conn = new SqlConnection(_connectionString))
             {
                 await conn.OpenAsync();
@@ -685,8 +763,8 @@ namespace APIDRODIN.Controllers
                             await deleteCmd.ExecuteNonQueryAsync();
                         }
 
-                        string insertGrnDetailsQuery = @"INSERT INTO Grndetails (GrnId, ProductId, QuantityAsPerParty, ReceivedQuantity, RejectedQuantity, PassedQuantity, Status, Mrp, BatchNumber, ExpiryDate, Remarks1, Remarks2, Demandedbyparty, Approvedbycompany, Rejectedstatus, Passedstatus, ReturnToParty, Quantity) 
-                                                         VALUES (@GrnId, @ProductId, @QuantityAsPerParty, @ReceivedQuantity, @RejectedQuantity, @PassedQuantity, @Status, @Mrp, @BatchNumber, @ExpiryDate, @Remarks1, @Remarks2, @Demandedbyparty, @Approvedbycompany, @Rejectedstatus, @Passedstatus, @ReturnToParty, @Quantity)";
+                        string insertGrnDetailsQuery = @"INSERT INTO Grndetails (GrnId, ProductId, QuantityAsPerParty, ReceivedQuantity, RejectedQuantity, PassedQuantity, [New], [Saleable], [Scratch], Status, Mrp, BatchNumber, ExpiryDate, Remarks1, Remarks2, Demandedbyparty, Approvedbycompany, Rejectedstatus, Passedstatus, ReturnToParty, Quantity) 
+                                                         VALUES (@GrnId, @ProductId, @QuantityAsPerParty, @ReceivedQuantity, @RejectedQuantity, @PassedQuantity, @New, @Saleable, @Scratch, @Status, @Mrp, @BatchNumber, @ExpiryDate, @Remarks1, @Remarks2, @Demandedbyparty, @Approvedbycompany, @Rejectedstatus, @Passedstatus, @ReturnToParty, @Quantity)";
 
                         foreach (var detail in (grnDto.GrnDetails ?? new List<GRNDetailDto>()).Where(d => d.ProductId > 0))
                         {
@@ -698,6 +776,9 @@ namespace APIDRODIN.Controllers
                                 insertCmd.Parameters.AddWithValue("@ReceivedQuantity", detail.ReceivedQuantity ?? 0);
                                 insertCmd.Parameters.AddWithValue("@RejectedQuantity", detail.RejectedQuantity ?? 0);
                                 insertCmd.Parameters.AddWithValue("@PassedQuantity", detail.PassedQuantity ?? 0);
+                                insertCmd.Parameters.AddWithValue("@New", detail.New ?? 0);
+                                insertCmd.Parameters.AddWithValue("@Saleable", detail.Saleable ?? 0);
+                                insertCmd.Parameters.AddWithValue("@Scratch", detail.Scratch ?? 0);
                                 insertCmd.Parameters.AddWithValue("@Status", (object?)detail.Status ?? DBNull.Value);
                                 insertCmd.Parameters.AddWithValue("@Mrp", (object?)detail.Mrp ?? DBNull.Value);
                                 insertCmd.Parameters.AddWithValue("@BatchNumber", string.IsNullOrWhiteSpace(detail.BatchNumber) ? (object)DBNull.Value : detail.BatchNumber);
@@ -814,7 +895,8 @@ namespace APIDRODIN.Controllers
                         var parameterNames = chunk.Select((id, index) => $"@GrnId{index}").ToList();
                         string detailQuery = $@"
                                     SELECT gd.GrnId, gd.ProductId, p.name AS ProductName ,  gd.ReceivedQuantity, gd.RejectedQuantity, gd.PassedQuantity, gd.Status, gd.Mrp, gd.BatchNumber, gd.Remarks1, gd.Remarks2,
-                                        gd.QuantityAsPerParty, gd.ExpiryDate, gd.Demandedbyparty, gd.Approvedbycompany, gd.Passedstatus, gd.Rejectedstatus, gd.ReturnToParty
+                                        gd.QuantityAsPerParty, gd.ExpiryDate, gd.Demandedbyparty, gd.Approvedbycompany, gd.Passedstatus, gd.Rejectedstatus, gd.ReturnToParty,
+                                        ISNULL(gd.[New], 0) AS [New], ISNULL(gd.Saleable, 0) AS Saleable, ISNULL(gd.Scratch, 0) AS Scratch
                                     FROM GrnDetails gd
                                     JOIN product p ON gd.ProductId = p.product_id
                                     WHERE gd.GrnId IN ({string.Join(",", parameterNames)});";
@@ -850,6 +932,9 @@ namespace APIDRODIN.Controllers
                                         Passedstatus = detailReader.IsDBNull(15) ? null : detailReader.GetString(15),
                                         Rejectedstatus = detailReader.IsDBNull(16) ? null : detailReader.GetString(16),
                                         ReturnToParty = !detailReader.IsDBNull(17) && detailReader.GetBoolean(17),
+                                        New = detailReader.IsDBNull(18) ? 0 : detailReader.GetInt32(18),
+                                        Saleable = detailReader.IsDBNull(19) ? 0 : detailReader.GetInt32(19),
+                                        Scratch = detailReader.IsDBNull(20) ? 0 : detailReader.GetInt32(20),
                                     };
 
                                     if (grnMap.TryGetValue(grnId, out var grn))
@@ -1044,7 +1129,8 @@ namespace APIDRODIN.Controllers
                         var parameterNames = chunk.Select((id, index) => $"@GrnId{index}").ToList();
                         string detailQuery = $@"
                                     SELECT gd.GrnId, gd.ProductId, p.name AS ProductName ,  gd.ReceivedQuantity, gd.RejectedQuantity, gd.PassedQuantity, gd.Status, gd.Mrp, gd.BatchNumber, gd.Remarks1, gd.Remarks2, 
-                                        gd.QuantityAsPerParty, gd.ExpiryDate, gd.Demandedbyparty, gd.Approvedbycompany, gd.Passedstatus, gd.Rejectedstatus, gd.ReturnToParty
+                                        gd.QuantityAsPerParty, gd.ExpiryDate, gd.Demandedbyparty, gd.Approvedbycompany, gd.Passedstatus, gd.Rejectedstatus, gd.ReturnToParty,
+                                        ISNULL(gd.[New], 0) AS [New], ISNULL(gd.Saleable, 0) AS Saleable, ISNULL(gd.Scratch, 0) AS Scratch
                                     FROM GrnDetails gd
                                     JOIN product p ON gd.ProductId = p.product_id
                                     WHERE gd.GrnId IN ({string.Join(",", parameterNames)});";
@@ -1080,6 +1166,9 @@ namespace APIDRODIN.Controllers
                                         Passedstatus = detailReader.IsDBNull(15) ? null : detailReader.GetString(15),
                                         Rejectedstatus = detailReader.IsDBNull(16) ? null : detailReader.GetString(16),
                                         ReturnToParty = !detailReader.IsDBNull(17) && detailReader.GetBoolean(17),
+                                        New = detailReader.IsDBNull(18) ? 0 : detailReader.GetInt32(18),
+                                        Saleable = detailReader.IsDBNull(19) ? 0 : detailReader.GetInt32(19),
+                                        Scratch = detailReader.IsDBNull(20) ? 0 : detailReader.GetInt32(20),
                                     };
 
                                     if (grnMap.TryGetValue(grnId, out var grn))
@@ -1152,7 +1241,8 @@ namespace APIDRODIN.Controllers
                         var parameterNames = chunk.Select((id, index) => $"@GrnId{index}").ToList();
                         string detailQuery = $@"
                                     SELECT gd.GrnId, gd.ProductId, p.name AS ProductName ,  gd.ReceivedQuantity, gd.RejectedQuantity, gd.PassedQuantity, gd.Status, gd.Mrp,
-                                            gd.BatchNumber, gd.Remarks1, gd.Remarks2, gd.QuantityAsPerParty, gd.ExpiryDate, gd.Demandedbyparty, gd.Approvedbycompany, gd.Passedstatus, gd.Rejectedstatus, gd.ReturnToParty
+                                            gd.BatchNumber, gd.Remarks1, gd.Remarks2, gd.QuantityAsPerParty, gd.ExpiryDate, gd.Demandedbyparty, gd.Approvedbycompany, gd.Passedstatus, gd.Rejectedstatus, gd.ReturnToParty,
+                                            ISNULL(gd.[New], 0) AS [New], ISNULL(gd.Saleable, 0) AS Saleable, ISNULL(gd.Scratch, 0) AS Scratch
                                     FROM GrnDetails gd
                                     JOIN product p ON gd.ProductId = p.product_id
                                     WHERE gd.GrnId IN ({string.Join(",", parameterNames)});";
@@ -1188,6 +1278,9 @@ namespace APIDRODIN.Controllers
                                         Passedstatus = detailReader.IsDBNull(15) ? null : detailReader.GetString(15),
                                         Rejectedstatus = detailReader.IsDBNull(16) ? null : detailReader.GetString(16),
                                         ReturnToParty = !detailReader.IsDBNull(17) && detailReader.GetBoolean(17),
+                                        New = detailReader.IsDBNull(18) ? 0 : detailReader.GetInt32(18),
+                                        Saleable = detailReader.IsDBNull(19) ? 0 : detailReader.GetInt32(19),
+                                        Scratch = detailReader.IsDBNull(20) ? 0 : detailReader.GetInt32(20),
                                     };
 
                                     if (grnMap.TryGetValue(grnId, out var grn))
@@ -1296,6 +1389,9 @@ namespace APIDRODIN.Controllers
             public int? RejectedQuantity { get; set; }
 
             public int? PassedQuantity { get; set; }
+            public int? New { get; set; } = 0;
+            public int? Saleable { get; set; } = 0;
+            public int? Scratch { get; set; } = 0;
 
             public string? Status { get; set; }
             public string? Demandedbyparty { get; set; }
